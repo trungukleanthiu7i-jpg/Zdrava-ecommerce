@@ -1,0 +1,191 @@
+/* ============================
+   ADMIN ORDERS – LAYOUT
+============================ */
+
+.admin-orders {
+  padding: 32px;
+  background: #f4f6fb;
+  min-height: 100vh;
+  font-family: "Inter", system-ui, sans-serif;
+
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #111827;
+  }
+}
+
+/* ============================
+   MAIN ORDERS TABLE
+============================ */
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+
+  thead {
+    background: #0f172a;
+
+    th {
+      color: #ffffff;
+      padding: 14px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #e5e7eb;
+
+      &:hover {
+        background: #f9fafb;
+      }
+    }
+
+    td {
+      padding: 14px 12px;
+      font-size: 13px;
+      color: #374151;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+  }
+}
+
+/* ============================
+   VIEW BUTTON
+============================ */
+
+.view-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #1d4ed8;
+  }
+}
+
+/* ============================
+   EXPANDED ORDER ROW
+============================ */
+
+.order-details-row {
+  background: #f8fafc;
+
+  td {
+    padding: 20px;
+  }
+}
+
+/* ============================
+   ORDER ITEMS TABLE (INNER)
+============================ */
+
+.order-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+
+  thead {
+    background: #f1f5f9;
+
+    th {
+      padding: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1f2937;
+      text-transform: uppercase;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #e5e7eb;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 12px 10px;
+      font-size: 13px;
+      color: #374151;
+      text-align: center;
+    }
+  }
+}
+
+/* ============================
+   BARCODE CELL
+============================ */
+
+.barcode-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.barcode-number {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #374151;
+}
+
+/* ============================
+   LOADING STATE
+============================ */
+
+.admin-loading {
+  padding: 40px;
+  font-size: 16px;
+  color: #374151;
+}
+
+/* ============================
+   NO ORDERS
+============================ */
+
+.no-orders {
+  text-align: center;
+  padding: 24px;
+  color: #6b7280;
+  font-size: 14px;
+}
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.download-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #2e7d32;
+  font-size: 16px;
+}
+
+.download-btn:hover {
+  color: #1b5e20;
+}

@@ -1,0 +1,165 @@
+/* ================================
+   ADMIN PRODUCTS / OFFERS (PRO)
+================================ */
+
+.admin-form-container {
+  background: #f4f6f8;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* ================================
+   PAGE WIDTH CONTROL
+================================ */
+
+.admin-page-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ================================
+   SECTION CARD
+================================ */
+
+.admin-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 28px;
+
+  h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: #111827;
+  }
+}
+
+/* ================================
+   FORM GRID – STRICT & SYMMETRIC
+================================ */
+
+.admin-form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: end;
+
+  /* ---------- INPUTS ---------- */
+  input,
+  select,
+  textarea {
+    height: 38px;              /* 🔥 SAME HEIGHT */
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+    }
+  }
+
+  /* ---------- TEXTAREA ---------- */
+  textarea {
+    height: 90px;
+    resize: none;
+    grid-column: span 3;      /* 🔥 FULL ROW BUT CENTERED */
+  }
+
+  /* ---------- FILE INPUT ---------- */
+  input[type="file"] {
+    grid-column: span 2;
+    height: 38px;
+  }
+
+  /* ---------- PRIMARY BUTTON ---------- */
+  button {
+    height: 38px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 180px;             /* 🔥 NO STRETCH */
+    justify-self: end;
+
+    &:hover {
+      background: #1d4ed8;
+    }
+  }
+
+  /* ---------- STATUS MESSAGE ---------- */
+  .status-message {
+    grid-column: span 3;
+    font-size: 12px;
+    color: #16a34a;
+    margin-top: 4px;
+
+    &.error {
+      color: #dc2626;
+    }
+  }
+}
+
+/* ================================
+   OFFER FORM (2 COLUMNS – CLEAN)
+================================ */
+
+.admin-form.offer {
+  grid-template-columns: repeat(2, 1fr);
+
+  textarea {
+    grid-column: span 2;
+  }
+
+  input[type="file"] {
+    grid-column: span 1;
+  }
+
+  button {
+    grid-column: span 2;
+    width: 200px;
+  }
+}
+
+/* ================================
+   RESPONSIVE – STILL SYMMETRIC
+================================ */
+
+@media (max-width: 900px) {
+  .admin-form {
+    grid-template-columns: repeat(2, 1fr);
+
+    textarea,
+    .status-message {
+      grid-column: span 2;
+    }
+
+    button {
+      grid-column: span 2;
+      justify-self: center;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-form {
+    grid-template-columns: 1fr;
+
+    textarea,
+    input[type="file"],
+    button,
+    .status-message {
+      grid-column: span 1;
+    }
+  }
+}

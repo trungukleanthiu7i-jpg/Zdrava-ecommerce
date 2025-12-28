@@ -1,0 +1,46 @@
+.add-to-cart-btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    font-size: 1.3rem;
+  }
+
+  &.default {
+    background-color: transparent;
+    color: #333;
+    padding: 0.4rem;
+    &:hover {
+      transform: scale(1.1);
+      color: #000;
+    }
+  }
+
+  &.single {
+    background-color: #ff6b00;
+    color: #fff;
+    padding: 0.6rem 1rem;
+    font-weight: bold;
+    gap: 8px;
+
+    &:hover {
+      background-color: #e55c00;
+      transform: translateY(-2px);
+    }
+  }
+
+  &.minimal {
+    background: none;
+    color: gray;
+    font-size: 0.9rem;
+    &:hover {
+      color: black;
+    }
+  }
+}

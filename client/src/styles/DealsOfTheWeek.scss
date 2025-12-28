@@ -1,0 +1,162 @@
+.deals-section {
+  position: relative;
+  padding: 80px 40px;
+  background: #f6fff6;
+  text-align: center;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &:hover .arrow {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .deals-subtitle {
+    font-size: 1rem;
+    color: #2b8242;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .deals-title {
+    font-size: 2.2rem;
+    color: #1a3c22;
+    font-weight: 700;
+    margin-bottom: 40px;
+  }
+
+  .deals-carousel {
+    display: flex;
+    gap: 25px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 20px 0;
+  }
+
+  .deal-card {
+    flex: 0 0 250px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    text-align: center;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+
+    .image-container {
+      position: relative;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      img {
+        max-height: 200px;
+        object-fit: contain;
+        border-radius: 10px;
+        transition: 0.3s ease;
+      }
+
+      .countdown {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        opacity: 0.9;
+        transition: opacity 0.3s ease;
+
+        div {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+
+          span {
+            font-size: 1rem;
+            font-weight: bold;
+          }
+
+          p {
+            font-size: 0.7rem;
+            margin: 0;
+          }
+        }
+      }
+
+      &:hover .countdown {
+        opacity: 0;
+      }
+    }
+
+    h3 {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0a0a0a;
+    }
+
+    .old-price {
+      color: #999;
+      text-decoration: line-through;
+      font-size: 0.95rem;
+      margin-top: 5px;
+    }
+
+    .new-price {
+      color: #00b874;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .offer-conditions {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #444;
+      font-style: italic;
+    }
+  }
+
+  .arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(43, 130, 66, 0.85);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 10px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+
+    &.left {
+      left: 20px;
+    }
+    &.right {
+      right: 20px;
+    }
+
+    &:hover {
+      background: #00b874;
+    }
+  }
+
+  .no-offers {
+    font-size: 1.2rem;
+    color: #666;
+    text-align: center;
+    width: 100%;
+  }
+}

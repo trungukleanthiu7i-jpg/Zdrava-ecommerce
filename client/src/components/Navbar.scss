@@ -1,0 +1,168 @@
+.navbar {
+  position: absolute; /* 👈 stays above the hero video */
+  top: -50px;
+  left: -100px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between; /* logo left, links right */
+  align-items: center;
+  padding: 25px 80px;
+  z-index: 1000;
+  font-family: 'Poppins', sans-serif;
+  background: transparent;
+  transition: background 0.3s ease;
+
+  &.scrolled {
+    background: rgba(0, 0, 0, 0.8); /* optional: dark on scroll */
+  }
+
+  /* ✅ Logo section */
+  &__logo {
+    display: flex;
+    align-items: center;
+
+    img {
+      height: 220px; /* smaller and higher up */
+      width: auto;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+
+    &:hover img {
+      transform: scale(1.05);
+    }
+  }
+
+  /* ✅ Navigation links styled like your screenshot */
+  &__links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+
+    li a {
+      text-decoration: none;
+      color: #fff; /* white text */
+      font-weight: 600;
+      font-size: 1.05rem;
+      position: relative;
+      transition: color 0.3s ease;
+
+      /* underline animation */
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: #b28a52; /* gold underline */
+        transition: width 0.3s ease;
+      }
+
+      &:hover {
+        color: #b28a52;
+      }
+
+      &:hover::after {
+        width: 100%;
+      }
+    }
+  }
+
+  /* ✅ Cart button (optional – styled same as links) */
+  &__cart {
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #b28a52;
+      transition: width 0.3s ease;
+    }
+
+    &:hover {
+      color: #b28a52;
+    }
+
+    &:hover::after {
+      width: 100%;
+    }
+  }
+
+  /* ✅ Smooth appear animation */
+  animation: fadeInDown 1s ease forwards;
+}
+
+@keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* ✅ Light mode for all non-home pages */
+.navbar--light {
+  position: relative;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+
+  .navbar__links a,
+  .navbar__cart {
+    color: #222 !important; /* dark text for readability */
+  }
+
+  .navbar__links a:hover,
+  .navbar__cart:hover {
+    color: #0c8b43 !important; /* your green hover */
+  }
+
+  .navbar__links a::after,
+  .navbar__cart::after {
+    background: #0c8b43 !important; /* green underline hover */
+  }
+}
+
+/* ✅ Keep white style for homepage */
+.navbar {
+  &__links a,
+  &__cart {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05rem;
+    position: relative;
+    transition: color 0.3s ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #b28a52;
+      transition: width 0.3s ease;
+    }
+
+    &:hover {
+      color: #b28a52;
+    }
+
+    &:hover::after {
+      width: 100%;
+    }
+  }
+}

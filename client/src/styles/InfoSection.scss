@@ -1,0 +1,84 @@
+.info-section {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 80px; /* ✅ more space between cards */
+  padding: 60px 40px; /* ✅ more padding for a larger look */
+  background: #f5faf5; /* soft open green background */
+  font-family: "Poppins", sans-serif;
+
+  .info-item {
+    display: flex;
+    align-items: center;
+    gap: 25px; /* ✅ more spacing between icon and text */
+    max-width: 300px; /* ✅ slightly wider card */
+    text-align: left;
+    background: #ffffff;
+    padding: 25px 20px; /* ✅ inner padding */
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    cursor: default;
+
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+    }
+
+    .info-icon {
+      font-size: 55px; /* ✅ bigger icon */
+      color: #2b8242; /* dark green icons */
+      flex-shrink: 0;
+    }
+
+    .info-text {
+      h4 {
+        margin: 0;
+        font-size: 20px; /* ✅ bigger title */
+        font-weight: 700;
+        color: #1f5129; /* deep green */
+      }
+
+      p {
+        margin: 6px 0 0;
+        color: #444;
+        font-size: 16px; /* ✅ slightly larger text */
+        line-height: 1.5;
+      }
+    }
+  }
+
+  @media (max-width: 900px) {
+    gap: 40px;
+    .info-item {
+      max-width: 100%;
+      padding: 20px 15px;
+
+      .info-icon {
+        font-size: 45px;
+      }
+
+      .info-text {
+        h4 {
+          font-size: 18px;
+        }
+        p {
+          font-size: 15px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+
+    .info-item {
+      width: 100%;
+      max-width: 90%;
+      justify-content: flex-start;
+    }
+  }
+}

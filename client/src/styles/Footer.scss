@@ -1,0 +1,109 @@
+.footer {
+  background: linear-gradient(180deg, #0b8a43, #087a3b);
+  color: #ffffff;
+  padding: 40px 20px 25px;
+  text-align: center;
+  font-family: "Roboto", sans-serif;
+}
+
+/* =========================
+   LOGO
+========================= */
+.footer__logo img {
+  max-width: 200px;
+  margin-bottom: 30px;
+}
+
+/* =========================
+   CONTENT ROWS
+========================= */
+.footer__content {
+  display: flex;
+  flex-wrap: wrap;              /* ✅ allow wrapping */
+  justify-content: center;
+  gap: 40px;                    /* ✅ spacing between items */
+  margin-bottom: 25px;
+}
+
+.footer__bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  padding-top: 20px;
+}
+
+/* =========================
+   FOOTER ITEM
+========================= */
+.footer__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;          /* ❌ prevent breaking inside icons */
+}
+
+/* =========================
+   ICONS
+========================= */
+.footer__icon {
+  font-size: 18px;
+  color: #ffdd00;
+}
+
+/* =========================
+   LINKS & TEXT
+========================= */
+.footer__item a,
+.footer__item span {
+  color: #ffffff;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  white-space: normal;          /* ✅ allow text wrapping */
+  word-break: break-word;       /* ✅ long email breaks correctly */
+  max-width: 260px;             /* ✅ prevents overflow */
+}
+
+.footer__item a:hover {
+  color: #ffdd00;
+}
+
+/* =========================
+   COPYRIGHT
+========================= */
+.footer__copyright {
+  font-size: 14px;
+  margin-top: 15px;
+  opacity: 0.9;
+}
+
+/* =========================
+   RESPONSIVE FIX
+========================= */
+@media (max-width: 768px) {
+  .footer__content {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .footer__item {
+    justify-content: center;
+    text-align: center;
+  }
+}
+.footer__madeby {
+  font-size: 13px;
+  margin-top: 6px;
+  opacity: 0.85;
+}
+
+.footer__madeby a {
+  color: #ffdd00;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.footer__madeby a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}

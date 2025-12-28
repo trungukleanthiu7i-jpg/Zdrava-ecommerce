@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+.product-page {
+  max-width: 1000px;
+  margin: 80px auto;
+  padding: 20px;
+  font-family: 'Roboto', sans-serif;
+  color: #2c3e50;
+
+  &__container {
+    display: flex;
+    gap: 40px;
+    background: #f5fdf7;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    align-items: flex-start;
+  }
+
+  &__image {
+    flex: 0 0 250px;
+
+    img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #27ae60;
+    }
+
+    p {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #34495e;
+    }
+
+    &__price-stock {
+      display: flex;
+      flex-direction: column;
+      gap: 50px;
+      align-items: center;
+      margin: 15px 0;
+
+      .price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #27ae60;
+      }
+
+      .stock {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #2ecc71;
+      }
+    }
+
+    /* 🌿 Sleek “Add to Cart” button */
+    .product-page__btn {
+      width: fit-content;
+      background: linear-gradient(90deg, #00ff99, #00cc88);
+      color: #012d1f;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+      position: relative;
+      overflow: hidden;
+
+      &:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.25);
+        transform: skewX(-20deg);
+        transition: left 0.5s ease;
+      }
+
+      &:hover {
+        transform: translateY(-3px);
+        background: linear-gradient(90deg, #00ffaa, #00ff88);
+        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+
+        &:before {
+          left: 150%;
+        }
+      }
+
+      &:active {
+        transform: scale(0.96);
+        background: linear-gradient(90deg, #00e676, #00cc66);
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    &__container {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    &__image {
+      flex: 0 0 70%;
+      margin-bottom: 20px;
+    }
+
+    &__info {
+      text-align: center;
+    }
+  }
+}
+
+/* 🌿 Recommended Section */
+.recommended-section {
+  margin-top: 60px;
+  padding: 40px 30px;
+  background: #f7faf9;
+  border-radius: 18px;
+
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 25px;
+    color: #1f2933;
+  }
+
+  .recommended-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* force 4 cards */
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .recommended-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+    &:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 22px rgba(0, 180, 120, 0.2);
+    }
+
+    img {
+      height: 140px;
+      width: 100%;
+      object-fit: contain;
+      margin-bottom: 12px;
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 6px;
+    }
+
+    h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 8px 0 4px;
+    }
+
+    p {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #16a34a;
+      margin-bottom: 10px;
+    }
+
+    .add-to-cart-btn {
+      background: linear-gradient(90deg, #00ff99, #00cc88);
+      border: none;
+      border-radius: 12px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #014d33;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 3px 10px rgba(0, 255, 136, 0.3);
+
+      &:hover {
+        transform: scale(1.08);
+        box-shadow: 0 6px 16px rgba(0, 255, 136, 0.45);
+      }
+
+      &:active {
+        transform: scale(0.96);
+      }
+    }
+  }
+
+  /* 📱 Responsive */
+  @media (max-width: 1024px) {
+    .recommended-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .recommended-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+/* 📦 Barcode styles */
+.barcode-wrapper {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.barcode-wrapper.small {
+  margin-top: 6px;
+}
+
+.barcode-number {
+  font-size: 12px;
+  letter-spacing: 1px;
+  margin-top: 4px;
+  color: #374151;
+}
+.stock-status {
+  margin: 6px 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stock-status.in {
+  color: #1a7f37; // green
+}
+
+.stock-status.out {
+  color: #c62828; // red
+}
+
+.product-card.out-of-stock {
+  opacity: 0.65;
+}
+
+.product-card.out-of-stock img {
+  filter: grayscale(100%);
+}
+
+.add-to-cart-btn:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}

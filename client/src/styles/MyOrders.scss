@@ -1,0 +1,145 @@
+/* =========================
+   My Orders Container
+========================= */
+
+.my-orders-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 20px;
+
+  h2 {
+    margin-bottom: 25px;
+  }
+}
+
+/* =========================
+   Orders List
+========================= */
+
+.orders-list {
+  display: grid;
+  gap: 20px;
+}
+
+/* =========================
+   Order Card Base
+========================= */
+
+.order-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-left 0.2s ease;
+}
+
+/* =========================
+   Clickable Hover Effect
+========================= */
+
+.order-card.clickable {
+  cursor: pointer;
+}
+
+.order-card.clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.12);
+  border-left: 4px solid #2e7d32; /* Zdrava green */
+}
+
+/* =========================
+   Order Arrow Indicator
+========================= */
+
+.order-arrow {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  font-size: 18px;
+  font-weight: bold;
+  color: #2e7d32;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.order-card.clickable:hover .order-arrow {
+  opacity: 1;
+  transform: translateY(-50%) translateX(4px);
+}
+
+/* =========================
+   Order Header
+========================= */
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* =========================
+   Order Status
+========================= */
+
+.status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status.created {
+  background: #eef;
+}
+
+.status.pending_payment {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.paid {
+  background: #d4f8d4;
+}
+
+.status.shipped {
+  background: #ffe4b5;
+}
+
+.status.completed {
+  background: #c8f7dc;
+}
+
+/* =========================
+   Order Info Row
+========================= */
+
+.order-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+/* =========================
+   Order Items Preview
+========================= */
+
+.order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #333;
+}
