@@ -26,6 +26,7 @@ const Header = () => {
 
   const [cartAnimation, setCartAnimation] = useState(false);
 
+  /* 🟢 Cart animation */
   useEffect(() => {
     if (cartAnimationTrigger > 0) {
       setCartAnimation(true);
@@ -47,21 +48,21 @@ const Header = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (isAdmin) return; // 🔒 block admin search
+    if (isAdmin) return; // 🔒 Admin cannot search / shop
     if (searchTerm.trim()) {
       navigate(`/search?query=${encodeURIComponent(searchTerm)}`);
       setSearchTerm("");
     }
   };
 
-  // 🔒 helper for admin-disabled links
+  /* 🔒 Admin disabled link */
   const AdminDisabledLink = ({ children }) => (
     <span className="nav-disabled">{children}</span>
   );
 
   return (
     <header className="header">
-      {/* === TOP BAR === */}
+      {/* ================= TOP BAR ================= */}
       <div className="header__top">
         <div className="header__left">
           <Link to="/">
@@ -73,7 +74,7 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* 🔍 Search Bar */}
+        {/* 🔍 Search */}
         <form className="header__search" onSubmit={handleSearch}>
           <input
             type="text"
@@ -94,8 +95,9 @@ const Header = () => {
         {/* 🛒 Cart + Language */}
         <div className="header__right">
           <div
-            className={`header__cart ${cartAnimation ? "cart-bounce" : ""} ${isAdmin ? "nav-disabled" : ""
-              }`}
+            className={`header__cart ${
+              cartAnimation ? "cart-bounce" : ""
+            } ${isAdmin ? "nav-disabled" : ""}`}
             onClick={() => !isAdmin && navigate("/cart")}
           >
             <FaShoppingCart className="cart-icon" />
@@ -103,9 +105,8 @@ const Header = () => {
               <span className="cart-count">{getCartCount()}</span>
             )}
           </div>
-          {isAdmin && (
-            <span className="admin-badge">ADMIN MODE</span>
-          )}
+
+          {isAdmin && <span className="admin-badge">ADMIN MODE</span>}
 
           <select
             value={language}
@@ -118,11 +119,13 @@ const Header = () => {
         </div>
       </div>
 
-      {/* === NAVIGATION BAR === */}
+      {/* ================= NAV BAR ================= */}
       <nav className="header__nav">
         {/* 📂 Categories */}
         <div
-          className={`categories-dropdown ${isAdmin ? "nav-disabled" : ""}`}
+          className={`categories-dropdown ${
+            isAdmin ? "nav-disabled" : ""
+          }`}
           onMouseEnter={() => !isAdmin && setDropdownOpen(true)}
           onMouseLeave={() => setDropdownOpen(false)}
         >
@@ -155,9 +158,10 @@ const Header = () => {
                 <Link to="/category/Croissant">
                   {t("Kruasant (Croissant)")}
                 </Link>
-                <Link to="/category/Sweets">{t("Embëlsira (Sweets)")}</Link>
-                <Link to="/category/Sauce">{t("Salca (Sauce)")}
+                <Link to="/category/Sweets">
+                  {t("Embëlsira (Sweets)")}
                 </Link>
+                <Link to="/category/Sauce">{t("Salca (Sauce)")}</Link>
                 <Link to="/category/Others">{t("Të tjera (Others)")}</Link>
               </div>
             </div>
@@ -182,22 +186,35 @@ const Header = () => {
           {user ? (
             <>
               <span className="username">
-                {user.username || user.email}{" "}
+                {user.username || user.email}
                 <FaChevronDown className="chevron" />
               </span>
 
               {accountMenuOpen && (
                 <div className="account-dropdown">
                   {isAdmin ? (
-                    <Link to="/admin">Admin Panel</Link>
+                    <Link to="/admin" className="dropdown-item">
+                      🛠 Admin Panel
+                    </Link>
                   ) : (
                     <>
-                      <Link to="/profile">{t("Profile")}</Link>
-                      <Link to="/my-orders">{t("My Orders")}</Link>
+                      <Link to="/profile" className="dropdown-item">
+                        👤 Profile
+                      </Link>
+                      <Link to="/my-orders" className="dropdown-item">
+                        📦 My Orders
+                      </Link>
                     </>
                   )}
 
-                  <button onClick={handleLogout}>{t("Logout")}</button>
+                  <div className="dropdown-divider" />
+
+                  <button
+                    className="dropdown-item logout"
+                    onClick={handleLogout}
+                  >
+                    🚪 Logout
+                  </button>
                 </div>
               )}
             </>

@@ -10,18 +10,24 @@
    LOGO
 ========================= */
 .footer__logo img {
-  max-width: 200px;
-  margin-bottom: 30px;
+  height: 330px;
+  /* 👈 control size */
+  width: auto;
+  /* keep proportions */
+  margin-bottom: 10px;
 }
+
 
 /* =========================
    CONTENT ROWS
 ========================= */
 .footer__content {
   display: flex;
-  flex-wrap: wrap;              /* ✅ allow wrapping */
+  flex-wrap: wrap;
+  /* ✅ allow wrapping */
   justify-content: center;
-  gap: 40px;                    /* ✅ spacing between items */
+  gap: 40px;
+  /* ✅ spacing between items */
   margin-bottom: 25px;
 }
 
@@ -39,7 +45,8 @@
   gap: 10px;
   font-size: 16px;
   font-weight: 500;
-  white-space: nowrap;          /* ❌ prevent breaking inside icons */
+  white-space: nowrap;
+  /* ❌ prevent breaking inside icons */
 }
 
 /* =========================
@@ -58,9 +65,12 @@
   color: #ffffff;
   text-decoration: none;
   transition: color 0.2s ease;
-  white-space: normal;          /* ✅ allow text wrapping */
-  word-break: break-word;       /* ✅ long email breaks correctly */
-  max-width: 260px;             /* ✅ prevents overflow */
+  white-space: normal;
+  /* ✅ allow text wrapping */
+  word-break: break-word;
+  /* ✅ long email breaks correctly */
+  max-width: 260px;
+  /* ✅ prevents overflow */
 }
 
 .footer__item a:hover {
@@ -90,6 +100,7 @@
     text-align: center;
   }
 }
+
 .footer__madeby {
   font-size: 13px;
   margin-top: 6px;

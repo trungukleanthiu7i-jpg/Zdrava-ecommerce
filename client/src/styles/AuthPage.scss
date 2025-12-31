@@ -13,10 +13,7 @@
 /* ===== Floating Particles ===== */
 .background-particles {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   overflow: hidden;
   z-index: 0;
 }
@@ -25,7 +22,7 @@
   position: absolute;
   width: 25px;
   height: 25px;
-  background: radial-gradient(circle, rgba(59, 91, 255, 0.5), transparent);
+  background: radial-gradient(circle, rgba(59, 91, 255, 0.45), transparent);
   border-radius: 50%;
   animation: float 12s infinite ease-in-out;
   opacity: 0.4;
@@ -43,15 +40,7 @@
   }
 }
 
-/* Randomize positions and delays */
-.particle:nth-child(odd) {
-  animation-duration: 10s;
-  animation-delay: calc(var(--i, 0) * 1s);
-}
-.particle:nth-child(even) {
-  animation-duration: 15s;
-  animation-delay: calc(var(--i, 0) * 2s);
-}
+/* Particle positions */
 .particle:nth-child(1) { top: 10%; left: 20%; }
 .particle:nth-child(2) { top: 40%; left: 70%; }
 .particle:nth-child(3) { top: 70%; left: 30%; }
@@ -71,7 +60,7 @@
   transform-style: preserve-3d;
   transition: transform 1s ease-in-out;
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
   z-index: 5;
 }
 
@@ -82,8 +71,7 @@
 /* ===== Card Faces ===== */
 .auth-face {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   border-radius: 20px;
   background: #fff;
   backface-visibility: hidden;
@@ -97,7 +85,7 @@
   transform: rotateY(180deg);
 }
 
-/* ===== Blue Side ===== */
+/* ===== Hero Side ===== */
 .auth-hero {
   width: 45%;
   height: 100%;
@@ -108,7 +96,6 @@
   justify-content: center;
   padding: 3rem;
   border-radius: 20px 0 0 20px;
-  box-shadow: inset -10px 0 20px rgba(0, 0, 0, 0.05);
 }
 
 .auth-hero h1 {
@@ -135,30 +122,59 @@
 .auth-form h2 {
   font-size: 2rem;
   color: #222;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
+/* ===== SOCIAL LOGIN (UPDATED) ===== */
 .social-login {
   display: flex;
-  gap: 15px;
-  margin-bottom: 1rem;
-
-  .icon {
-    background: #eee;
-    border-radius: 50%;
-    padding: 10px;
-    font-size: 1.2rem;
-    color: #333;
-    cursor: pointer;
-    transition: 0.3s;
-
-    &:hover {
-      background: #3b5bff;
-      color: #fff;
-    }
-  }
+  justify-content: center;
+  gap: 16px;
+  margin: 18px 0 14px;
 }
 
+.social-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Google */
+.social-btn.google {
+  background: #ffffff;
+  color: #444;
+  border: 1px solid #e0e0e0;
+}
+
+.social-btn.google:hover {
+  background: #f5f5f5;
+  transform: translateY(-2px);
+}
+
+/* Facebook */
+.social-btn.facebook {
+  background: #1877f2;
+  color: #ffffff;
+}
+
+.social-btn.facebook:hover {
+  background: #166fe5;
+  transform: translateY(-2px);
+}
+
+.social-btn:active {
+  transform: scale(0.94);
+}
+
+/* ===== Inputs ===== */
 input {
   width: 80%;
   padding: 12px 15px;
@@ -168,13 +184,15 @@ input {
   background: #f9f9f9;
   font-size: 1rem;
   outline: none;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s;
 
   &:focus {
     border-color: #3b5bff;
+    box-shadow: 0 0 0 2px rgba(59, 91, 255, 0.15);
   }
 }
 
+/* ===== Button ===== */
 .btn {
   border: none;
   background: linear-gradient(90deg, #3b5bff, #2f49e6);
@@ -188,17 +206,19 @@ input {
   transition: all 0.3s ease;
 
   &:hover {
-    transform: scale(1.05);
+    transform: translateY(-2px);
     box-shadow: 0 0 25px rgba(59, 91, 255, 0.7);
   }
 }
 
+/* ===== Messages ===== */
 .msg {
   margin-top: 10px;
   font-size: 0.9rem;
   color: #444;
 }
 
+/* ===== Switch Text ===== */
 .switch-text {
   margin-top: 1rem;
   font-size: 0.95rem;
@@ -209,6 +229,7 @@ input {
     font-weight: 600;
     cursor: pointer;
     transition: 0.3s;
+
     &:hover {
       text-decoration: underline;
     }

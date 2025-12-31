@@ -11,15 +11,8 @@ export default function MyOrders() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const token = localStorage.getItem("token");
-
-        const res = await axiosClient.get("/orders/my", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        setOrders(res.data);
+        const res = await axiosClient.get("/orders/my");
+        setOrders(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("❌ Failed to fetch orders", err);
       } finally {
@@ -60,7 +53,7 @@ export default function MyOrders() {
               </span>
 
               <span className={`status ${order.status}`}>
-                {order.status.replace("_", " ")}
+                {order.status?.replace("_", " ")}
               </span>
             </div>
 
@@ -72,13 +65,14 @@ export default function MyOrders() {
               </span>
 
               <span>
-                <b>Total:</b> {order.total} {order.currency}
+                <b>Total:</b>{" "}
+                {order.total?.toFixed(2)} {order.currency}
               </span>
             </div>
 
             {/* ITEMS PREVIEW */}
             <div className="order-items">
-              {order.items.map((item, idx) => (
+              {order.items?.map((item, idx) => (
                 <div key={idx} className="order-item">
                   <span>{item.name}</span>
                   <span>{item.boxes} boxes</span>

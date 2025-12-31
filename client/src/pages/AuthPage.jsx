@@ -78,6 +78,17 @@ const AuthPage = () => {
     }
   };
 
+  /* ================================
+     🔐 OAUTH HANDLERS
+  ================================ */
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:5000/api/auth/google";
+  };
+
+  const handleFacebookLogin = () => {
+    window.location.href = "http://localhost:5000/api/auth/facebook";
+  };
+
   return (
     <div className="auth-wrapper">
       <div className="background-particles">
@@ -97,9 +108,25 @@ const AuthPage = () => {
           <form onSubmit={handleSubmit} className="auth-form">
             <h2>Sign In</h2>
 
+            {/* 🔐 SOCIAL LOGIN */}
             <div className="social-login">
-              <FaFacebookF className="icon" />
-              <FaGoogle className="icon" />
+              <button
+                type="button"
+                className="social-btn google"
+                onClick={handleGoogleLogin}
+                title="Continue with Google"
+              >
+                <FaGoogle />
+              </button>
+
+              <button
+                type="button"
+                className="social-btn facebook"
+                onClick={handleFacebookLogin}
+                title="Continue with Facebook"
+              >
+                <FaFacebookF />
+              </button>
             </div>
 
             <input

@@ -51,10 +51,11 @@
       color: #34495e;
     }
 
-    &__price-stock {
+    .product-page__price-stock {
+
       display: flex;
-      flex-direction: column;
-      gap: 50px;
+      flex-direction: row;
+      gap: 150px;
       align-items: center;
       margin: 15px 0;
 
@@ -62,6 +63,8 @@
         font-size: 1.5rem;
         font-weight: 700;
         color: #27ae60;
+        margin-bottom: 8px;
+        /* ✅ ONLY CHANGE */
       }
 
       .stock {
@@ -153,7 +156,7 @@
 
   .recommended-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* force 4 cards */
+    grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     max-width: 1100px;
     margin: 0 auto;
@@ -223,7 +226,6 @@
     }
   }
 
-  /* 📱 Responsive */
   @media (max-width: 1024px) {
     .recommended-grid {
       grid-template-columns: repeat(3, 1fr);
@@ -253,6 +255,7 @@
   margin-top: 4px;
   color: #374151;
 }
+
 .stock-status {
   margin: 6px 0;
   font-weight: 600;
@@ -260,11 +263,11 @@
 }
 
 .stock-status.in {
-  color: #1a7f37; // green
+  color: #1a7f37;
 }
 
 .stock-status.out {
-  color: #c62828; // red
+  color: #c62828;
 }
 
 .product-card.out-of-stock {

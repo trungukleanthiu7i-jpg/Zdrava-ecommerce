@@ -22,7 +22,7 @@ const CartDrawer = () => {
   const [cartAnimation, setCartAnimation] = useState(false);
   const navigate = useNavigate();
 
-  // 🌀 Sync animation with global cart trigger (clients only)
+  /* 🌀 Cart animation (clients only) */
   useEffect(() => {
     if (!isAdmin && cartAnimationTrigger > 0) {
       setCartAnimation(true);
@@ -30,7 +30,7 @@ const CartDrawer = () => {
     }
   }, [cartAnimationTrigger, isAdmin]);
 
-  // 🧭 Smooth navigation with drawer fade out
+  /* 🧭 Go to Cart */
   const handleGoToCart = () => {
     if (isAdmin) return;
     setClosing(true);
@@ -41,7 +41,24 @@ const CartDrawer = () => {
     }, 400);
   };
 
-  // 🌫️ Smooth close when overlay clicked
+  /* ✅ Checkout logic (AUTH AWARE) */
+  const handleCheckout = () => {
+    if (isAdmin || cartItems.length === 0) return;
+
+    setClosing(true);
+    setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+
+      if (!user) {
+        navigate("/auth");      // ❌ not logged in
+      } else {
+        navigate("/checkout");  // ✅ logged in
+      }
+    }, 400);
+  };
+
+  /* 🌫️ Close drawer */
   const handleOverlayClick = () => {
     if (isAdmin) return;
     setClosing(true);
@@ -53,32 +70,33 @@ const CartDrawer = () => {
 
   return (
     <>
-      {/* 🛒 Floating Cart Button */}
-      <button
-        className={`floating-cart-btn ${
-          cartAnimation ? "cart-bounce" : ""
-        } ${isAdmin ? "disabled" : ""}`}
-        onClick={() => !isAdmin && setOpen(!open)}
-        title={isAdmin ? "Disabled in admin mode" : "Open cart"}
-        disabled={isAdmin}
-      >
-        <FaShoppingCart className="cart-icon" />
+      {/* 🛒 Floating Cart Button (HIDDEN when drawer open) */}
+      {!open && (
+        <button
+          className={`floating-cart-btn ${
+            cartAnimation ? "cart-bounce" : ""
+          } ${isAdmin ? "disabled" : ""}`}
+          onClick={() => !isAdmin && setOpen(true)}
+          disabled={isAdmin}
+          title={isAdmin ? "Disabled in admin mode" : "Open cart"}
+        >
+          <FaShoppingCart className="cart-icon" />
 
-        {/* ❌ Hide counter for admin */}
-        {!isAdmin && cartItems.length > 0 && (
-          <span className="cart-count">{cartItems.length}</span>
-        )}
-      </button>
+          {!isAdmin && cartItems.length > 0 && (
+            <span className="cart-count">{cartItems.length}</span>
+          )}
+        </button>
+      )}
 
-      {/* 🌫️ Overlay (clients only) */}
+      {/* 🌫️ Overlay */}
       {!isAdmin && open && (
         <div
           className={`cart-overlay ${closing ? "fade-out" : "fade-in"}`}
           onClick={handleOverlayClick}
-        ></div>
+        />
       )}
 
-      {/* 🧾 Drawer (clients only) */}
+      {/* 🧾 Cart Drawer */}
       {!isAdmin && (
         <div
           className={`cart-drawer ${open ? "open" : ""} ${
@@ -126,15 +144,24 @@ const CartDrawer = () => {
                 ))}
               </ul>
 
-              {/* 🧮 Footer Section */}
+              {/* 🧮 Footer */}
               <div className="cart-drawer__footer">
                 <h3>Total: {getTotalPrice().toFixed(2)} RON</h3>
 
                 <div className="drawer-buttons">
-                  <button className="go-to-cart-btn" onClick={handleGoToCart}>
+                  <button
+                    className="go-to-cart-btn"
+                    onClick={handleGoToCart}
+                  >
                     Go to Cart
                   </button>
-                  <button className="checkout-btn">Checkout</button>
+
+                  <button
+                    className="checkout-btn"
+                    onClick={handleCheckout}
+                  >
+                    Checkout
+                  </button>
                 </div>
               </div>
             </>

@@ -15,8 +15,24 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
       select: false, // 🔐 never return password by default
+      default: null, // ✅ allow OAuth users without password
+    },
+
+    provider: {
+      type: String,
+      enum: ["local", "google", "facebook"],
+      default: "local",
+    },
+
+    googleId: {
+      type: String,
+      default: null,
+    },
+
+    facebookId: {
+      type: String,
+      default: null,
     },
 
     role: {
@@ -62,7 +78,6 @@ const userSchema = new mongoose.Schema(
 
     /* =========================
        COMPANY / B2B PROFILE
-       (used only if accountType === "company")
     ========================= */
     company: {
       companyName: { type: String, default: "" },
@@ -81,9 +96,6 @@ const userSchema = new mongoose.Schema(
         default: "",
       },
 
-      /* =========================
-         INVOICE ADDRESS
-      ========================= */
       invoiceAddress: {
         country: { type: String, default: "" },
         city: { type: String, default: "" },
@@ -96,9 +108,12 @@ const userSchema = new mongoose.Schema(
 );
 
 /* =========================
-   🔐 HASH PASSWORD
+   🔐 HASH PASSWORD (LOCAL ONLY)
 ========================= */
 userSchema.pre("save", async function (next) {
+  // ✅ Skip hashing if password is missing (OAuth users)
+  if (!this.password) return next();
+
   if (!this.isModified("password")) return next();
 
   const salt = await bcrypt.genSalt(10);
@@ -110,6 +125,7 @@ userSchema.pre("save", async function (next) {
    🔑 PASSWORD COMPARE
 ========================= */
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return bcrypt.compare(enteredPassword, this.password);
 };
 

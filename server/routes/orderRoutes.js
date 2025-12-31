@@ -2,7 +2,6 @@ import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
 import Order from "../models/Order.js";
-import User from "../models/User.js";
 import PDFDocument from "pdfkit";
 import path from "path";
 import fs from "fs";
@@ -11,7 +10,7 @@ import bwipjs from "bwip-js";
 const router = express.Router();
 
 /* ======================================================
-   🛒 CREATE ORDER (SAFE)
+   🛒 CREATE ORDER (CLIENT ONLY)
 ====================================================== */
 router.post("/", authMiddleware, async (req, res) => {
   try {
@@ -20,9 +19,6 @@ router.post("/", authMiddleware, async (req, res) => {
         message: "Admins are not allowed to create orders",
       });
     }
-
-    // existing code continues...
-
 
     const {
       customerType,
@@ -61,8 +57,45 @@ router.post("/", authMiddleware, async (req, res) => {
 
     res.status(201).json(order);
   } catch (err) {
-    console.error("Create order error:", err);
+    console.error("❌ Create order error:", err);
     res.status(500).json({ message: "Failed to create order" });
+  }
+});
+
+/* ======================================================
+   🧑 USER — MY ORDERS
+====================================================== */
+router.get("/my", authMiddleware, async (req, res) => {
+  try {
+    const orders = await Order.find({
+      userId: req.user._id,
+    }).sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (err) {
+    console.error("❌ Fetch my orders error:", err);
+    res.status(500).json({ message: "Failed to fetch user orders" });
+  }
+});
+
+/* ======================================================
+   🧑 USER — SINGLE ORDER (DETAILS)
+====================================================== */
+router.get("/:id", authMiddleware, async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      _id: req.params.id,
+      userId: req.user._id, // 🔒 only own orders
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (err) {
+    console.error("❌ Fetch single order error:", err);
+    res.status(500).json({ message: "Failed to fetch order" });
   }
 });
 
@@ -85,9 +118,8 @@ router.get("/admin/all", authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
-
 /* ======================================================
-   📄 ADMIN — FULL COMMERCIAL PDF (FINAL)
+   📄 ADMIN — ORDER PDF
 ====================================================== */
 router.get(
   "/admin/:id/pdf",
@@ -105,27 +137,27 @@ router.get(
       }
 
       const doc = new PDFDocument({ margin: 40, size: "A4" });
+
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",
         `attachment; filename=Order_${order.orderNumber}.pdf`
       );
+
       doc.pipe(res);
 
-      /* ================= LOGO (FIXED PATH) ================= */
+      /* ===== LOGO ===== */
       const logoPath = path.join(
-        process.cwd(), // D:\Zdrava\server
+        process.cwd(),
         "public",
         "Zdrava-logo-color.png"
       );
 
       if (fs.existsSync(logoPath)) {
         doc.image(logoPath, 380, 30, { width: 180 });
-      } else {
-        console.warn("⚠️ Logo NOT found:", logoPath);
       }
 
-      /* ================= HEADER ================= */
+      /* ===== HEADER ===== */
       doc
         .font("Helvetica-Bold")
         .fontSize(16)
@@ -141,40 +173,7 @@ router.get(
 
       doc.moveDown(1.5);
 
-      /* ================= CUSTOMER INFO ================= */
-      doc.font("Helvetica-Bold").fontSize(12).text("Customer Information");
-      doc.moveDown(0.3);
-      doc.font("Helvetica").fontSize(10);
-
-      doc.text(`Customer Type: ${order.customerType}`);
-
-      if (order.customerType === "company" && order.company) {
-        doc
-          .text(`Company: ${order.company.companyName}`)
-          .text(`CUI: ${order.company.vatNumber}`)
-          .text(
-            `Contact Person: ${order.company.contactPerson || "-"}`
-          );
-      } else if (order.customer) {
-        doc.text(`Customer: ${order.customer.fullName}`);
-      }
-
-      if (order.customer) {
-        doc
-          .text(`Email: ${order.customer.email}`)
-          .text(`Phone: ${order.customer.phone}`);
-      }
-
-      if (order.shippingAddress) {
-        doc
-          .text(`Country: ${order.shippingAddress.country}`)
-          .text(`City: ${order.shippingAddress.city}`)
-          .text(`Address: ${order.shippingAddress.addressLine}`);
-      }
-
-      doc.moveDown(1.5);
-
-      /* ================= TABLE ================= */
+      /* ===== TABLE ===== */
       const startX = 40;
       let y = doc.y;
       const rowH = 22;
@@ -190,7 +189,6 @@ router.get(
         "Barcode",
       ];
 
-      // Header row
       doc.fillColor("#2f80c0").rect(startX, y, 510, rowH).fill();
       doc.fillColor("white").font("Helvetica-Bold").fontSize(9);
 
@@ -203,15 +201,7 @@ router.get(
       doc.fillColor("black");
       y += rowH;
 
-      /* ================= TABLE ROWS ================= */
-      for (let i = 0; i < order.items.length; i++) {
-        const item = order.items[i];
-
-        if (i % 2 === 1) {
-          doc.fillColor("#f2f2f2").rect(startX, y, 510, rowH).fill();
-          doc.fillColor("black");
-        }
-
+      for (const item of order.items) {
         x = startX;
         const totalUnits = item.boxes * (item.unitsPerBox || 1);
 
@@ -232,33 +222,24 @@ router.get(
           x += colW[idx];
         });
 
-        /* ===== BARCODE (FIXED & RELIABLE) ===== */
         const barcodeValue =
           item.barcode || item.productId?.barcode;
 
         if (barcodeValue) {
+          const png = await bwipjs.toBuffer({
+            bcid: "code128",
+            text: String(barcodeValue),
+            scale: 1,
+            height: 6,
+            includetext: false,
+          });
 
-          try {
-            const png = await bwipjs.toBuffer({
-              bcid: "code128",
-              text: String(item.barcode),
-              scale: 1,
-              height: 6,
-              includetext: false,
-            });
-
-            doc.image(png, startX + 430, y + 5, {
-              width: 70,
-            });
-          } catch (e) {
-            console.error("Barcode render error:", e.message);
-          }
+          doc.image(png, startX + 430, y + 5, { width: 70 });
         }
 
         y += rowH;
       }
 
-      /* ================= TOTAL ================= */
       doc.moveDown(2);
       doc
         .font("Helvetica-Bold")
@@ -270,7 +251,7 @@ router.get(
 
       doc.end();
     } catch (err) {
-      console.error("PDF error:", err);
+      console.error("❌ PDF error:", err);
       res.status(500).json({ message: "Failed to generate PDF" });
     }
   }

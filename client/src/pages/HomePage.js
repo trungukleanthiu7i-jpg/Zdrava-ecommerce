@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import axios from "axios";
 
 import "../styles/HomePage.scss";
-import DealsOfTheWeek from "../components/DealsOfTheWeek"; // ✅ new section
+import DealsOfTheWeek from "../components/DealsOfTheWeek";
 import StatsSection from "../components/StatsSection";
 import MapSection from "../components/MapSection";
 import InfoSection from "../components/InfoSection";
@@ -16,6 +17,7 @@ import { FaHandshake } from "react-icons/fa";
 
 function HomePage() {
   const [products, setProducts] = useState([]);
+  const navigate = useNavigate(); // ✅ added
 
   // 🪄 Initialize AOS animations
   useEffect(() => {
@@ -39,13 +41,6 @@ function HomePage() {
     fetchProducts();
   }, []);
 
-  const scrollToProducts = () => {
-    const dealsSection = document.querySelector(".deals-section");
-    if (dealsSection) {
-      dealsSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   return (
     <div className="home-page">
       {/* 🌿 Hero Section */}
@@ -65,7 +60,11 @@ function HomePage() {
               Discover fresh, healthy products and tasty pickled delights! Browse
               our selection and add your favorites to the cart.
             </p>
-            <button onClick={scrollToProducts}>Shop Now</button>
+
+            {/* ✅ FIXED: redirect to AllProductsPage */}
+            <button onClick={() => navigate("/products")}>
+              Shop Now
+            </button>
           </div>
         </div>
       </section>
@@ -75,7 +74,7 @@ function HomePage() {
         <InfoSection />
       </div>
 
-      {/* 🛍️ Deals of the Week Section (NEW) */}
+      {/* 🛍️ Deals of the Week */}
       <div data-aos="fade-up" data-aos-delay="300">
         <DealsOfTheWeek products={products.slice(0, 6)} />
       </div>

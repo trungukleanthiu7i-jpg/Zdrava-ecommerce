@@ -3,6 +3,10 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
+import passport from "passport";
+
+// ✅ Load Passport strategies
+import "./config/passport.js";
 
 // ✅ Routes
 import productRoutes from "./routes/productRoutes.js";
@@ -12,22 +16,38 @@ import messageRoutes from "./routes/messageRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import paymentsRoutes from "./routes/payments.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import authOAuthRoutes from "./routes/authOAuthRoutes.js";
 
 dotenv.config({ path: path.resolve("./.env") });
 
 const app = express();
 
-// 🧰 Middleware
-app.use(cors());
+/* =========================
+   🧰 MIDDLEWARE
+========================= */
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
-// 🖼️ Static file serving
+// 🔐 Initialize Passport (OAuth)
+app.use(passport.initialize());
+
+/* =========================
+   🖼️ STATIC FILES
+========================= */
 const __dirname = path.resolve();
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ MongoDB connection
+/* =========================
+   🗄️ MONGODB CONNECTION
+========================= */
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected successfully"))
@@ -35,21 +55,30 @@ mongoose
     console.error("❌ MongoDB connection error:", err)
   );
 
-// ✅ API Routes (REGISTER ONCE!)
+/* =========================
+   🔌 API ROUTES
+========================= */
 app.use("/api/products", productRoutes);
 app.use("/api/offers", offerRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/messages", messageRoutes);
-app.use("/api/users", userRoutes);     // ✅ ONLY ONCE
+app.use("/api/users", userRoutes); // existing login/register
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/orders", orderRoutes);
 
-// ✅ Health check
+// 🔐 OAuth routes (Google / Facebook)
+app.use("/api/auth", authOAuthRoutes);
+
+/* =========================
+   ❤️ HEALTH CHECK
+========================= */
 app.get("/", (req, res) => {
   res.send("🌿 Zdrava API is running...");
 });
 
-// ✅ Start server
+/* =========================
+   🚀 START SERVER
+========================= */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`🚀 Server running on port ${PORT}`)
