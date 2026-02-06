@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 import "../styles/MyOrders.scss";
+import { useTranslation } from "react-i18next";
 
 export default function MyOrders() {
+  const { t } = useTranslation();
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -23,21 +26,27 @@ export default function MyOrders() {
     fetchOrders();
   }, []);
 
+  /* 🔄 Loading */
   if (loading) {
-    return <p className="orders-loading">Loading your orders...</p>;
+    return (
+      <p className="orders-loading">
+        {t("Loading your orders...")}
+      </p>
+    );
   }
 
+  /* 📭 Empty state */
   if (orders.length === 0) {
     return (
       <p className="orders-empty">
-        You haven’t placed any orders yet.
+        {t("You haven’t placed any orders yet.")}
       </p>
     );
   }
 
   return (
     <div className="my-orders-container">
-      <h2>My Orders</h2>
+      <h2>{t("My Orders")}</h2>
 
       <div className="orders-list">
         {orders.map((order) => (
@@ -49,7 +58,7 @@ export default function MyOrders() {
             {/* HEADER */}
             <div className="order-header">
               <span>
-                <b>Order:</b> {order.orderNumber}
+                <b>{t("Order")}:</b> {order.orderNumber}
               </span>
 
               <span className={`status ${order.status}`}>
@@ -60,12 +69,12 @@ export default function MyOrders() {
             {/* INFO */}
             <div className="order-info">
               <span>
-                <b>Date:</b>{" "}
+                <b>{t("Date")}:</b>{" "}
                 {new Date(order.createdAt).toLocaleDateString()}
               </span>
 
               <span>
-                <b>Total:</b>{" "}
+                <b>{t("Total")}:</b>{" "}
                 {order.total?.toFixed(2)} {order.currency}
               </span>
             </div>
@@ -75,7 +84,9 @@ export default function MyOrders() {
               {order.items?.map((item, idx) => (
                 <div key={idx} className="order-item">
                   <span>{item.name}</span>
-                  <span>{item.boxes} boxes</span>
+                  <span>
+                    {item.boxes} {t("boxes")}
+                  </span>
                 </div>
               ))}
             </div>

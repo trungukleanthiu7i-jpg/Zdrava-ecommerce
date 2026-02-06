@@ -3,8 +3,11 @@ import axiosClient from "../api/axiosClient";
 import { UserContext } from "../context/UserContext";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../styles/Profile.scss";
+import { useTranslation } from "react-i18next";
 
 export default function Profile() {
+  const { t } = useTranslation();
+
   const { user: contextUser, loginUser } = useContext(UserContext);
 
   const [user, setUser] = useState(null);
@@ -70,13 +73,10 @@ export default function Profile() {
             email: data.company?.email || "",
             phone: data.company?.phone || "",
             invoiceAddress: {
-              country:
-                data.company?.invoiceAddress?.country || "",
+              country: data.company?.invoiceAddress?.country || "",
               city: data.company?.invoiceAddress?.city || "",
-              addressLine:
-                data.company?.invoiceAddress?.addressLine || "",
-              postalCode:
-                data.company?.invoiceAddress?.postalCode || "",
+              addressLine: data.company?.invoiceAddress?.addressLine || "",
+              postalCode: data.company?.invoiceAddress?.postalCode || "",
             },
           },
         }));
@@ -112,9 +112,9 @@ export default function Profile() {
       setUser(res.data);
       loginUser(res.data);
       setEditing(false);
-      alert("Profile updated successfully");
+      alert(t("Profile updated successfully"));
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to save profile");
+      alert(err.response?.data?.message || t("Failed to save profile"));
     }
   };
 
@@ -128,7 +128,7 @@ export default function Profile() {
         newPassword: form.newPassword,
       });
 
-      alert("Password updated successfully");
+      alert(t("Password updated successfully"));
 
       setForm((prev) => ({
         ...prev,
@@ -136,63 +136,51 @@ export default function Profile() {
         newPassword: "",
       }));
     } catch (err) {
-      alert(
-        err.response?.data?.message || "Failed to change password"
-      );
+      alert(err.response?.data?.message || t("Failed to change password"));
     }
   };
 
-  if (loading) return <p>Loading profile...</p>;
-  if (!user) return <p>Profile not available.</p>;
+  if (loading) return <p>{t("Loading profile...")}</p>;
+  if (!user) return <p>{t("Profile not available.")}</p>;
 
   return (
     <div className="profile-container">
-      <h2>My Profile</h2>
+      <h2>{t("My Profile")}</h2>
 
       {/* ================= BASIC INFO ================= */}
       <div className="profile-card">
         <div className="profile-row">
-          <span className="label">Username</span>
+          <span className="label">{t("Username")}</span>
           <span className="value">{user.username}</span>
         </div>
 
         <div className="profile-row">
-          <span className="label">Account Type</span>
+          <span className="label">{t("Account Type")}</span>
           {editing ? (
             <select
               value={form.accountType}
-              onChange={(e) =>
-                setForm({ ...form, accountType: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, accountType: e.target.value })}
             >
-              <option value="individual">Individual</option>
-              <option value="company">Company (B2B)</option>
+              <option value="individual">{t("Individual")}</option>
+              <option value="company">{t("Company (B2B)")}</option>
             </select>
           ) : (
             <span className="value">
-              {form.accountType === "company"
-                ? "Company"
-                : "Individual"}
+              {form.accountType === "company" ? t("Company") : t("Individual")}
             </span>
           )}
         </div>
 
         {["email", "phone"].map((field) => (
           <div className="profile-row" key={field}>
-            <span className="label">
-              {field.charAt(0).toUpperCase() + field.slice(1)}
-            </span>
+            <span className="label">{t(field === "email" ? "Email" : "Phone")}</span>
             {editing ? (
               <input
                 value={form[field]}
-                onChange={(e) =>
-                  setForm({ ...form, [field]: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, [field]: e.target.value })}
               />
             ) : (
-              <span className="value">
-                {user[field] || "-"}
-              </span>
+              <span className="value">{user[field] || "-"}</span>
             )}
           </div>
         ))}
@@ -201,7 +189,7 @@ export default function Profile() {
       {/* ================= COMPANY (B2B) ================= */}
       {form.accountType === "company" && (
         <div className="profile-card">
-          <h3>Company Information</h3>
+          <h3>{t("Company Information")}</h3>
 
           {[
             { key: "companyName", label: "Company Name" },
@@ -210,7 +198,7 @@ export default function Profile() {
             { key: "phone", label: "Company Phone" },
           ].map((f) => (
             <div className="profile-row" key={f.key}>
-              <span className="label">{f.label}</span>
+              <span className="label">{t(f.label)}</span>
               {editing ? (
                 <input
                   value={form.company[f.key]}
@@ -225,9 +213,7 @@ export default function Profile() {
                   }
                 />
               ) : (
-                <span className="value">
-                  {user.company?.[f.key] || "-"}
-                </span>
+                <span className="value">{user.company?.[f.key] || "-"}</span>
               )}
             </div>
           ))}
@@ -238,52 +224,44 @@ export default function Profile() {
       <div className="profile-card">
         {!editing ? (
           <button className="save-btn" onClick={() => setEditing(true)}>
-            Edit Profile
+            {t("Edit Profile")}
           </button>
         ) : (
           <button className="save-btn" onClick={handleSaveProfile}>
-            Save Profile
+            {t("Save Profile")}
           </button>
         )}
       </div>
 
       {/* ================= PASSWORD ================= */}
       <div className="profile-card">
-        <h3>Change Password</h3>
+        <h3>{t("Change Password")}</h3>
 
         {[
           {
             label: "Old Password",
             value: form.oldPassword,
-            setter: (v) =>
-              setForm({ ...form, oldPassword: v }),
+            setter: (v) => setForm({ ...form, oldPassword: v }),
             visible: showOldPassword,
-            toggle: () =>
-              setShowOldPassword((v) => !v),
+            toggle: () => setShowOldPassword((v) => !v),
           },
           {
             label: "New Password",
             value: form.newPassword,
-            setter: (v) =>
-              setForm({ ...form, newPassword: v }),
+            setter: (v) => setForm({ ...form, newPassword: v }),
             visible: showNewPassword,
-            toggle: () =>
-              setShowNewPassword((v) => !v),
+            toggle: () => setShowNewPassword((v) => !v),
           },
         ].map((p) => (
           <div className="profile-row" key={p.label}>
-            <span className="label">{p.label}</span>
+            <span className="label">{t(p.label)}</span>
             <div className="password-input">
               <input
                 type={p.visible ? "text" : "password"}
                 value={p.value}
                 onChange={(e) => p.setter(e.target.value)}
               />
-              <button
-                type="button"
-                className="eye-btn"
-                onClick={p.toggle}
-              >
+              <button type="button" className="eye-btn" onClick={p.toggle}>
                 {p.visible ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
@@ -291,7 +269,7 @@ export default function Profile() {
         ))}
 
         <button className="save-btn" onClick={handleChangePassword}>
-          Update Password
+          {t("Update Password")}
         </button>
       </div>
     </div>

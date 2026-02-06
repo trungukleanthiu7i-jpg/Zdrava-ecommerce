@@ -4,20 +4,19 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import axios from "axios";
 
+import { useTranslation } from "react-i18next";
+
 import "../styles/HomePage.scss";
 import DealsOfTheWeek from "../components/DealsOfTheWeek";
 import StatsSection from "../components/StatsSection";
 import MapSection from "../components/MapSection";
 import InfoSection from "../components/InfoSection";
 
-// React Icons
-import { MdLocalFlorist } from "react-icons/md";
-import { GiFruitTree, GiArtificialIntelligence } from "react-icons/gi";
-import { FaHandshake } from "react-icons/fa";
-
 function HomePage() {
+  const { t } = useTranslation();
+
   const [products, setProducts] = useState([]);
-  const navigate = useNavigate(); // ✅ added
+  const navigate = useNavigate();
 
   // 🪄 Initialize AOS animations
   useEffect(() => {
@@ -55,15 +54,16 @@ function HomePage() {
         />
         <div className="hero__overlay">
           <div className="hero__content" data-aos="fade-up" data-aos-delay="300">
-            <h1>Welcome to Zdrava Store</h1>
+            <h1>{t("Welcome to Zdrava Store")}</h1>
             <p>
-              Discover fresh, healthy products and tasty pickled delights! Browse
-              our selection and add your favorites to the cart.
+              {t(
+                "Discover fresh, healthy products and tasty pickled delights! Browse our selection and add your favorites to the cart."
+              )}
             </p>
 
-            {/* ✅ FIXED: redirect to AllProductsPage */}
+            {/* ✅ Redirect to AllProductsPage */}
             <button onClick={() => navigate("/products")}>
-              Shop Now
+              {t("Shop Now")}
             </button>
           </div>
         </div>

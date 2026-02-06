@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FaMapMarkerAlt, FaEnvelope, FaPhoneAlt } from "react-icons/fa";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 import "../styles/ContactPage.scss";
 
 function ContactPage() {
+  const { t } = useTranslation();
+
   // ✅ Form state
   const [formData, setFormData] = useState({
     name: "",
@@ -44,10 +47,11 @@ function ContactPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
-        <h1>Let’s Get in Touch</h1>
+        <h1>{t("Let’s Get in Touch")}</h1>
         <p>
-          Have a question or feedback? We’d love to hear from you. Reach out
-          using the form below or visit us at our store in Breasta, Dolj!
+          {t(
+            "Have a question or feedback? We’d love to hear from you. Reach out using the form below or visit us at our store in Breasta, Dolj!"
+          )}
         </p>
       </motion.div>
 
@@ -59,8 +63,8 @@ function ContactPage() {
           transition={{ type: "spring", stiffness: 200 }}
         >
           <FaMapMarkerAlt className="icon" />
-          <h3>Our Location</h3>
-          <p>Aleea 1 Constantin Argetoianu, Breasta, Dolj, Romania</p>
+          <h3>{t("Our Location")}</h3>
+          <p>{t("Aleea 1 Constantin Argetoianu, Breasta, Dolj, Romania")}</p>
         </motion.div>
 
         <motion.div
@@ -69,7 +73,7 @@ function ContactPage() {
           transition={{ type: "spring", stiffness: 200 }}
         >
           <FaEnvelope className="icon" />
-          <h3>Email Us</h3>
+          <h3>{t("Email Us")}</h3>
           <p>info@zdravaromania.com</p>
         </motion.div>
 
@@ -79,7 +83,7 @@ function ContactPage() {
           transition={{ type: "spring", stiffness: 200 }}
         >
           <FaPhoneAlt className="icon" />
-          <h3>Call Us</h3>
+          <h3>{t("Call Us")}</h3>
           <p>+40 712 345 678</p>
         </motion.div>
       </div>
@@ -95,7 +99,7 @@ function ContactPage() {
         <input
           type="text"
           name="name"
-          placeholder="Your Name"
+          placeholder={t("Your Name")}
           value={formData.name}
           onChange={handleChange}
           required
@@ -103,24 +107,25 @@ function ContactPage() {
         <input
           type="email"
           name="email"
-          placeholder="Your Email"
+          placeholder={t("Your Email")}
           value={formData.email}
           onChange={handleChange}
           required
         />
         <textarea
           name="message"
-          placeholder="Your Message"
+          placeholder={t("Your Message")}
           value={formData.message}
           onChange={handleChange}
           required
         ></textarea>
+
         <button type="submit" disabled={status === "sending"}>
           {status === "sending"
-            ? "Sending..."
+            ? t("Sending...")
             : status === "success"
-            ? "✅ Sent!"
-            : "Send Message"}
+            ? t("✅ Sent!")
+            : t("Send Message")}
         </button>
       </motion.form>
 
@@ -132,7 +137,7 @@ function ContactPage() {
         transition={{ duration: 1 }}
       >
         <iframe
-          title="Zdrava Romania Location"
+          title={t("Zdrava Romania Location")}
           src="https://www.google.com/maps?q=44.343667,23.702528&z=15&output=embed"
           allowFullScreen
           loading="lazy"

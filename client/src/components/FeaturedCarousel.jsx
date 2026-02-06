@@ -62,7 +62,7 @@ const FeaturedCarousel = () => {
               <div className="featured-carousel__info">
                 <h3>{product.name}</h3>
                 <p>{product.description}</p>
-                <span className="price">{product.price} RON</span>
+                <span className="price">{product.price} €</span>
                 <span className="stock">
                   {product.stock > 0
                     ? `In stock: ${product.stock}`

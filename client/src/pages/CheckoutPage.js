@@ -116,7 +116,7 @@ export default function CheckoutPage() {
           pallets: Number(i.pallets || 0),
         })),
         paymentMethod,
-        currency: "RON",
+        currency: "€",
       };
 
       const res = await axiosClient.post("/payments/initiate", payload);

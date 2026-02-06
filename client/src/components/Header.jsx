@@ -14,7 +14,10 @@ import "../styles/Header.scss";
 
 const Header = () => {
   const { t, i18n } = useTranslation();
-  const [language, setLanguage] = useState("en");
+
+  // ✅ default to RO, but sync from localStorage on load
+  const [language, setLanguage] = useState("ro");
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
 
@@ -25,6 +28,15 @@ const Header = () => {
   const navigate = useNavigate();
 
   const [cartAnimation, setCartAnimation] = useState(false);
+
+  /* ✅ Sync language on first load (refresh safe) */
+  useEffect(() => {
+    const savedLang = localStorage.getItem("lang");
+    const langToUse = savedLang || "ro";
+
+    setLanguage(langToUse);
+    i18n.changeLanguage(langToUse);
+  }, [i18n]);
 
   /* 🟢 Cart animation */
   useEffect(() => {
@@ -37,6 +49,7 @@ const Header = () => {
   const changeLanguage = (lang) => {
     setLanguage(lang);
     i18n.changeLanguage(lang);
+    localStorage.setItem("lang", lang); // ✅ persist language
   };
 
   const handleLogout = () => {
@@ -113,8 +126,9 @@ const Header = () => {
             onChange={(e) => changeLanguage(e.target.value)}
             className="header__lang"
           >
-            <option value="en">English</option>
+            {/* ✅ Romanian first */}
             <option value="ro">Română</option>
+            <option value="en">English</option>
           </select>
         </div>
       </div>
@@ -123,9 +137,7 @@ const Header = () => {
       <nav className="header__nav">
         {/* 📂 Categories */}
         <div
-          className={`categories-dropdown ${
-            isAdmin ? "nav-disabled" : ""
-          }`}
+          className={`categories-dropdown ${isAdmin ? "nav-disabled" : ""}`}
           onMouseEnter={() => !isAdmin && setDropdownOpen(true)}
           onMouseLeave={() => setDropdownOpen(false)}
         >
@@ -136,44 +148,85 @@ const Header = () => {
 
           {!isAdmin && dropdownOpen && (
             <div className="dropdown-mega-menu">
+              {/* ===== HORECA ===== */}
               <div className="dropdown-column">
                 <h4>HORECA</h4>
-                <Link to="/category/sauce">{t("Sauces")}</Link>
-                <Link to="/category/restaurant-products">
-                  {t("Products for Restaurants")}
+
+                <Link to="/category/legume-conservate-horeca">
+                  {t("Legume conservate HORECA")}
                 </Link>
-                <Link to="/category/patisserie-products">
-                  {t("Products for Patisserie")}
+
+                <Link to="/category/sosuri-horeca">
+                  {t("Sosuri HORECA")}
                 </Link>
+
+                <Link to="/category/dulceturi">{t("Dulcețuri")}</Link>
               </div>
 
+              {/* ===== SUPERMARKET ===== */}
               <div className="dropdown-column">
                 <h4>SUPERMARKET</h4>
-                <Link to="/category/Pickles">{t("Turshi (Pickles)")}</Link>
-                <Link to="/category/Jam">{t("Recel (Jam)")}</Link>
-                <Link to="/category/Stuffed-peppers">
-                  {t("Speca me gjizë (Stuffed Peppers)")}
+
+                <Link to="/category/legume-conservate">
+                  {t("Legume conservate")}
                 </Link>
-                <Link to="/category/Drinks">{t("Pije (Drinks)")}</Link>
-                <Link to="/category/Croissant">
-                  {t("Kruasant (Croissant)")}
+
+                <Link to="/category/produse-din-branza">
+                  {t("Produse din brânză")}
                 </Link>
-                <Link to="/category/Sweets">
-                  {t("Embëlsira (Sweets)")}
+
+                <Link to="/category/dulciuri-si-snacks-uri">
+                  {t("Dulciuri și snacks-uri")}
                 </Link>
-                <Link to="/category/Sauce">{t("Salca (Sauce)")}</Link>
-                <Link to="/category/Others">{t("Të tjera (Others)")}</Link>
+
+                <Link to="/category/cafea-si-bauturi">
+                  {t("Cafea și băuturi")}
+                </Link>
+
+                <Link to="/category/sosuri">{t("Sosuri")}</Link>
+
+                <Link to="/category/masline">{t("Măsline")}</Link>
+
+                <Link to="/category/alimente-cu-amidon">
+                  {t("Alimente cu amidon")}
+                </Link>
+
+                <Link to="/category/placinta">{t("Plăcintă")}</Link>
               </div>
             </div>
           )}
         </div>
 
         {/* 🧭 Navigation */}
-        {isAdmin ? <AdminDisabledLink>{t("Home")}</AdminDisabledLink> : <Link to="/">{t("Home")}</Link>}
-        {isAdmin ? <AdminDisabledLink>{t("Shop Now")}</AdminDisabledLink> : <Link to="/products">{t("Shop Now")}</Link>}
-        {isAdmin ? <AdminDisabledLink>{t("About Us")}</AdminDisabledLink> : <Link to="/about">{t("About Us")}</Link>}
-        {isAdmin ? <AdminDisabledLink>{t("New Products")}</AdminDisabledLink> : <Link to="/new-products">{t("New Products")}</Link>}
-        {isAdmin ? <AdminDisabledLink>{t("Contact")}</AdminDisabledLink> : <Link to="/contact">{t("Contact")}</Link>}
+        {isAdmin ? (
+          <AdminDisabledLink>{t("Home")}</AdminDisabledLink>
+        ) : (
+          <Link to="/">{t("Home")}</Link>
+        )}
+
+        {isAdmin ? (
+          <AdminDisabledLink>{t("Shop Now")}</AdminDisabledLink>
+        ) : (
+          <Link to="/products">{t("Shop Now")}</Link>
+        )}
+
+        {isAdmin ? (
+          <AdminDisabledLink>{t("About Us")}</AdminDisabledLink>
+        ) : (
+          <Link to="/about">{t("About Us")}</Link>
+        )}
+
+        {isAdmin ? (
+          <AdminDisabledLink>{t("New Products")}</AdminDisabledLink>
+        ) : (
+          <Link to="/new-products">{t("New Products")}</Link>
+        )}
+
+        {isAdmin ? (
+          <AdminDisabledLink>{t("Contact")}</AdminDisabledLink>
+        ) : (
+          <Link to="/contact">{t("Contact")}</Link>
+        )}
 
         {/* 👤 Account */}
         <div
@@ -219,10 +272,7 @@ const Header = () => {
               )}
             </>
           ) : (
-            <span
-              className="auth-link"
-              onClick={() => navigate("/auth")}
-            >
+            <span className="auth-link" onClick={() => navigate("/auth")}>
               {t("My Account")}
             </span>
           )}

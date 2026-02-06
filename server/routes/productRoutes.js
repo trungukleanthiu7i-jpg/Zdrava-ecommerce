@@ -74,45 +74,138 @@ router.get("/category/:category", async (req, res) => {
 });
 
 /* ======================================================
-   ✅ POST add product (IMAGE OPTIONAL)
+   ✅ POST add product (IMAGE OPTIONAL + OPTIONAL FIELDS)
+   ✅ Keeps your current image path format to avoid breaking anything
 ====================================================== */
 router.post("/", upload.single("image"), async (req, res) => {
   try {
+    // 🔎 DEBUG: see what backend receives
+    console.log("📦 REQ.BODY:", req.body);
+    console.log("🖼️ REQ.FILE:", req.file ? req.file.filename : "no file");
+
     const {
       name,
       description = "",
       price,
       stock,
       category,
-      unitsPerBox,
-      boxPerPalet,
+
+      // optional existing
+      unitsPerBox = "",
+      boxPerPalet = "",
       barcode = "",
+
+      // ✅ NEW optional fields (tabs)
+      ingredientsText = "",
+      allergens = "",
+      nutritionPer100g,
+      originCountry = "",
+      netWeight = "",
     } = req.body;
 
-    if (!name || !price || !stock || !category || !unitsPerBox || !boxPerPalet) {
-      return res.status(400).json({ message: "Missing required fields" });
+    // ✅ Only these are required (unchanged)
+    const missing = [];
+    if (!name || !String(name).trim()) missing.push("name");
+    if (price === undefined || price === null || String(price).trim() === "")
+      missing.push("price");
+    if (!stock || !String(stock).trim()) missing.push("stock");
+    if (!category || !String(category).trim()) missing.push("category");
+
+    if (missing.length > 0) {
+      return res
+        .status(400)
+        .json({ message: `Missing required fields: ${missing.join(", ")}` });
     }
 
-    const image = req.file
-      ? `/images/produse/${req.file.filename}`
-      : ""; // ✅ IMAGE OPTIONAL
+    const numericPrice = Number(price);
+    if (Number.isNaN(numericPrice)) {
+      return res.status(400).json({ message: "Price must be a number" });
+    }
+
+    // ✅ KEEP YOUR CURRENT IMAGE FORMAT (to avoid breaking anything)
+    const image = req.file ? `/images/produse/${req.file.filename}` : "";
+
+    // ✅ Parse allergens: allow "milk, soy" OR ["milk","soy"]
+    let allergensArray = [];
+    if (Array.isArray(allergens)) {
+      allergensArray = allergens.map((a) => String(a).trim()).filter(Boolean);
+    } else if (typeof allergens === "string") {
+      allergensArray = allergens
+        .split(",")
+        .map((a) => a.trim())
+        .filter(Boolean);
+    }
+
+    // ✅ Parse nutritionPer100g:
+    // - may arrive as object OR JSON string OR empty
+    let nutritionObj;
+    if (nutritionPer100g && typeof nutritionPer100g === "string") {
+      try {
+        const parsed = JSON.parse(nutritionPer100g);
+        if (parsed && typeof parsed === "object") nutritionObj = parsed;
+      } catch (e) {
+        // ignore invalid JSON so product can still be added
+        console.warn("⚠ nutritionPer100g not valid JSON, ignoring.");
+      }
+    } else if (nutritionPer100g && typeof nutritionPer100g === "object") {
+      nutritionObj = nutritionPer100g;
+    }
+
+    // ✅ Clean nutrition object: remove empty values, convert numeric strings
+    if (nutritionObj) {
+      for (const key of Object.keys(nutritionObj)) {
+        const v = nutritionObj[key];
+
+        if (v === "" || v === null || v === undefined) {
+          delete nutritionObj[key];
+          continue;
+        }
+
+        if (typeof v === "string") {
+          const trimmed = v.trim();
+          if (trimmed === "") {
+            delete nutritionObj[key];
+            continue;
+          }
+          const asNum = Number(trimmed);
+          if (!Number.isNaN(asNum)) nutritionObj[key] = asNum;
+        }
+      }
+
+      if (Object.keys(nutritionObj).length === 0) nutritionObj = undefined;
+    }
 
     const product = new Product({
-      name,
+      name: String(name).trim(),
       description,
-      price,
+      price: numericPrice,
       stock,
       category,
-      unitsPerBox,
-      boxPerPalet,
-      barcode,
+
+      // keep as strings
+      unitsPerBox: unitsPerBox ? String(unitsPerBox) : "",
+      boxPerPalet: boxPerPalet ? String(boxPerPalet) : "",
+      barcode: barcode ? String(barcode) : "",
       image,
+
+      // ✅ NEW optional fields
+      ingredientsText: ingredientsText ? String(ingredientsText) : "",
+      allergens: allergensArray,
+      ...(nutritionObj ? { nutritionPer100g: nutritionObj } : {}),
+      originCountry: originCountry ? String(originCountry) : "",
+      netWeight: netWeight ? String(netWeight) : "",
     });
 
     const saved = await product.save();
     res.status(201).json(saved);
   } catch (err) {
     console.error("ADD PRODUCT ERROR:", err);
+
+    // ✅ if mongoose validation fails, show the real reason
+    if (err?.name === "ValidationError") {
+      return res.status(400).json({ message: err.message });
+    }
+
     res.status(500).json({ message: "Add product failed" });
   }
 });
@@ -128,7 +221,6 @@ router.get("/:id", async (req, res) => {
       return res.status(400).json({ message: "Invalid ID" });
     }
 
-    // ✅ FIXED: reliable fetch
     const product = await Product.findOne({ _id: id }).lean();
 
     if (!product) {

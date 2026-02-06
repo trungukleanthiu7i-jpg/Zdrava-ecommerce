@@ -3,7 +3,6 @@ import axios from "axios";
 import "../components/AdminForm.scss";
 
 function AdminProducts() {
-
   // --------------------- NORMAL PRODUCT FORM ---------------------
   const [formData, setFormData] = useState({
     name: "",
@@ -53,7 +52,7 @@ function AdminProducts() {
     setOfferData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 🟢 Add new product
+  // 🟢 Add new product (OPTIONAL: unitsPerBox, boxPerPalet, barcode, image)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus("Uploading...");
@@ -61,20 +60,24 @@ function AdminProducts() {
     try {
       const uploadData = new FormData();
 
+      // ✅ required fields
       uploadData.append("name", formData.name);
       uploadData.append("description", formData.description);
       uploadData.append("price", formData.price);
       uploadData.append("stock", formData.stock);
       uploadData.append("category", formData.category);
-      uploadData.append("unitsPerBox", String(formData.unitsPerBox));
-      uploadData.append("boxPerPalet", String(formData.boxPerPalet));
 
-
+      // ✅ optional fields: only append if filled
+      if (formData.unitsPerBox !== "" && formData.unitsPerBox !== null) {
+        uploadData.append("unitsPerBox", String(formData.unitsPerBox));
+      }
+      if (formData.boxPerPalet !== "" && formData.boxPerPalet !== null) {
+        uploadData.append("boxPerPalet", String(formData.boxPerPalet));
+      }
       if (formData.barcode) uploadData.append("barcode", formData.barcode);
       if (formData.image) uploadData.append("image", formData.image);
 
       await axios.post("http://localhost:5000/api/products", uploadData);
-
 
       setStatus("✅ Product added successfully!");
       setFormData({
@@ -90,7 +93,11 @@ function AdminProducts() {
       });
     } catch (error) {
       console.error(error);
-      setStatus("❌ Error adding product.");
+      setStatus(
+        error?.response?.data?.message
+          ? `❌ ${error.response.data.message}`
+          : "❌ Error adding product."
+      );
     }
   };
 
@@ -165,7 +172,7 @@ function AdminProducts() {
         </button>
       </div>
 
-      {/* 📨 Messages Panel — NOW APPEARS IMMEDIATELY */}
+      {/* 📨 Messages Panel */}
       {showMessages && (
         <div className="messages-panel">
           <h2>User Messages</h2>
@@ -209,7 +216,6 @@ function AdminProducts() {
               required
             />
 
-
             <textarea
               name="description"
               placeholder="Description"
@@ -221,12 +227,13 @@ function AdminProducts() {
             <input
               type="number"
               name="price"
-              placeholder="Price (RON)"
+              placeholder="Price (€)"
               value={formData.price}
               onChange={handleChange}
               required
             />
 
+            {/* REQUIRED */}
             <select
               name="stock"
               value={formData.stock}
@@ -238,25 +245,22 @@ function AdminProducts() {
               <option value="out of stock">Out of stock</option>
             </select>
 
-
-            {/* REQUIRED */}
+            {/* ✅ OPTIONAL NOW */}
             <input
               type="number"
               name="unitsPerBox"
-              placeholder="Units per box"
+              placeholder="Units per box (optional)"
               value={formData.unitsPerBox}
               onChange={handleChange}
-              required
             />
 
-            {/* REQUIRED */}
+            {/* ✅ OPTIONAL NOW */}
             <input
               type="number"
               name="boxPerPalet"
-              placeholder="Boxes per palet"
+              placeholder="Boxes per palet (optional)"
               value={formData.boxPerPalet}
               onChange={handleChange}
-              required
             />
 
             {/* REQUIRED */}
@@ -267,28 +271,34 @@ function AdminProducts() {
               required
             >
               <option value="">Select category</option>
-              <option value="Drinks">Drinks</option>
-              <option value="Jam">Recel (Jam)</option>
-              <option value="Pickles">Turshi (Pickles)</option>
-              <option value="Stuffed-peppers">Speca me gjize</option>
-              <option value="Croissant">Kruasant</option>
-              <option value="Sweets">Embelsira</option>
-              <option value="Sauce">Salca</option>
-              <option value="Others">Te tjera</option>
-              <option value="restaurant-products">Products for Restaurants</option>
-              <option value="patisserie-products">Products for Patisserie</option>
+
+              {/* HORECA */}
+              <option value="legume-conservate-horeca">Legume conservate HORECA</option>
+              <option value="sosuri-horeca">Sosuri HORECA</option>
+              <option value="dulceturi">Dulcețuri</option>
+
+              {/* SUPERMARKET */}
+              <option value="legume-conservate">Legume conservate</option>
+              <option value="produse-din-branza">Produse din brânză</option>
+              <option value="dulciuri-si-snacks-uri">Dulciuri și snacks-uri</option>
+              <option value="cafea-si-bauturi">Cafea și băuturi</option>
+              <option value="sosuri">Sosuri</option>
+              <option value="masline">Măsline</option>
+              <option value="alimente-cu-amidon">Alimente cu amidon</option>
+              <option value="placinta">Plăcintă</option>
             </select>
 
 
+            {/* ✅ OPTIONAL */}
             <input
               type="text"
               name="barcode"
-              placeholder="Barcode"
+              placeholder="Barcode (optional)"
               value={formData.barcode}
               onChange={handleChange}
             />
 
-
+            {/* ✅ OPTIONAL */}
             <input
               type="file"
               name="image"
@@ -303,27 +313,68 @@ function AdminProducts() {
         </div>
       </div>
 
-
       {/* Add Offer Product Form */}
       <div className="admin-form-box">
         <h2>Add Offer Product</h2>
         <form className="admin-form" onSubmit={handleOfferSubmit}>
-          <input type="text" name="name" placeholder="Offer product name" value={offerData.name} onChange={handleOfferChange} required />
-          <textarea name="description" placeholder="Description" value={offerData.description} onChange={handleOfferChange} />
-          <input type="number" name="oldPrice" placeholder="Old price" value={offerData.oldPrice} onChange={handleOfferChange} required />
-          <input type="number" name="newPrice" placeholder="New price" value={offerData.newPrice} onChange={handleOfferChange} required />
-          <input type="datetime-local" name="offerEndDate" value={offerData.offerEndDate} onChange={handleOfferChange} required />
-          <input type="text" name="conditions" placeholder="Conditions" value={offerData.conditions} onChange={handleOfferChange} />
-          <input type="text" name="existingImage" placeholder="Existing image filename" value={offerData.existingImage} onChange={handleOfferChange} />
+          <input
+            type="text"
+            name="name"
+            placeholder="Offer product name"
+            value={offerData.name}
+            onChange={handleOfferChange}
+            required
+          />
+          <textarea
+            name="description"
+            placeholder="Description"
+            value={offerData.description}
+            onChange={handleOfferChange}
+          />
+          <input
+            type="number"
+            name="oldPrice"
+            placeholder="Old price"
+            value={offerData.oldPrice}
+            onChange={handleOfferChange}
+            required
+          />
+          <input
+            type="number"
+            name="newPrice"
+            placeholder="New price"
+            value={offerData.newPrice}
+            onChange={handleOfferChange}
+            required
+          />
+          <input
+            type="datetime-local"
+            name="offerEndDate"
+            value={offerData.offerEndDate}
+            onChange={handleOfferChange}
+            required
+          />
+          <input
+            type="text"
+            name="conditions"
+            placeholder="Conditions"
+            value={offerData.conditions}
+            onChange={handleOfferChange}
+          />
+          <input
+            type="text"
+            name="existingImage"
+            placeholder="Existing image filename"
+            value={offerData.existingImage}
+            onChange={handleOfferChange}
+          />
 
           <button type="submit">Add Offer Product</button>
           {offerStatus && <p className="status-message">{offerStatus}</p>}
         </form>
       </div>
     </div>
-
   );
 }
 
 export default AdminProducts;
-

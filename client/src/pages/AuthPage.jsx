@@ -4,8 +4,11 @@ import "../styles/AuthPage.scss";
 import { FaFacebookF, FaGoogle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import { useTranslation } from "react-i18next";
 
 const AuthPage = () => {
+  const { t } = useTranslation();
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
@@ -56,7 +59,7 @@ const AuthPage = () => {
       const { token, user: userData, message: backendMessage } = res.data;
 
       if (!token || !userData) {
-        setMessage(backendMessage || "Authentication failed.");
+        setMessage(backendMessage || t("Authentication failed."));
         setSubmitting(false);
         return;
       }
@@ -71,7 +74,7 @@ const AuthPage = () => {
     } catch (err) {
       setMessage(
         err.response?.data?.message ||
-          "Authentication failed. Please try again."
+          t("Authentication failed. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -101,12 +104,12 @@ const AuthPage = () => {
         {/* ================= SIGN IN ================= */}
         <div className="auth-face front">
           <div className="auth-hero">
-            <h1>Welcome Back!</h1>
-            <p>Log in to your account to access all features.</p>
+            <h1>{t("Welcome Back!")}</h1>
+            <p>{t("Log in to your account to access all features.")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
-            <h2>Sign In</h2>
+            <h2>{t("Sign In")}</h2>
 
             {/* 🔐 SOCIAL LOGIN */}
             <div className="social-login">
@@ -114,7 +117,7 @@ const AuthPage = () => {
                 type="button"
                 className="social-btn google"
                 onClick={handleGoogleLogin}
-                title="Continue with Google"
+                title={t("Continue with Google")}
               >
                 <FaGoogle />
               </button>
@@ -123,7 +126,7 @@ const AuthPage = () => {
                 type="button"
                 className="social-btn facebook"
                 onClick={handleFacebookLogin}
-                title="Continue with Facebook"
+                title={t("Continue with Facebook")}
               >
                 <FaFacebookF />
               </button>
@@ -132,7 +135,7 @@ const AuthPage = () => {
             <input
               type="text"
               name="username"
-              placeholder="Email or Username"
+              placeholder={t("Email or Username")}
               value={formData.username}
               onChange={handleChange}
               required
@@ -141,21 +144,21 @@ const AuthPage = () => {
             <input
               type="password"
               name="password"
-              placeholder="Password"
+              placeholder={t("Password")}
               value={formData.password}
               onChange={handleChange}
               required
             />
 
             <button type="submit" className="btn" disabled={submitting}>
-              {submitting ? "Signing in..." : "Sign In"}
+              {submitting ? t("Signing in...") : t("Sign In")}
             </button>
 
             {message && <p className="msg">{message}</p>}
 
             <p className="switch-text">
-              Don’t have an account?{" "}
-              <span onClick={toggleForm}>Sign Up</span>
+              {t("Don’t have an account?")}{" "}
+              <span onClick={toggleForm}>{t("Sign Up")}</span>
             </p>
           </form>
         </div>
@@ -163,17 +166,17 @@ const AuthPage = () => {
         {/* ================= SIGN UP ================= */}
         <div className="auth-face back">
           <div className="auth-hero">
-            <h1>Join Us Today!</h1>
-            <p>Create your account and start exploring the platform.</p>
+            <h1>{t("Join Us Today!")}</h1>
+            <p>{t("Create your account and start exploring the platform.")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
-            <h2>Create Account</h2>
+            <h2>{t("Create Account")}</h2>
 
             <input
               type="text"
               name="username"
-              placeholder="Email or Username"
+              placeholder={t("Email or Username")}
               value={formData.username}
               onChange={handleChange}
               required
@@ -182,21 +185,21 @@ const AuthPage = () => {
             <input
               type="password"
               name="password"
-              placeholder="Password"
+              placeholder={t("Password")}
               value={formData.password}
               onChange={handleChange}
               required
             />
 
             <button type="submit" className="btn" disabled={submitting}>
-              {submitting ? "Creating account..." : "Sign Up"}
+              {submitting ? t("Creating account...") : t("Sign Up")}
             </button>
 
             {message && <p className="msg">{message}</p>}
 
             <p className="switch-text">
-              Already have an account?{" "}
-              <span onClick={toggleForm}>Sign In</span>
+              {t("Already have an account?")}{" "}
+              <span onClick={toggleForm}>{t("Sign In")}</span>
             </p>
           </form>
         </div>

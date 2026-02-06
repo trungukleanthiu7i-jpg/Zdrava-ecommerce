@@ -1,320 +1,347 @@
 .about-page {
-    font-family: "Poppins", sans-serif;
-    background: #f8f9fb;
-    color: #333;
-    min-height: 100vh;
-    padding-bottom: 4rem;
+  font-family: "Poppins", sans-serif;
+  background: #f8f9fb;
+  color: #333;
+  min-height: 100vh;
+  padding-bottom: 4rem;
 
-    /* === Hero Section === */
-    .about-hero {
-        background: linear-gradient(135deg, #2e8b57, #3cb371);
-        color: white;
-        text-align: center;
-        padding: 5rem 10%;
-        border-radius: 0 0 60px 60px;
+  /* === Hero Section === */
+  .about-hero {
+    background: linear-gradient(135deg, #2e8b57, #3cb371);
+    color: white;
+    text-align: center;
+    padding: 5rem 10%;
+    border-radius: 0 0 60px 60px;
 
-        h1 {
-            font-size: 2.8rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+  }
+
+  /* === Mission Section === */
+  .about-mission {
+    text-align: center;
+    padding: 4rem 10%;
+
+    h2 {
+      font-size: 2rem;
+      color: #2e8b57;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      max-width: 900px;
+      margin: 0 auto 2.5rem;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #555;
+    }
+
+    .mission-icons {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 2rem;
+      flex-wrap: wrap;
+
+      .mission-item {
+        background: #fff;
+        border-radius: 15px;
+        padding: 2rem;
+        width: 280px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .icon {
+          font-size: 2.5rem;
+          color: #2e8b57;
+          margin-bottom: 1rem;
+        }
+
+        h4 {
+          font-size: 1.2rem;
+          color: #2e8b57;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
         }
 
         p {
-            font-size: 1.1rem;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.6;
+          font-size: 0.95rem;
+          color: #555;
         }
+      }
+    }
+  }
+
+  /* === 🌿 Inspirational Quote Divider === */
+  .about-divider {
+    text-align: center;
+    padding: 4rem 10%;
+    background: #f7fdf8;
+    color: #2e8b57;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    margin: 3rem auto;
+    max-width: 1000px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+
+    /* decorative vine lines */
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      width: 120px;
+      height: 4px;
+      top: 50%;
+      background: linear-gradient(90deg, #2e8b57, #3cb371);
+      border-radius: 2px;
+      transform: translateY(-50%);
+      opacity: 0.5;
+      pointer-events: none; /* ✅ never block clicks */
     }
 
-    /* === Mission Section === */
-    .about-mission {
-        text-align: center;
-        padding: 4rem 10%;
-
-        h2 {
-            font-size: 2rem;
-            color: #2e8b57;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        p {
-            max-width: 900px;
-            margin: 0 auto 2.5rem;
-            font-size: 1.05rem;
-            line-height: 1.7;
-            color: #555;
-        }
-
-        .mission-icons {
-            display: flex;
-            justify-content: center;
-            align-items: stretch;
-            gap: 2rem;
-            flex-wrap: wrap;
-
-            .mission-item {
-                background: #fff;
-                border-radius: 15px;
-                padding: 2rem;
-                width: 280px;
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-                transition: all 0.3s ease;
-
-                &:hover {
-                    transform: translateY(-8px);
-                    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-                }
-
-                .icon {
-                    font-size: 2.5rem;
-                    color: #2e8b57;
-                    margin-bottom: 1rem;
-                }
-
-                h4 {
-                    font-size: 1.2rem;
-                    color: #2e8b57;
-                    font-weight: 600;
-                    margin-bottom: 0.5rem;
-                }
-
-                p {
-                    font-size: 0.95rem;
-                    color: #555;
-                }
-            }
-        }
+    &::before {
+      left: 8%;
     }
 
-    /* === 🌿 Inspirational Quote Divider === */
-    .about-divider {
-        text-align: center;
-        padding: 4rem 10%;
-        background: #f7fdf8; // soft green tint
-        color: #2e8b57;
-        position: relative;
-        overflow: hidden;
-        border-radius: 20px;
-        margin: 3rem auto;
-        max-width: 1000px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-
-        /* decorative vine lines */
-        &::before,
-        &::after {
-            content: "";
-            position: absolute;
-            width: 120px;
-            height: 4px;
-            top: 50%;
-            background: linear-gradient(90deg, #2e8b57, #3cb371);
-            border-radius: 2px;
-            transform: translateY(-50%);
-            opacity: 0.5;
-        }
-
-        &::before {
-            left: 8%;
-        }
-
-        &::after {
-            right: 8%;
-        }
-
-        h3 {
-            font-size: 1.6rem;
-            font-weight: 600;
-            line-height: 1.6;
-            max-width: 700px;
-            margin: 0 auto 0.8rem;
-            color: #2e8b57;
-        }
-
-        p {
-            font-size: 1.05rem;
-            color: #497c5a;
-            font-weight: 400;
-        }
-
-        /* small leaf icon float */
-        &::after,
-        &::before {
-            animation: growLine 2s ease-in-out forwards;
-        }
-
-        @keyframes growLine {
-            from {
-                width: 0;
-                opacity: 0;
-            }
-
-            to {
-                width: 120px;
-                opacity: 0.5;
-            }
-        }
-
-        @media (max-width: 768px) {
-            padding: 3rem 5%;
-
-            &::before,
-            &::after {
-                display: none;
-            }
-
-            h3 {
-                font-size: 1.3rem;
-            }
-
-            p {
-                font-size: 1rem;
-            }
-        }
+    &::after {
+      right: 8%;
     }
 
+    h3 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      line-height: 1.6;
+      max-width: 700px;
+      margin: 0 auto 0.8rem;
+      color: #2e8b57;
+      position: relative;
+      z-index: 1;
+    }
 
+    p {
+      font-size: 1.05rem;
+      color: #497c5a;
+      font-weight: 400;
+      position: relative;
+      z-index: 1;
+    }
 
+    &::after,
+    &::before {
+      animation: growLine 2s ease-in-out forwards;
+    }
 
+    @keyframes growLine {
+      from {
+        width: 0;
+        opacity: 0;
+      }
+      to {
+        width: 120px;
+        opacity: 0.5;
+      }
+    }
 
-    /* ✅ Responsive */
     @media (max-width: 768px) {
-        .about-timeline {
-            padding: 4rem 6%;
+      padding: 3rem 5%;
 
-            .timeline::before {
-                left: 10px;
-            }
+      &::before,
+      &::after {
+        display: none;
+      }
 
-            .timeline-content {
-                margin-left: 2rem;
-                padding: 1rem 1.5rem;
-            }
-        }
+      h3 {
+        font-size: 1.3rem;
+      }
+
+      p {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  /* ✅ Responsive */
+  @media (max-width: 768px) {
+    .about-timeline {
+      padding: 4rem 6%;
+
+      .timeline::before {
+        left: 10px;
+      }
+
+      .timeline-content {
+        margin-left: 2rem;
+        padding: 1rem 1.5rem;
+      }
+    }
+  }
+
+  /* === 🌿 Milestone / Stats Section === */
+  .about-stats {
+    background: #ffffff;
+    padding: 5rem 10%;
+    text-align: center;
+    position: relative;
+
+    .stats-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 3rem;
     }
 
+    .stat-box {
+      background: #f7fdf8;
+      border-radius: 20px;
+      padding: 2rem;
+      width: 250px;
+      box-shadow: 0 6px 18px rgba(46, 139, 87, 0.1);
+      border: 1px solid #e0f1e6;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
 
-    /* === 🌿 Milestone / Stats Section === */
-    .about-stats {
-        background: #ffffff;
-        padding: 5rem 10%;
-        text-align: center;
+      /* ✨ Glowing effect layer */
+      &::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 180%;
+        height: 180%;
+        background: radial-gradient(
+          circle,
+          rgba(46, 139, 87, 0.25) 0%,
+          transparent 70%
+        );
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        transition: all 0.5s ease;
+        z-index: 0;
+        pointer-events: none; /* ✅ never block clicks */
+      }
+
+      &:hover::before {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+
+      &:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 30px rgba(46, 139, 87, 0.15);
+      }
+
+      .stat-icon,
+      h3,
+      p {
         position: relative;
+        z-index: 1;
+      }
 
-        .stats-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 3rem;
+      .stat-icon {
+        font-size: 2.5rem;
+        color: #2e8b57;
+        margin-bottom: 1rem;
+        transition: color 0.3s ease;
+      }
+
+      h3 {
+        font-size: 2.5rem;
+        color: #2e8b57;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+
+        span {
+          font-size: 1.8rem;
+          color: #2e8b57;
         }
+      }
 
-        .stat-box {
-            background: #f7fdf8;
-            border-radius: 20px;
-            padding: 2rem;
-            width: 250px;
-            box-shadow: 0 6px 18px rgba(46, 139, 87, 0.1);
-            border: 1px solid #e0f1e6;
-            transition: all 0.4s ease;
-            position: relative;
-            overflow: hidden;
-            cursor: default;
+      p {
+        font-size: 1rem;
+        color: #444;
+        font-weight: 500;
+      }
 
-            /* ✨ Glowing effect layer */
-            &::before {
-                content: "";
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 180%;
-                height: 180%;
-                background: radial-gradient(circle, rgba(46, 139, 87, 0.25) 0%, transparent 70%);
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 0;
-                transition: all 0.5s ease;
-                z-index: 0;
-            }
+      &:hover .stat-icon {
+        color: #39a66d;
+      }
+    }
+  }
 
-            &:hover::before {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
+  /* === Call to Action === */
+  .about-cta {
+    background: #2e8b57;
+    color: white;
+    text-align: center;
+    padding: 3rem 10%;
+    border-radius: 25px;
+    max-width: 900px;
+    margin: 4rem auto 0;
 
-            &:hover {
-                transform: translateY(-6px);
-                box-shadow: 0 12px 30px rgba(46, 139, 87, 0.15);
-            }
+    /* ✅ IMPORTANT: create stacking context + avoid click blocking */
+    position: relative;
+    z-index: 5;
+    overflow: hidden;
 
-            .stat-icon,
-            h3,
-            p {
-                position: relative;
-                z-index: 1;
-                /* keep content above glow */
-            }
-
-            .stat-icon {
-                font-size: 2.5rem;
-                color: #2e8b57;
-                margin-bottom: 1rem;
-                transition: color 0.3s ease;
-            }
-
-            h3 {
-                font-size: 2.5rem;
-                color: #2e8b57;
-                font-weight: 700;
-                margin-bottom: 0.3rem;
-
-                span {
-                    font-size: 1.8rem;
-                    color: #2e8b57;
-                }
-            }
-
-            p {
-                font-size: 1rem;
-                color: #444;
-                font-weight: 500;
-            }
-
-            &:hover .stat-icon {
-                color: #39a66d;
-                /* brighter green on hover */
-            }
-        }
+    /* ✅ if you ever add overlays here, they won't block clicks */
+    &::before,
+    &::after {
+      pointer-events: none;
     }
 
-    /* === Call to Action === */
-    .about-cta {
-        background: #2e8b57;
-        color: white;
-        text-align: center;
-        padding: 3rem 10%;
-        border-radius: 25px;
-        max-width: 900px;
-        margin: 4rem auto 0;
-
-        h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        p {
-            font-size: 1.05rem;
-
-            a {
-                color: #fff;
-                font-weight: 600;
-                text-decoration: underline;
-                transition: 0.3s;
-
-                &:hover {
-                    color: #d8ffd8;
-                }
-            }
-        }
+    h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 6;
     }
+
+    p,
+    .about-cta-text {
+      font-size: 1.05rem;
+      position: relative;
+      z-index: 6;
+    }
+
+    a,
+    .about-contact-link {
+      color: #fff;
+      font-weight: 800;
+      text-decoration: underline;
+      transition: 0.3s;
+      pointer-events: auto !important;
+      position: relative;
+      z-index: 9999;
+
+      &:hover {
+        color: #d8ffd8;
+      }
+    }
+  }
+}
+
+/* ✅ EXTRA SAFETY: ensure CTA text area never becomes unclickable */
+.about-cta,
+.about-cta * {
+  pointer-events: auto !important;
 }

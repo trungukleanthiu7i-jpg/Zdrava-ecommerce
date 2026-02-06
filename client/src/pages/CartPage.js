@@ -55,7 +55,7 @@ function CartPage() {
                     <h3>{item.name}</h3>
 
                     <p>
-                      Preț / unitate: <strong>{price.toFixed(2)} RON</strong>
+                      Preț / unitate: <strong>{price.toFixed(2)} €</strong>
                     </p>
 
                     {/* Boxes */}
@@ -92,7 +92,7 @@ function CartPage() {
                     </p>
 
                     <p className="item-total">
-                      Total produs: {itemTotal.toFixed(2)} RON
+                      Total produs: {itemTotal.toFixed(2)} €
                     </p>
                   </div>
 
@@ -109,7 +109,7 @@ function CartPage() {
 
           {/* Total */}
           <div className="cart-total">
-            <h2>Total comandă: {Number(getTotalPrice()).toFixed(2)} RON</h2>
+            <h2>Total comandă: {Number(getTotalPrice()).toFixed(2)} €</h2>
           </div>
 
           {/* Actions */}

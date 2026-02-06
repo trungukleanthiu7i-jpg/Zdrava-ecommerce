@@ -2,9 +2,12 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "../styles/DealsOfTheWeek.scss";
 
 const DealsOfTheWeek = () => {
+  const { t } = useTranslation();
+
   const [offers, setOffers] = useState([]);
   const [timeLeft, setTimeLeft] = useState({});
   const carouselRef = useRef(null);
@@ -85,30 +88,29 @@ const DealsOfTheWeek = () => {
     return `${BASE_URL}${cleanPath}`;
   };
 
-const handleProductClick = async (offer) => {
-  try {
-    // Try to find a product with the same name
-    const res = await axios.get(`http://localhost:5000/api/products`);
-    const allProducts = res.data;
-    const matchingProduct = allProducts.find(
-      (p) => p.name.trim().toLowerCase() === offer.name.trim().toLowerCase()
-    );
+  const handleProductClick = async (offer) => {
+    try {
+      // Try to find a product with the same name
+      const res = await axios.get(`http://localhost:5000/api/products`);
+      const allProducts = res.data;
+      const matchingProduct = allProducts.find(
+        (p) => p.name.trim().toLowerCase() === offer.name.trim().toLowerCase()
+      );
 
-    if (matchingProduct) {
-      navigate(`/product/${matchingProduct._id}`);
-    } else {
-      alert("Product not found in the main list.");
+      if (matchingProduct) {
+        navigate(`/product/${matchingProduct._id}`);
+      } else {
+        alert(t("Product not found in the main list."));
+      }
+    } catch (err) {
+      console.error("Error redirecting to product:", err);
     }
-  } catch (err) {
-    console.error("Error redirecting to product:", err);
-  }
-};
-
+  };
 
   return (
     <section className="deals-section">
-      <p className="deals-subtitle">Hot Discounts Just for You</p>
-      <h2 className="deals-title">Deals Of The Week</h2>
+      <p className="deals-subtitle">{t("Hot Discounts Just for You")}</p>
+      <h2 className="deals-title">{t("Deals Of The Week")}</h2>
 
       <button className="arrow left" onClick={() => scroll("left")}>
         <FaChevronLeft />
@@ -119,7 +121,7 @@ const handleProductClick = async (offer) => {
 
       <div className="deals-carousel" ref={carouselRef}>
         {offers.length === 0 ? (
-          <p className="no-offers">No offers available right now.</p>
+          <p className="no-offers">{t("No offers available right now.")}</p>
         ) : (
           offers.map((offer) => (
             <div
@@ -140,26 +142,26 @@ const handleProductClick = async (offer) => {
                 <div className="countdown">
                   <div>
                     <span>{timeLeft[offer._id]?.days ?? 0}</span>
-                    <p>DAYS</p>
+                    <p>{t("DAYS")}</p>
                   </div>
                   <div>
                     <span>{timeLeft[offer._id]?.hours ?? 0}</span>
-                    <p>HRS</p>
+                    <p>{t("HRS")}</p>
                   </div>
                   <div>
                     <span>{timeLeft[offer._id]?.minutes ?? 0}</span>
-                    <p>MINS</p>
+                    <p>{t("MINS")}</p>
                   </div>
                   <div>
                     <span>{timeLeft[offer._id]?.seconds ?? 0}</span>
-                    <p>SECS</p>
+                    <p>{t("SECS")}</p>
                   </div>
                 </div>
               </div>
 
               <h3>{offer.name}</h3>
-              <p className="old-price">{offer.oldPrice.toFixed(2)} RON</p>
-              <p className="new-price">{offer.newPrice.toFixed(2)} RON</p>
+              <p className="old-price">{offer.oldPrice.toFixed(2)} €</p>
+              <p className="new-price">{offer.newPrice.toFixed(2)} €</p>
 
               {offer.conditions && (
                 <p className="offer-conditions">{offer.conditions}</p>
