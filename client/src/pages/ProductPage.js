@@ -42,13 +42,16 @@ function ProductPage() {
 
   const [activeTab, setActiveTab] = useState("description");
 
+  // ✅ Use deployed backend on Render, localhost in development
+  const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
   /* ================================
      FETCH PRODUCT
   ================================ */
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const res = await axios.get(`${API}/api/products/${id}`);
         setProduct(res.data);
         setActiveTab("description");
       } catch (err) {
@@ -59,7 +62,7 @@ function ProductPage() {
     };
 
     fetchProduct();
-  }, [id]);
+  }, [id, API]);
 
   /* ================================
      FETCH RECOMMENDED PRODUCTS
@@ -69,7 +72,7 @@ function ProductPage() {
 
     const fetchRecommended = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/products");
+        const res = await axios.get(`${API}/api/products`);
 
         const sameCategoryProducts = res.data
           .filter((p) => p.category === product.category && p._id !== product._id)
@@ -82,13 +85,13 @@ function ProductPage() {
     };
 
     fetchRecommended();
-  }, [product]);
+  }, [product, API]);
 
   // ✅ Safe fallbacks so hooks can run even when product is null
   const safeProduct = product || {};
 
   const productImageUrl = safeProduct.image
-    ? `http://localhost:5000/images/produse/${safeProduct.image}`
+    ? `${API}/images/produse/${safeProduct.image}`
     : `${process.env.PUBLIC_URL}/images/no-image.png`;
 
   const ingredientsText =
@@ -100,8 +103,8 @@ function ProductPage() {
       ? safeProduct.allergens.join(", ")
       : "Nu conține alergeni declarați."
     : safeProduct.allergens
-      ? String(safeProduct.allergens)
-      : "Nu conține alergeni declarați.";
+    ? String(safeProduct.allergens)
+    : "Nu conține alergeni declarați.";
 
   const originCountry = safeProduct.originCountry || "—";
   const netWeight = safeProduct.netWeight || "—";
@@ -124,9 +127,8 @@ function ProductPage() {
         .map((l) => l.trim())
         .filter(Boolean);
 
-      // If it's just free text without ":", show nothing (or you can show raw text)
       const rows = lines
-        .map((line, idx) => {
+        .map((line) => {
           const parts = line.split(":");
           if (parts.length < 2) return null;
           const left = parts[0].trim();
@@ -143,7 +145,6 @@ function ProductPage() {
     const isObj = nutrition && typeof nutrition === "object" && !Array.isArray(nutrition);
     if (!isObj) return [];
 
-    // Your RO energy is in one field like: "1963 kj/467 kcal"
     const roEnergy = nutrition["Valoare energetică"] || nutrition["Valoare energetica"];
     let energyKj = "";
     let energyKcal = "";
@@ -155,7 +156,6 @@ function ProductPage() {
       energyKcal = kcalMatch ? normalizeVal(kcalMatch[1]) : "";
     }
 
-    // Also support EN keys if you later use them
     const enEnergyKj = nutrition.energyKj != null ? normalizeVal(nutrition.energyKj) : "";
     const enEnergyKcal = nutrition.energyKcal != null ? normalizeVal(nutrition.energyKcal) : "";
 
@@ -171,8 +171,8 @@ function ProductPage() {
         label: "din care acizi graşi saturaţi",
         value: normalizeVal(
           nutrition["din care acizi graşi saturaţi"] ||
-          nutrition["din care acizi grasi saturati"] ||
-          nutrition.saturatedFat
+            nutrition["din care acizi grasi saturati"] ||
+            nutrition.saturatedFat
         ),
         unit: "g",
       },
@@ -204,7 +204,6 @@ function ProductPage() {
     ]
       .map((r) => {
         if (!r.value) return r;
-        // If value already includes unit like "18 g", strip it to avoid "g g"
         const cleaned = String(r.value).replace(/\s*(kj|kcal|g)\s*$/i, "").trim();
         return { ...r, value: cleaned };
       })
@@ -288,11 +287,9 @@ function ProductPage() {
                   Informații nutriționale <span className="nutrition-note">(per 100 g)</span>
                 </h4>
 
-
                 {hasNutrition ? (
                   <div className="nutrition-wrap">
                     <table className="nutrition-table">
-
                       <tbody>
                         {nutritionDisplayRows.map((r, idx) => (
                           <tr key={`${r.label}-${idx}`}>
@@ -336,7 +333,7 @@ function ProductPage() {
           <div className="recommended-grid">
             {recommended.map((item) => {
               const recommendedImageUrl = item.image
-                ? `http://localhost:5000/images/produse/${item.image}`
+                ? `${API}/images/produse/${item.image}`
                 : `${process.env.PUBLIC_URL}/images/no-image.png`;
 
               return (

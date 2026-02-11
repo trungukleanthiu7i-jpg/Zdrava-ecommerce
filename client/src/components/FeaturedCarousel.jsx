@@ -10,6 +10,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "../styles/FeaturedCarousel.scss";
 
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const FeaturedCarousel = () => {
   const [products, setProducts] = useState([]);
   const { addToCart } = useCart();
@@ -17,7 +19,7 @@ const FeaturedCarousel = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/products");
+        const res = await axios.get(`${API}/api/products`);
         setProducts(res.data);
       } catch (error) {
         console.error("Error fetching products:", error);

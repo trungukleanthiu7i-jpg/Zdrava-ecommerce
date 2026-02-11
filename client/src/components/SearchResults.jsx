@@ -5,18 +5,19 @@ import "../styles/SearchResults.scss";
 import { useCart } from "../context/CartContext";
 import { FaShoppingCart, FaCheck } from "react-icons/fa";
 
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const SearchResults = () => {
   const [products, setProducts] = useState([]);
-  const [addedItems, setAddedItems] = useState([]); // ✅ track recently added products
+  const [addedItems, setAddedItems] = useState([]);
   const location = useLocation();
   const { addToCart } = useCart();
   const query = new URLSearchParams(location.search).get("query");
 
-  // ✅ Fix image URL
+  // ✅ Backend image support
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "/images/default.jpg";
-    if (imagePath.startsWith("/images/produse/")) return imagePath;
-    return `/images/produse/${imagePath}`;
+    return `${API}${imagePath}`;
   };
 
   // ✅ Fetch search results
@@ -24,13 +25,14 @@ const SearchResults = () => {
     const fetchProducts = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/products/search?query=${query}`
+          `${API}/api/products/search?query=${query}`
         );
         setProducts(res.data);
       } catch (err) {
         console.error("Error fetching search results:", err);
       }
     };
+
     if (query) fetchProducts();
   }, [query]);
 
@@ -39,9 +41,10 @@ const SearchResults = () => {
     addToCart(product);
     setAddedItems((prev) => [...prev, product._id]);
 
-    // Remove “added” state after 1 second
     setTimeout(() => {
-      setAddedItems((prev) => prev.filter((id) => id !== product._id));
+      setAddedItems((prev) =>
+        prev.filter((id) => id !== product._id)
+      );
     }, 1000);
   };
 
@@ -71,7 +74,11 @@ const SearchResults = () => {
                   onClick={() => handleAddToCart(p)}
                   title="Add to Cart"
                 >
-                  {addedItems.includes(p._id) ? <FaCheck /> : <FaShoppingCart />}
+                  {addedItems.includes(p._id) ? (
+                    <FaCheck />
+                  ) : (
+                    <FaShoppingCart />
+                  )}
                 </button>
               </div>
             </div>

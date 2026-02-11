@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 export default function OAuthSuccess() {
   const navigate = useNavigate();
   const { loginUser } = useContext(UserContext);
@@ -20,7 +22,7 @@ export default function OAuthSuccess() {
 
     // 2️⃣ Fetch user using token
     axios
-      .get("http://localhost:5000/api/users/me", {
+      .get(`${API}/api/users/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -42,9 +44,5 @@ export default function OAuthSuccess() {
       });
   }, [navigate, loginUser]);
 
-  return (
-    <p style={{ textAlign: "center", marginTop: 50 }}>
-      Logging you in…
-    </p>
-  );
+  return <p style={{ textAlign: "center", marginTop: 50 }}>Logging you in…</p>;
 }

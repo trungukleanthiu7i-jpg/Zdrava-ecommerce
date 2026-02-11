@@ -125,13 +125,16 @@ function AllProductsPage() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
+  // ✅ Use deployed backend on Render, localhost in development
+  const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
   /* ================================
      FETCH PRODUCTS
   ================================ */
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/products");
+        const res = await axios.get(`${API}/api/products`);
         setProducts(res.data || []);
       } catch (err) {
         console.error("Fetch products error:", err);
@@ -141,7 +144,7 @@ function AllProductsPage() {
     };
 
     fetchProducts();
-  }, []);
+  }, [API]);
 
   /* ================================
      FILTER BY CATEGORY
@@ -192,13 +195,13 @@ function AllProductsPage() {
   };
 
   /* ================================
-     IMAGE URL (FIXED)
-     Your backend returns image like "/images/produse/filename.jpg"
+     IMAGE URL (PRODUCTION SAFE)
+     Backend returns image like "/images/produse/filename.jpg"
 ================================ */
   const getImageUrl = (imagePath) => {
     if (!imagePath) return `${process.env.PUBLIC_URL}/images/no-image.png`;
-    if (imagePath.startsWith("/")) return `http://localhost:5000${imagePath}`;
-    return `http://localhost:5000/images/produse/${imagePath}`;
+    if (imagePath.startsWith("/")) return `${API}${imagePath}`;
+    return `${API}/images/produse/${imagePath}`;
   };
 
   const activeLabel =
@@ -257,10 +260,7 @@ function AllProductsPage() {
                       onClick={() => navigate(`/product/${product._id}`)}
                     >
                       {/* IMAGE */}
-                      <img
-                        src={getImageUrl(product.image)}
-                        alt={product.name}
-                      />
+                      <img src={getImageUrl(product.image)} alt={product.name} />
 
                       {/* NAME */}
                       <h3>{product.name}</h3>

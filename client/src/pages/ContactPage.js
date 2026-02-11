@@ -5,6 +5,8 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import "../styles/ContactPage.scss";
 
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 function ContactPage() {
   const { t } = useTranslation();
 
@@ -29,7 +31,7 @@ function ContactPage() {
     setStatus("sending");
 
     try {
-      await axios.post("http://localhost:5000/api/messages", formData);
+      await axios.post(`${API}/api/messages`, formData);
       setStatus("success");
       setFormData({ name: "", email: "", message: "" });
     } catch (error) {

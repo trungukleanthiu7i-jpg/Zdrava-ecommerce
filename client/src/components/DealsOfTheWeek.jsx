@@ -13,7 +13,8 @@ const DealsOfTheWeek = () => {
   const carouselRef = useRef(null);
   const navigate = useNavigate();
 
-  const BASE_URL = "http://localhost:5000"; // backend base URL
+  // ✅ Use deployed backend on Render, localhost in development
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   // 🟢 Fetch offers
   useEffect(() => {
@@ -26,7 +27,7 @@ const DealsOfTheWeek = () => {
       }
     };
     fetchOffers();
-  }, []);
+  }, [BASE_URL]);
 
   // 🕒 Countdown logic (with days)
   useEffect(() => {
@@ -91,7 +92,7 @@ const DealsOfTheWeek = () => {
   const handleProductClick = async (offer) => {
     try {
       // Try to find a product with the same name
-      const res = await axios.get(`http://localhost:5000/api/products`);
+      const res = await axios.get(`${BASE_URL}/api/products`);
       const allProducts = res.data;
       const matchingProduct = allProducts.find(
         (p) => p.name.trim().toLowerCase() === offer.name.trim().toLowerCase()

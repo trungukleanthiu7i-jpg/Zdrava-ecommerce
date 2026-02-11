@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import "../components/AdminForm.scss";
 
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 function AdminProducts() {
   // --------------------- NORMAL PRODUCT FORM ---------------------
   const [formData, setFormData] = useState({
@@ -77,7 +79,7 @@ function AdminProducts() {
       if (formData.barcode) uploadData.append("barcode", formData.barcode);
       if (formData.image) uploadData.append("image", formData.image);
 
-      await axios.post("http://localhost:5000/api/products", uploadData);
+      await axios.post(`${API}/api/products`, uploadData);
 
       setStatus("✅ Product added successfully!");
       setFormData({
@@ -107,7 +109,7 @@ function AdminProducts() {
     setOfferStatus("Adding offer...");
 
     try {
-      await axios.post("http://localhost:5000/api/offers", offerData, {
+      await axios.post(`${API}/api/offers`, offerData, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -135,7 +137,7 @@ function AdminProducts() {
     }
 
     try {
-      const res = await axios.get("http://localhost:5000/api/messages");
+      const res = await axios.get(`${API}/api/messages`);
       setMessages(res.data);
       setShowMessages(true);
     } catch (error) {
@@ -148,7 +150,7 @@ function AdminProducts() {
     if (!window.confirm("Are you sure you want to delete this message?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/messages/${id}`);
+      await axios.delete(`${API}/api/messages/${id}`);
       setMessages((prev) => prev.filter((msg) => msg._id !== id));
     } catch (error) {
       console.error("Error deleting message:", error);
@@ -273,21 +275,24 @@ function AdminProducts() {
               <option value="">Select category</option>
 
               {/* HORECA */}
-              <option value="legume-conservate-horeca">Legume conservate HORECA</option>
+              <option value="legume-conservate-horeca">
+                Legume conservate HORECA
+              </option>
               <option value="sosuri-horeca">Sosuri HORECA</option>
               <option value="dulceturi">Dulcețuri</option>
 
               {/* SUPERMARKET */}
               <option value="legume-conservate">Legume conservate</option>
               <option value="produse-din-branza">Produse din brânză</option>
-              <option value="dulciuri-si-snacks-uri">Dulciuri și snacks-uri</option>
+              <option value="dulciuri-si-snacks-uri">
+                Dulciuri și snacks-uri
+              </option>
               <option value="cafea-si-bauturi">Cafea și băuturi</option>
               <option value="sosuri">Sosuri</option>
               <option value="masline">Măsline</option>
               <option value="alimente-cu-amidon">Alimente cu amidon</option>
               <option value="placinta">Plăcintă</option>
             </select>
-
 
             {/* ✅ OPTIONAL */}
             <input

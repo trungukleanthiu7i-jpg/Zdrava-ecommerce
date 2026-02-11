@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useTranslation } from "react-i18next";
 
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const AuthPage = () => {
   const { t } = useTranslation();
 
@@ -49,8 +51,8 @@ const AuthPage = () => {
 
     try {
       const endpoint = isSignUp
-        ? "http://localhost:5000/api/users/register"
-        : "http://localhost:5000/api/users/login";
+        ? `${API}/api/users/register`
+        : `${API}/api/users/login`;
 
       const res = await axios.post(endpoint, formData, {
         headers: { "Content-Type": "application/json" },
@@ -85,11 +87,11 @@ const AuthPage = () => {
      🔐 OAUTH HANDLERS
   ================================ */
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/google";
+    window.location.href = `${API}/api/auth/google`;
   };
 
   const handleFacebookLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/facebook";
+    window.location.href = `${API}/api/auth/facebook`;
   };
 
   return (

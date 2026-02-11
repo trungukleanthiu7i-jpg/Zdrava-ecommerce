@@ -5,6 +5,8 @@ import "../styles/AllProductsPage.scss";
 import { useCart } from "../context/CartContext";
 import { FaShoppingBasket, FaCheck } from "react-icons/fa";
 
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const CATEGORY_LABELS = {
   // HORECA
   "legume-conservate-horeca": "Legume conservate HORECA",
@@ -36,7 +38,7 @@ const CategoryPage = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `http://localhost:5000/api/products/category/${category}`
+          `${API}/api/products/category/${category}`
         );
         setProducts(res.data || []);
       } catch (error) {
@@ -59,11 +61,11 @@ const CategoryPage = () => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return `${process.env.PUBLIC_URL}/images/no-image.png`;
 
-    // New backend format: "/images/produse/xxx.jpg"
-    if (imagePath.startsWith("/")) return `http://localhost:5000${imagePath}`;
+    // New backend format: "/uploads/xxx.jpg" OR "/images/produse/xxx.jpg"
+    if (imagePath.startsWith("/")) return `${API}${imagePath}`;
 
     // Old format: "xxx.jpg"
-    return `http://localhost:5000/images/produse/${imagePath}`;
+    return `${API}/images/produse/${imagePath}`;
   };
 
   // ✅ Add to cart with animation + block out-of-stock
@@ -113,9 +115,7 @@ const CategoryPage = () => {
                   €{Number(product.price || 0).toFixed(2)}
                 </p>
 
-                <div
-                  className={`stock-status ${isOutOfStock ? "out" : "in"}`}
-                >
+                <div className={`stock-status ${isOutOfStock ? "out" : "in"}`}>
                   {isOutOfStock ? "Out of stock" : "In stock"}
                 </div>
 
@@ -127,7 +127,11 @@ const CategoryPage = () => {
                   disabled={isOutOfStock}
                   title={isOutOfStock ? "Out of stock" : "Add to cart"}
                 >
-                  {addedItems.includes(product._id) ? <FaCheck /> : <FaShoppingBasket />}
+                  {addedItems.includes(product._id) ? (
+                    <FaCheck />
+                  ) : (
+                    <FaShoppingBasket />
+                  )}
                 </button>
               </div>
             );

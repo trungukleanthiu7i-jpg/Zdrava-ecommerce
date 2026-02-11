@@ -4,6 +4,8 @@ import Barcode from "react-barcode";
 import { FaDownload } from "react-icons/fa";
 import "../styles/AdminOrders.scss";
 
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -17,14 +19,11 @@ const AdminOrders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/orders/admin/all",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get(`${API}/api/orders/admin/all`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         setOrders(res.data);
       } catch (err) {
@@ -42,15 +41,12 @@ const AdminOrders = () => {
   ========================= */
   const handleDownloadPDF = async (orderId, orderNumber) => {
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/orders/admin/${orderId}/pdf`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.get(`${API}/api/orders/admin/${orderId}/pdf`, {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const blob = new Blob([res.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
@@ -127,9 +123,7 @@ const AdminOrders = () => {
                     {order.shippingAddress?.addressLine},{" "}
                     {order.shippingAddress?.postalCode}
                   </td>
-                  <td>
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
+                  <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td>{order.total?.toFixed(2)}</td>
                   <td>{order.currency}</td>
                   <td>{order.paymentMethod}</td>
@@ -173,11 +167,8 @@ const AdminOrders = () => {
 
                         <tbody>
                           {order.items.map((item, i) => {
-                            // 🔥 ROBUST BARCODE RESOLUTION
                             const barcodeValue =
-                              item.barcode ||
-                              item.productId?.barcode ||
-                              null;
+                              item.barcode || item.productId?.barcode || null;
 
                             const unitsPerBox =
                               item.unitsPerBox ||
@@ -211,8 +202,7 @@ const AdminOrders = () => {
                                 <td>{unitsPerBox}</td>
                                 <td>{item.boxes * unitsPerBox}</td>
                                 <td>
-                                  {item.lineTotal.toFixed(2)}{" "}
-                                  {order.currency}
+                                  {item.lineTotal.toFixed(2)} {order.currency}
                                 </td>
                               </tr>
                             );

@@ -18,6 +18,9 @@ function HomePage() {
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
 
+  // ✅ Use backend URL from Render env var when deployed
+  const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
   // 🪄 Initialize AOS animations
   useEffect(() => {
     AOS.init({
@@ -31,14 +34,14 @@ function HomePage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/products");
+        const res = await axios.get(`${API}/api/products`);
         setProducts(res.data);
       } catch (err) {
         console.error("Error fetching products:", err);
       }
     };
     fetchProducts();
-  }, []);
+  }, [API]);
 
   return (
     <div className="home-page">
