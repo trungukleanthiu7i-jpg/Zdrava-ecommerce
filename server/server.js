@@ -19,9 +19,9 @@ import orderRoutes from "./routes/orderRoutes.js";
 import authOAuthRoutes from "./routes/authOAuthRoutes.js";
 
 /**
- * ✅ ENV loading:
- * - On Render: env vars come from Render dashboard (dotenv is optional but harmless)
- * - Locally: it loads from .env
+ * ENV loading
+ * - Render uses dashboard env vars
+ * - Local uses .env
  */
 dotenv.config();
 
@@ -46,6 +46,7 @@ app.use(passport.initialize());
    🖼️ STATIC FILES
 ========================= */
 const __dirname = path.resolve();
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 app.use(express.static(path.join(__dirname, "public")));
@@ -55,38 +56,15 @@ app.use(express.static(path.join(__dirname, "public")));
 ========================= */
 mongoose
   .connect(process.env.MONGO_URI, {
-    // these options help stability in hosted environments
     serverSelectionTimeoutMS: 10000,
   })
   .then(() => {
     console.log("✅ MongoDB connected successfully");
     console.log("✅ Connected DB:", mongoose.connection.name);
-    console.log("✅ Mongo host:", mongoose.connection.host);
   })
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err);
   });
-
-/* =========================
-   🧪 DEBUG DB ENDPOINT (TEMP)
-   Use this to verify you're connected to the DB with 149 products:
-   https://zdrava-ecommerce-backend.onrender.com/api/debug/db
-========================= */
-app.get("/api/debug/db", async (req, res) => {
-  try {
-    const dbName = mongoose.connection.name;
-    const host = mongoose.connection.host;
-
-    // count docs in the actual "products" collection in this connection
-    const productsCount = await mongoose.connection
-      .collection("products")
-      .countDocuments();
-
-    res.json({ dbName, host, productsCount });
-  } catch (e) {
-    res.status(500).json({ error: String(e) });
-  }
-});
 
 /* =========================
    🔌 API ROUTES
@@ -98,8 +76,6 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/orders", orderRoutes);
-
-// 🔐 OAuth routes (Google / Facebook)
 app.use("/api/auth", authOAuthRoutes);
 
 /* =========================
@@ -113,4 +89,7 @@ app.get("/", (req, res) => {
    🚀 START SERVER
 ========================= */
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
