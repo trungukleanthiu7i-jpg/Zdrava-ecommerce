@@ -7,12 +7,6 @@ import { Strategy as FacebookStrategy } from "passport-facebook";
 import User from "../models/User.js";
 
 /* =========================
-   🔎 DEBUG
-========================= */
-console.log("GOOGLE_CLIENT_ID =", process.env.GOOGLE_CLIENT_ID);
-console.log("FACEBOOK_APP_ID =", process.env.FACEBOOK_APP_ID);
-
-/* =========================
    🔐 GOOGLE STRATEGY
 ========================= */
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -30,7 +24,6 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           let user = await User.findOne({ googleId: profile.id });
 
           if (!user) {
-            // 🔗 Link to existing account by email if exists
             if (email) {
               const existingUser = await User.findOne({ email });
               if (existingUser) {
@@ -41,11 +34,11 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
               }
             }
 
-            // Create new user
             user = await User.create({
               googleId: profile.id,
               email,
-              username: profile.displayName || (email ? email.split("@")[0] : "user"),
+              username:
+                profile.displayName || (email ? email.split("@")[0] : "user"),
               provider: "google",
             });
           }
@@ -71,7 +64,7 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
         clientID: process.env.FACEBOOK_APP_ID,
         clientSecret: process.env.FACEBOOK_APP_SECRET,
         callbackURL: `${process.env.BACKEND_URL}/api/auth/facebook/callback`,
-        profileFields: ["id", "displayName"], // no email
+        profileFields: ["id", "displayName"],
       },
       async (_accessToken, _refreshToken, profile, done) => {
         try {
