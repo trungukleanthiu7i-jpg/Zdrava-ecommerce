@@ -1,30 +1,27 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-/* =========================
-   🔎 DEBUG (OPTIONAL)
-========================= */
-console.log("GOOGLE_CLIENT_ID =", process.env.GOOGLE_CLIENT_ID);
-
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy } from "passport-facebook";
 import User from "../models/User.js";
 
 /* =========================
-   🔐 GOOGLE STRATEGY
-   (uses email)
+   🔎 DEBUG
 ========================= */
-if (
-  process.env.GOOGLE_CLIENT_ID &&
-  process.env.GOOGLE_CLIENT_SECRET
-) {
+console.log("GOOGLE_CLIENT_ID =", process.env.GOOGLE_CLIENT_ID);
+console.log("FACEBOOK_APP_ID =", process.env.FACEBOOK_APP_ID);
+
+/* =========================
+   🔐 GOOGLE STRATEGY
+========================= */
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "/api/auth/google/callback",
+        callbackURL: `${process.env.BACKEND_URL}/api/auth/google/callback`,
       },
       async (_accessToken, _refreshToken, profile, done) => {
         try {
@@ -44,12 +41,11 @@ if (
               }
             }
 
+            // Create new user
             user = await User.create({
               googleId: profile.id,
               email,
-              username:
-                profile.displayName ||
-                (email ? email.split("@")[0] : "user"),
+              username: profile.displayName || (email ? email.split("@")[0] : "user"),
               provider: "google",
             });
           }
@@ -67,19 +63,15 @@ if (
 
 /* =========================
    🔐 FACEBOOK STRATEGY
-   (NO email, username only)
 ========================= */
-if (
-  process.env.FACEBOOK_APP_ID &&
-  process.env.FACEBOOK_APP_SECRET
-) {
+if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
   passport.use(
     new FacebookStrategy(
       {
         clientID: process.env.FACEBOOK_APP_ID,
         clientSecret: process.env.FACEBOOK_APP_SECRET,
-        callbackURL: "/api/auth/facebook/callback",
-        profileFields: ["id", "displayName"], // 👈 no email
+        callbackURL: `${process.env.BACKEND_URL}/api/auth/facebook/callback`,
+        profileFields: ["id", "displayName"], // no email
       },
       async (_accessToken, _refreshToken, profile, done) => {
         try {
@@ -88,7 +80,7 @@ if (
           if (!user) {
             user = await User.create({
               facebookId: profile.id,
-              username: profile.displayName, // 👈 Facebook name
+              username: profile.displayName,
               provider: "facebook",
             });
           }
