@@ -4,7 +4,9 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-// 🔐 JWT generator
+/* =========================
+   🔐 JWT GENERATOR
+========================= */
 const generateToken = (user) =>
   jwt.sign(
     { id: user._id, role: user.role },
@@ -12,7 +14,9 @@ const generateToken = (user) =>
     { expiresIn: "7d" }
   );
 
-// 🚀 Google login
+/* =========================
+   🚀 GOOGLE LOGIN START
+========================= */
 router.get(
   "/google",
   passport.authenticate("google", {
@@ -21,16 +25,28 @@ router.get(
   })
 );
 
-// 🔄 Google callback
+/* =========================
+   🔄 GOOGLE CALLBACK
+========================= */
 router.get(
   "/google/callback",
-  passport.authenticate("google", {
-    session: false,
-    failureRedirect: `${process.env.FRONTEND_URL}/auth`,
-  }),
-  (req, res) => {
-    const token = generateToken(req.user);
-    res.redirect(`${process.env.FRONTEND_URL}/oauth-success?token=${token}`);
+  passport.authenticate("google", { session: false, failureRedirect: `${process.env.FRONTEND_URL}/auth` }),
+  async (req, res) => {
+    try {
+      if (!req.user) {
+        console.error("⚠️ Google OAuth: req.user is null");
+        return res.status(400).send("User not found after Google login");
+      }
+
+      const token = generateToken(req.user);
+      console.log("✅ Google OAuth successful, token generated:", token);
+
+      // Redirect to frontend with token
+      res.redirect(`${process.env.FRONTEND_URL}/oauth-success?token=${token}`);
+    } catch (err) {
+      console.error("🔥 OAuth callback error:", err);
+      res.status(500).send(`Internal Server Error: ${err.message}`);
+    }
   }
 );
 
