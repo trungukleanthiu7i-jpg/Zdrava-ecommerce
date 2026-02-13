@@ -3,24 +3,21 @@ dotenv.config();
 
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { Strategy as FacebookStrategy } from "passport-facebook";
 import User from "../models/User.js";
 
-/* =========================
-   🔐 GOOGLE STRATEGY
-========================= */
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: `${process.env.BACKEND_URL}/api/auth/google/callback`,
+        callbackURL: "https://zdrava-ecommerce-backend.onrender.com/api/auth/google/callback",
       },
       async (_accessToken, _refreshToken, profile, done) => {
         try {
-          const email = profile?.emails?.[0]?.value || null;
+          console.log("🔥 Google profile received:", profile);
 
+          const email = profile?.emails?.[0]?.value || null;
           let user = await User.findOne({ googleId: profile.id });
 
           if (!user) {
@@ -37,14 +34,15 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             user = await User.create({
               googleId: profile.id,
               email,
-              username:
-                profile.displayName || (email ? email.split("@")[0] : "user"),
+              username: profile.displayName || (email ? email.split("@")[0] : "user"),
               provider: "google",
             });
+            console.log("✅ Created new user:", user);
           }
 
           return done(null, user);
         } catch (err) {
+          console.error("❌ Passport GoogleStrategy error:", err);
           return done(err, null);
         }
       }
@@ -52,41 +50,6 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   );
 } else {
   console.warn("⚠️ Google OAuth disabled: missing env vars");
-}
-
-/* =========================
-   🔐 FACEBOOK STRATEGY
-========================= */
-if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
-  passport.use(
-    new FacebookStrategy(
-      {
-        clientID: process.env.FACEBOOK_APP_ID,
-        clientSecret: process.env.FACEBOOK_APP_SECRET,
-        callbackURL: `${process.env.BACKEND_URL}/api/auth/facebook/callback`,
-        profileFields: ["id", "displayName"],
-      },
-      async (_accessToken, _refreshToken, profile, done) => {
-        try {
-          let user = await User.findOne({ facebookId: profile.id });
-
-          if (!user) {
-            user = await User.create({
-              facebookId: profile.id,
-              username: profile.displayName,
-              provider: "facebook",
-            });
-          }
-
-          return done(null, user);
-        } catch (err) {
-          return done(err, null);
-        }
-      }
-    )
-  );
-} else {
-  console.warn("⚠️ Facebook OAuth disabled: missing env vars");
 }
 
 export default passport;
