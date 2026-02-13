@@ -1,7 +1,7 @@
 .footer {
   background: linear-gradient(180deg, #0b8a43, #087a3b);
   color: #ffffff;
-  padding: 40px 20px 25px;
+  padding: 20px 20px 15px; /* reduced top/bottom padding */
   text-align: center;
   font-family: "Roboto", sans-serif;
 }
@@ -10,30 +10,25 @@
    LOGO
 ========================= */
 .footer__logo img {
-  height: 330px;
-  /* 👈 control size */
+  height: 330px; /* keep large logo */
   width: auto;
-  /* keep proportions */
-  margin-bottom: 10px;
+  margin: 0; /* remove extra margin */
 }
-
 
 /* =========================
    CONTENT ROWS
 ========================= */
 .footer__content {
   display: flex;
-  flex-wrap: wrap;
-  /* ✅ allow wrapping */
+  flex-wrap: wrap; /* allow wrapping */
   justify-content: center;
-  gap: 40px;
-  /* ✅ spacing between items */
-  margin-bottom: 25px;
+  gap: 20px; /* smaller gap between items */
+  margin-bottom: 15px; /* reduce space below content */
 }
 
 .footer__bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.25);
-  padding-top: 20px;
+  padding-top: 10px; /* reduce space above bottom row */
 }
 
 /* =========================
@@ -45,8 +40,7 @@
   gap: 10px;
   font-size: 16px;
   font-weight: 500;
-  white-space: nowrap;
-  /* ❌ prevent breaking inside icons */
+  white-space: nowrap; /* prevent breaking inside icons */
 }
 
 /* =========================
@@ -65,12 +59,9 @@
   color: #ffffff;
   text-decoration: none;
   transition: color 0.2s ease;
-  white-space: normal;
-  /* ✅ allow text wrapping */
-  word-break: break-word;
-  /* ✅ long email breaks correctly */
-  max-width: 260px;
-  /* ✅ prevents overflow */
+  white-space: normal; /* allow wrapping */
+  word-break: break-word; /* long email breaks correctly */
+  max-width: 260px; /* prevent overflow */
 }
 
 .footer__item a:hover {
@@ -82,7 +73,7 @@
 ========================= */
 .footer__copyright {
   font-size: 14px;
-  margin-top: 15px;
+  margin-top: 10px; /* smaller space */
   opacity: 0.9;
 }
 
@@ -92,7 +83,7 @@
 @media (max-width: 768px) {
   .footer__content {
     flex-direction: column;
-    gap: 18px;
+    gap: 15px; /* smaller gap for mobile */
   }
 
   .footer__item {
@@ -103,7 +94,7 @@
 
 .footer__madeby {
   font-size: 13px;
-  margin-top: 6px;
+  margin-top: 4px; /* slightly smaller space */
   opacity: 0.85;
 }
 
