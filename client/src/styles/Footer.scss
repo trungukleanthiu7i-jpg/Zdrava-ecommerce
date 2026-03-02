@@ -1,111 +1,220 @@
-.footer {
-  background: linear-gradient(180deg, #0b8a43, #087a3b);
+/* =====================================
+   ZDRAVA FOOTER – BRAND MATCH
+===================================== */
+
+.footerPro {
+  width: 100%;
   color: #ffffff;
-  padding: 10px 10px 15px; /* reduced top/bottom padding */
-  text-align: center;
   font-family: "Roboto", sans-serif;
+
+  /* Brand green gradient */
+  background: linear-gradient(180deg, #0e8a43 0%, #0b6f37 60%, #095c2d 100%);
+  padding-top: 55px;
+  position: relative;
+  overflow: hidden;
 }
 
-/* =========================
-   LOGO
-========================= */
-.footer__logo img {
-  height: 330px; /* keep large logo */
-  width: auto;
-  margin: 0; /* remove extra margin */
+/* Soft red glow */
+.footerPro::before {
+  content: "";
+  position: absolute;
+  top: -150px;
+  left: -150px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(200, 0, 0, 0.16), transparent 70%);
+  pointer-events: none;
 }
 
-/* =========================
-   CONTENT ROWS
-========================= */
-.footer__content {
+/* Layout */
+.footerPro__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 35px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.2fr;
+  gap: 35px;
+  align-items: start;
+}
+
+.footerPro__col {
+  min-width: 0;
+}
+
+/* Logo */
+.footerPro__brand {
   display: flex;
-  flex-wrap: wrap; /* allow wrapping */
-  justify-content: center;
-  gap: 20px; /* smaller gap between items */
-  margin-bottom: 15px; /* reduce space below content */
+  flex-direction: column;
+  gap: 16px;
 }
 
-.footer__bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
-  padding-top: 10px; /* reduce space above bottom row */
-}
-
-/* =========================
-   FOOTER ITEM
-========================= */
-.footer__item {
+.footerPro__logoWrap {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 16px;
-  font-weight: 500;
-  white-space: nowrap; /* prevent breaking inside icons */
+  justify-content: flex-start;
 }
 
-/* =========================
-   ICONS
-========================= */
-.footer__icon {
+.footerPro__logo {
+  width: 200px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+}
+
+/* Social buttons */
+.footerPro__social {
+  display: flex;
+  gap: 12px;
+}
+
+.footerPro__socialBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  text-decoration: none;
+
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.footerPro__socialBtn:hover {
+  background: #ffffff;
+  color: #0b6f37;
+  transform: translateY(-3px);
+}
+
+/* Titles */
+.footerPro__title {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 18px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Links */
+.footerPro__links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footerPro__link {
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  font-weight: 650;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.footerPro__link:hover {
+  color: #ffdd00;
+  transform: translateX(4px);
+}
+
+/* Contacts */
+.footerPro__contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.footerPro__contactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.footerPro__contactIcon {
   font-size: 18px;
   color: #ffdd00;
+  margin-top: 2px;
 }
 
-/* =========================
-   LINKS & TEXT
-========================= */
-.footer__item a,
-.footer__item span {
-  color: #ffffff;
+.footerPro__contactLink,
+.footerPro__contactText {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 650;
   text-decoration: none;
-  transition: color 0.2s ease;
-  white-space: normal; /* allow wrapping */
-  word-break: break-word; /* long email breaks correctly */
-  max-width: 260px; /* prevent overflow */
+  word-break: break-word;
 }
 
-.footer__item a:hover {
+.footerPro__contactLink:hover {
+  text-decoration: underline;
+}
+
+/* Company info block */
+.footerPro__companyInfo {
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  padding-top: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.footerPro__companyInfo p {
+  margin: 4px 0;
+  font-weight: 650;
+}
+
+/* Bottom bar */
+.footerPro__bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.footerPro__bottomInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footerPro__legalLine,
+.footerPro__madeby {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.92;
+}
+
+.footerPro__madeby a {
+  color: #ffffff;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.footerPro__madeby a:hover {
   color: #ffdd00;
 }
 
-/* =========================
-   COPYRIGHT
-========================= */
-.footer__copyright {
-  font-size: 14px;
-  margin-top: 10px; /* smaller space */
-  opacity: 0.9;
-}
-
-/* =========================
-   RESPONSIVE FIX
-========================= */
-@media (max-width: 768px) {
-  .footer__content {
-    flex-direction: column;
-    gap: 15px; /* smaller gap for mobile */
-  }
-
-  .footer__item {
-    justify-content: center;
+/* Responsive */
+@media (max-width: 900px) {
+  .footerPro__inner {
+    grid-template-columns: 1fr;
     text-align: center;
   }
-}
 
-.footer__madeby {
-  font-size: 13px;
-  margin-top: 4px; /* slightly smaller space */
-  opacity: 0.85;
-}
+  .footerPro__logoWrap {
+    justify-content: center;
+  }
 
-.footer__madeby a {
-  color: #ffdd00;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
+  .footerPro__social {
+    justify-content: center;
+  }
 
-.footer__madeby a:hover {
-  color: #ffffff;
-  text-decoration: underline;
+  .footerPro__bottomInner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 }

@@ -9,23 +9,123 @@ import {
 import "../styles/Footer.scss";
 
 const Footer = () => {
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="footer">
-      {/* ✅ Logo centered on top */}
-      <div className="footer__logo">
-        <img
-          src={`${process.env.PUBLIC_URL}/images/Zdrava-logo-color.png`}
-          alt="Zdrava Logo"
-        />
+    <footer className="footerPro">
+      <div className="footerPro__inner">
+
+        {/* LEFT: Logo + Social */}
+        <div className="footerPro__col footerPro__brand">
+          <div className="footerPro__logoWrap">
+            <img
+              className="footerPro__logo"
+              src={`${process.env.PUBLIC_URL}/images/Zdrava-logo-color.png`}
+              alt="Zdrava Natural Food"
+            />
+          </div>
+
+          <div className="footerPro__social">
+            <a
+              className="footerPro__socialBtn"
+              href="https://www.facebook.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+            >
+              <FaFacebookF />
+            </a>
+
+            <a
+              className="footerPro__socialBtn"
+              href="https://www.instagram.com/zdravagroup.ro"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+            >
+              <FaInstagram />
+            </a>
+
+            <a
+              className="footerPro__socialBtn"
+              href="https://www.tiktok.com/@zdravafood.ro"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="TikTok"
+            >
+              <FaTiktok />
+            </a>
+          </div>
+        </div>
+
+        {/* MIDDLE: Informații */}
+        <div className="footerPro__col">
+          <h4 className="footerPro__title">INFORMAȚII</h4>
+
+          <div className="footerPro__links">
+            <Link className="footerPro__link" to="/terms-and-conditions">
+              Termeni și condiții
+            </Link>
+
+            <Link className="footerPro__link" to="/contact">
+              Contact
+            </Link>
+
+            <Link className="footerPro__link" to="/about">
+              Despre noi
+            </Link>
+          </div>
+        </div>
+
+        {/* RIGHT: Contact */}
+        <div className="footerPro__col">
+          <h4 className="footerPro__title">DATE DE CONTACT</h4>
+
+          <div className="footerPro__contactList">
+            <div className="footerPro__contactItem">
+              <FaPhoneAlt className="footerPro__contactIcon" />
+              <a
+                className="footerPro__contactLink"
+                href="tel:+40734844079"
+              >
+                0734 844 079
+              </a>
+            </div>
+
+            <div className="footerPro__contactItem">
+              <FaEnvelope className="footerPro__contactIcon" />
+              <a
+                className="footerPro__contactLink"
+                href="mailto:info@info-zdravafood-ro.com"
+              >
+                info@info-zdravafood-ro.com
+              </a>
+            </div>
+
+            <div className="footerPro__contactItem">
+              <FaMapMarkerAlt className="footerPro__contactIcon" />
+              <span className="footerPro__contactText">
+                Str. Cerna nr. 3, Craiova, Dolj, România
+              </span>
+            </div>
+          </div>
+
+          {/* Legal Company Info (recommended for e-commerce) */}
+          <div className="footerPro__companyInfo">
+            <p>MERITA LOGISTIC S.R.L.</p>
+            <p>CUI: RO48977906</p>
+            <p>Reg. Com.: J2023002219162</p>
+          </div>
+        </div>
+
       </div>
 
-      {/* ✅ Top contact info row */}
-      <div className="footer__content">
-        {/* 📞 Phone */}
-        <div className="footer__item">
-          <FaPhoneAlt className="footer__icon" />
-          <a href="tel:+40712345678">+40 712 345 678</a>
-        </div>
+      {/* Bottom Bar */}
+      <div className="footerPro__bottom">
+        <div className="footerPro__bottomInner">
+          <p className="footerPro__legalLine">
+            © {year} Zdrava România. Toate drepturile rezervate.
+          </p>
 
         {/* 📧 Email */}
         <div className="footer__item">
@@ -47,42 +147,6 @@ const Footer = () => {
           </a>
         </div>
       </div>
-
-      {/* ✅ Bottom info row */}
-      <div className="footer__content footer__bottom">
-        {/* 📍 Address */}
-        <div className="footer__item">
-          <FaMapMarkerAlt className="footer__icon" />
-          <span>Aleea 1 Constantin Argetoianu, Breasta, Dolj</span>
-        </div>
-
-        {/* 🎵 TikTok */}
-        <div className="footer__item">
-          <FaTiktok className="footer__icon" />
-          <a
-            href="https://www.tiktok.com/@zdravafood.ro"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            @zdravafood.ro
-          </a>
-        </div>
-      </div>
-
-      <p className="footer__copyright">
-        © {new Date().getFullYear()} Zdrava Romania. All rights reserved.
-      </p>
-
-      <p className="footer__madeby">
-        Made by{" "}
-        <a
-          href="https://www.linkedin.com/in/kleanthi-trungu-491185336/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Kleanthi Trungu
-        </a>
-      </p>
     </footer>
   );
 };

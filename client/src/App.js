@@ -35,6 +35,9 @@ import OAuthSuccess from "./pages/OAuthSuccess"; // ✅ NEW
 // 🔍 Other
 import SearchResults from "./components/SearchResults";
 
+// 📝 Legal pages
+import TermsAndConditions from "./pages/TermsAndConditions";
+
 // 👤 User context
 import { UserContext } from "./context/UserContext";
 
@@ -79,26 +82,148 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         {/* 🏠 Client Pages */}
-        <Route path="/" element={<AnimatedPage><HomePage /></AnimatedPage>} />
-        <Route path="/products" element={<AnimatedPage><AllProductsPage /></AnimatedPage>} />
-        <Route path="/product/:id" element={<AnimatedPage><ProductPage /></AnimatedPage>} />
-        <Route path="/cart" element={<AnimatedPage><CartPage /></AnimatedPage>} />
-        <Route path="/checkout" element={<AnimatedPage><CheckoutPage /></AnimatedPage>} />
-        <Route path="/profile" element={<AnimatedPage><Profile /></AnimatedPage>} />
-        <Route path="/my-orders" element={<AnimatedPage><MyOrders /></AnimatedPage>} />
-        <Route path="/my-orders/:id" element={<AnimatedPage><OrderDetails /></AnimatedPage>} />
-        <Route path="/contact" element={<AnimatedPage><ContactPage /></AnimatedPage>} />
-        <Route path="/about" element={<AnimatedPage><AboutPage /></AnimatedPage>} />
-        <Route path="/category/:category" element={<AnimatedPage><CategoryPage /></AnimatedPage>} />
-        <Route path="/new-products" element={<AnimatedPage><NewProductsPage /></AnimatedPage>} />
-        <Route path="/search" element={<AnimatedPage><SearchResults /></AnimatedPage>} />
-        <Route path="/auth" element={<AnimatedPage><AuthPage /></AnimatedPage>} />
+        <Route
+          path="/"
+          element={
+            <AnimatedPage>
+              <HomePage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            <AnimatedPage>
+              <AllProductsPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/product/:id"
+          element={
+            <AnimatedPage>
+              <ProductPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <AnimatedPage>
+              <CartPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <AnimatedPage>
+              <CheckoutPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <AnimatedPage>
+              <Profile />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/my-orders"
+          element={
+            <AnimatedPage>
+              <MyOrders />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/my-orders/:id"
+          element={
+            <AnimatedPage>
+              <OrderDetails />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <AnimatedPage>
+              <ContactPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <AnimatedPage>
+              <AboutPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/category/:category"
+          element={
+            <AnimatedPage>
+              <CategoryPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/new-products"
+          element={
+            <AnimatedPage>
+              <NewProductsPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/search"
+          element={
+            <AnimatedPage>
+              <SearchResults />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/auth"
+          element={
+            <AnimatedPage>
+              <AuthPage />
+            </AnimatedPage>
+          }
+        />
 
         {/* 🔐 OAuth */}
-        <Route path="/oauth-success" element={<AnimatedPage><OAuthSuccess /></AnimatedPage>} />
+        <Route
+          path="/oauth-success"
+          element={
+            <AnimatedPage>
+              <OAuthSuccess />
+            </AnimatedPage>
+          }
+        />
+
+        {/* 📚 Legal pages */}
+        <Route
+          path="/terms-and-conditions"
+          element={
+            <AnimatedPage>
+              <TermsAndConditions />
+            </AnimatedPage>
+          }
+        />
 
         {/* 🧑‍💼 Admin */}
-        <Route path="/admin/*" element={<AnimatedPage><AdminDashboard /></AnimatedPage>} />
+        <Route
+          path="/admin/*"
+          element={
+            <AnimatedPage>
+              <AdminDashboard />
+            </AnimatedPage>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );
