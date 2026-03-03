@@ -5,6 +5,7 @@ import {
   FaInstagram,
   FaMapMarkerAlt,
   FaTiktok,
+  FaFacebookF,
 } from "react-icons/fa";
 import "../styles/Footer.scss";
 
@@ -31,7 +32,6 @@ const Footer = () => {
               href="https://www.facebook.com/"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Facebook"
             >
               <FaFacebookF />
             </a>
@@ -41,7 +41,6 @@ const Footer = () => {
               href="https://www.instagram.com/zdravagroup.ro"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Instagram"
             >
               <FaInstagram />
             </a>
@@ -51,29 +50,28 @@ const Footer = () => {
               href="https://www.tiktok.com/@zdravafood.ro"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="TikTok"
             >
               <FaTiktok />
             </a>
           </div>
         </div>
 
-        {/* MIDDLE: Informații */}
+        {/* MIDDLE: Info */}
         <div className="footerPro__col">
           <h4 className="footerPro__title">INFORMAȚII</h4>
 
           <div className="footerPro__links">
-            <Link className="footerPro__link" to="/terms-and-conditions">
+            <a className="footerPro__link" href="/terms-and-conditions">
               Termeni și condiții
-            </Link>
+            </a>
 
-            <Link className="footerPro__link" to="/contact">
-              Contact
-            </Link>
+            <a className="footerPro__link" href="/contact">
+              Contactează-ne
+            </a>
 
-            <Link className="footerPro__link" to="/about">
+            <a className="footerPro__link" href="/about">
               Despre noi
-            </Link>
+            </a>
           </div>
         </div>
 
@@ -86,9 +84,9 @@ const Footer = () => {
               <FaPhoneAlt className="footerPro__contactIcon" />
               <a
                 className="footerPro__contactLink"
-                href="tel:+40734844079"
+                href="tel:+40712345678"
               >
-                0734 844 079
+                +40 712 345 678
               </a>
             </div>
 
@@ -105,46 +103,79 @@ const Footer = () => {
             <div className="footerPro__contactItem">
               <FaMapMarkerAlt className="footerPro__contactIcon" />
               <span className="footerPro__contactText">
-                Str. Cerna nr. 3, Craiova, Dolj, România
+                Aleea 1 Constantin Argetoianu, Breasta, Dolj, România
               </span>
             </div>
-          </div>
-
-          {/* Legal Company Info (recommended for e-commerce) */}
-          <div className="footerPro__companyInfo">
-            <p>MERITA LOGISTIC S.R.L.</p>
-            <p>CUI: RO48977906</p>
-            <p>Reg. Com.: J2023002219162</p>
           </div>
         </div>
 
       </div>
 
-      {/* Bottom Bar */}
+      {/* Compliance Section */}
+      <div className="footerPro__compliance">
+
+        <a
+          href="https://anpc.ro/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footerPro__anpcLink"
+        >
+          <img
+            src={`${process.env.PUBLIC_URL}/images/anpcLogo.png`}
+            alt="ANPC"
+            className="footerPro__anpcLogo"
+          />
+        </a>
+
+        <div className="footerPro__complianceLinks">
+          <a
+            href="https://anpc.ro/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            ANPC
+          </a>
+
+          <span> | </span>
+
+          <a
+            href="https://anpc.ro/ce-este-sal/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            SAL
+          </a>
+
+          <span> | </span>
+
+          <a
+            href="https://ec.europa.eu/consumers/odr"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            SOL (ODR)
+          </a>
+        </div>
+
+      </div>
+
+      {/* Bottom */}
       <div className="footerPro__bottom">
         <div className="footerPro__bottomInner">
           <p className="footerPro__legalLine">
             © {year} Zdrava România. Toate drepturile rezervate.
           </p>
 
-        {/* 📧 Email */}
-        <div className="footer__item">
-          <FaEnvelope className="footer__icon" />
-          <a href="mailto:info@info-zdravafood-ro.com">
-            info@info-zdravafood-ro.com
-          </a>
-        </div>
-
-        {/* 📸 Instagram */}
-        <div className="footer__item">
-          <FaInstagram className="footer__icon" />
-          <a
-            href="https://www.instagram.com/zdravagroup.ro"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            @zdravagroup.ro
-          </a>
+          <p className="footerPro__madeby">
+            Creat de{" "}
+            <a
+              href="https://www.linkedin.com/in/kleanthi-trungu-491185336/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Kleanthi Trungu
+            </a>
+          </p>
         </div>
       </div>
     </footer>

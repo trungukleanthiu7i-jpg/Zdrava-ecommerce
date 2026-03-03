@@ -9,7 +9,8 @@
 
   /* Brand green gradient */
   background: linear-gradient(180deg, #0e8a43 0%, #0b6f37 60%, #095c2d 100%);
-  padding-top: 55px;
+  padding-top: 35px; /* ✅ was 55px */
+  padding-bottom: 0; /* ✅ keep bottom tight */
   position: relative;
   overflow: hidden;
 }
@@ -30,10 +31,10 @@
 .footerPro__inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px 35px;
+  padding: 0 20px 20px; /* ✅ was 35px bottom */
   display: grid;
   grid-template-columns: 1.2fr 1fr 1.2fr;
-  gap: 35px;
+  gap: 25px; /* ✅ was 35px */
   align-items: start;
 }
 
@@ -45,7 +46,7 @@
 .footerPro__brand {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px; /* ✅ was 16px */
 }
 
 .footerPro__logoWrap {
@@ -55,7 +56,7 @@
 }
 
 .footerPro__logo {
-  width: 200px;
+  width: 280px; /* ✅ bigger logo without huge footer */
   max-width: 100%;
   height: auto;
   display: block;
@@ -65,12 +66,12 @@
 /* Social buttons */
 .footerPro__social {
   display: flex;
-  gap: 12px;
+  gap: 10px; /* ✅ tighter */
 }
 
 .footerPro__socialBtn {
-  width: 44px;
-  height: 44px;
+  width: 42px; /* ✅ slightly smaller */
+  height: 42px;
   border-radius: 10px;
   display: inline-flex;
   align-items: center;
@@ -94,7 +95,7 @@
 .footerPro__title {
   font-size: 18px;
   font-weight: 800;
-  margin: 0 0 18px;
+  margin: 0 0 12px; /* ✅ was 18px */
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -103,7 +104,7 @@
 .footerPro__links {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px; /* ✅ was 12px */
 }
 
 .footerPro__link {
@@ -122,14 +123,14 @@
 .footerPro__contactList {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 12px; /* ✅ was 14px */
+  margin-bottom: 10px; /* ✅ was 16px */
 }
 
 .footerPro__contactItem {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px; /* ✅ tighter */
 }
 
 .footerPro__contactIcon {
@@ -150,10 +151,10 @@
   text-decoration: underline;
 }
 
-/* Company info block */
+/* Company info block (if used) */
 .footerPro__companyInfo {
   border-top: 1px solid rgba(255, 255, 255, 0.22);
-  padding-top: 12px;
+  padding-top: 10px; /* ✅ slightly tighter */
   color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
   line-height: 1.45;
@@ -162,6 +163,56 @@
 .footerPro__companyInfo p {
   margin: 4px 0;
   font-weight: 650;
+}
+
+/* =====================================
+   COMPLIANCE (ANPC + SAL + ODR)
+===================================== */
+
+.footerPro__compliance {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 20px; /* ✅ was 18px */
+  text-align: center;
+}
+
+.footerPro__anpcLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.footerPro__anpcLogo {
+  height: 62px; /* ✅ bigger logo */
+  width: auto;
+  display: block;
+  margin: 0 auto 6px; /* ✅ tighter */
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
+}
+
+.footerPro__complianceLinks {
+  font-size: 14px;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.2; /* ✅ reduce vertical spacing */
+}
+
+.footerPro__complianceLinks a {
+  color: #ffdd00;
+  text-decoration: none;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+}
+
+.footerPro__complianceLinks a:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.footerPro__complianceLinks span {
+  margin: 0 8px; /* ✅ was 10px */
+  opacity: 0.55;
 }
 
 /* Bottom bar */
@@ -173,7 +224,7 @@
 .footerPro__bottomInner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 15px 20px;
+  padding: 12px 20px; /* ✅ was 15px */
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
@@ -202,6 +253,7 @@
   .footerPro__inner {
     grid-template-columns: 1fr;
     text-align: center;
+    gap: 18px; /* ✅ tighter on mobile */
   }
 
   .footerPro__logoWrap {
@@ -216,5 +268,22 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+  }
+
+  .footerPro__compliance {
+    padding: 10px 16px;
+  }
+
+  .footerPro__logo {
+    width: 260px;
+  }
+
+  .footerPro__anpcLogo {
+    height: 56px;
+    margin-bottom: 6px;
+  }
+
+  .footerPro__complianceLinks span {
+    margin: 0 7px;
   }
 }

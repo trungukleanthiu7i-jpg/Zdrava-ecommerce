@@ -2,13 +2,21 @@ import React from "react";
 import "../styles/TermsAndConditions.scss";
 
 const TermsAndConditions = () => {
+
+  // 📅 Fixed legal update date (change only when terms are modified)
+  const formattedDate = "02 martie 2026";
+
   return (
     <div className="legalPage">
       <div className="legalPage__container">
 
+        {/* HEADER (ONLY ONCE) */}
         <h1>TERMENI ȘI CONDIȚII</h1>
         <h2>MERITA LOGISTIC S.R.L. – Magazin online Zdrava</h2>
-        <p><strong>Ultima actualizare:</strong> [data]</p>
+
+        <p>
+          <strong>Ultima actualizare:</strong> {formattedDate}
+        </p>
 
         <p>
           Prezentul document stabilește termenii și condițiile de utilizare a site-ului
@@ -18,6 +26,8 @@ const TermsAndConditions = () => {
           Utilizatorul/Clientul confirmă că a citit, a înțeles și acceptă integral
           acești Termeni și Condiții.
         </p>
+
+        {/* Continue with sections 1, 2, 3... below */}
 
         <h3>1. Identificarea comerciantului</h3>
 
