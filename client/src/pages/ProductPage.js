@@ -36,46 +36,31 @@ function Barcode({ value }) {
 ================================ */
 const dash = "—";
 
-function formatMoney(amount, currency = "EUR") {
-  if (amount === undefined || amount === null || amount === "") return dash;
-
-  // Keep your existing display style, but safe-format if possible
-  const n = Number(amount);
-  if (Number.isFinite(n)) {
-    // Use comma for RO style if desired; keep simple to avoid breaking
-    return `${n} ${currency}`;
-  }
-  return `${amount} ${currency}`;
-}
-
-function renderOperator(op) {
+function renderOperatorMinimal(op) {
   if (!op || typeof op !== "object") return null;
 
-  const name = op.name?.trim();
-  const addressParts = [
-    op.address,
-    op.city,
-    op.postalCode,
-    op.country,
-  ]
+  const name = op.name ? String(op.name).trim() : "";
+  const addressParts = [op.address, op.city, op.postalCode, op.country]
     .map((x) => (x ? String(x).trim() : ""))
     .filter(Boolean);
-
   const address = addressParts.length ? addressParts.join(", ") : "";
-  const phone = op.phone?.trim();
-  const email = op.email?.trim();
-  const website = op.website?.trim();
 
-  const hasAny = name || address || phone || email || website;
-  if (!hasAny) return null;
+  if (!name && !address) return null;
 
   return (
     <div className="legal-operator">
-      {name && <div className="char-row"><span>Denumire</span><strong>{name}</strong></div>}
-      {address && <div className="char-row"><span>Adresă</span><strong>{address}</strong></div>}
-      {phone && <div className="char-row"><span>Telefon</span><strong>{phone}</strong></div>}
-      {email && <div className="char-row"><span>Email</span><strong>{email}</strong></div>}
-      {website && <div className="char-row"><span>Website</span><strong>{website}</strong></div>}
+      {name && (
+        <div className="char-row">
+          <span>Denumire</span>
+          <strong>{name}</strong>
+        </div>
+      )}
+      {address && (
+        <div className="char-row">
+          <span>Adresă</span>
+          <strong>{address}</strong>
+        </div>
+      )}
     </div>
   );
 }
@@ -83,7 +68,7 @@ function renderOperator(op) {
 function ProductPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart(); // keep as-is (even if unused here)
+  const { addToCart } = useCart(); // keep as-is
 
   const [product, setProduct] = useState(null);
   const [recommended, setRecommended] = useState([]);
@@ -158,35 +143,18 @@ function ProductPage() {
   const originCountry = safeProduct.originCountry || dash;
   const netWeight = safeProduct.netWeight || dash;
 
-  // NEW: additional legal/label fields (all optional)
-  const brand = safeProduct.brand || dash;
-  const legalName = safeProduct.legalName || dash;
-  const storageConditions = safeProduct.storageConditions || dash;
-  const instructionsForUse = safeProduct.instructionsForUse || dash;
-  const placeOfProvenance = safeProduct.placeOfProvenance || dash;
+  // ✅ NEW (mandatory/conditional) fields you added in the minimal schema
+  const storageConditions = safeProduct.storageConditions || "";
+  const instructionsForUse = safeProduct.instructionsForUse || "";
+  const caffeineMgPer100ml =
+    safeProduct.caffeineMgPer100ml === null || safeProduct.caffeineMgPer100ml === undefined
+      ? null
+      : safeProduct.caffeineMgPer100ml;
 
-  const alcoholByVolume =
-    safeProduct.alcoholByVolume === null || safeProduct.alcoholByVolume === undefined
-      ? dash
-      : `${safeProduct.alcoholByVolume}%`;
+  const highCaffeineWarningText = safeProduct.highCaffeineWarningText || "";
 
-  const durabilityDateText = safeProduct.durabilityDateText || dash;
-  const lotNumber = safeProduct.lotNumber || dash;
-
-  const currency = safeProduct.currency || "EUR";
-  const unitPrice = safeProduct.unitPrice || dash;
-
-  const vatRate =
-    safeProduct.vatRate === null || safeProduct.vatRate === undefined
-      ? dash
-      : `${safeProduct.vatRate}%`;
-
-  const priceIncludesVAT =
-    safeProduct.priceIncludesVAT === undefined || safeProduct.priceIncludesVAT === null
-      ? dash
-      : safeProduct.priceIncludesVAT
-      ? "Da"
-      : "Nu";
+  const foodBusinessOperator = safeProduct.foodBusinessOperator;
+  const importer = safeProduct.importer;
 
   const nutrition = safeProduct.nutritionPer100g;
 
@@ -293,26 +261,18 @@ function ProductPage() {
 
   const hasNutrition = nutritionDisplayRows.length > 0;
 
+  // ✅ Show "Etichetă" tab only if there is something meaningful
+  const hasLabelInfo =
+    (storageConditions && storageConditions.trim()) ||
+    (instructionsForUse && instructionsForUse.trim()) ||
+    (foodBusinessOperator && Object.keys(foodBusinessOperator || {}).length > 0) ||
+    (importer && Object.keys(importer || {}).length > 0) ||
+    caffeineMgPer100ml !== null ||
+    (highCaffeineWarningText && highCaffeineWarningText.trim());
+
   // ✅ Now it's safe to early return (hooks already ran)
   if (loading) return <p className="loading">Loading...</p>;
   if (!product) return <p>Product not found.</p>;
-
-  // Decide if we show the "Etichetă & Legal" tab at all (only if there is something real)
-  const hasLegalInfo =
-    (safeProduct.brand && safeProduct.brand.trim()) ||
-    (safeProduct.legalName && safeProduct.legalName.trim()) ||
-    (safeProduct.storageConditions && safeProduct.storageConditions.trim()) ||
-    (safeProduct.instructionsForUse && safeProduct.instructionsForUse.trim()) ||
-    (safeProduct.placeOfProvenance && safeProduct.placeOfProvenance.trim()) ||
-    safeProduct.alcoholByVolume !== null && safeProduct.alcoholByVolume !== undefined ||
-    (safeProduct.durabilityDateText && safeProduct.durabilityDateText.trim()) ||
-    (safeProduct.lotNumber && safeProduct.lotNumber.trim()) ||
-    (safeProduct.unitPrice && safeProduct.unitPrice.trim()) ||
-    safeProduct.vatRate !== null && safeProduct.vatRate !== undefined ||
-    safeProduct.priceIncludesVAT !== undefined ||
-    (safeProduct.foodBusinessOperator && Object.keys(safeProduct.foodBusinessOperator || {}).length > 0) ||
-    (safeProduct.importer && Object.keys(safeProduct.importer || {}).length > 0) ||
-    (safeProduct.distributor && Object.keys(safeProduct.distributor || {}).length > 0);
 
   return (
     <div className="product-page">
@@ -327,9 +287,7 @@ function ProductPage() {
           {product.description && <p>{product.description}</p>}
 
           <div className="product-page__price-stock">
-            <span className="price">
-              {product.price} €
-            </span>
+            <span className="price">{product.price} €</span>
             <span className={`stock ${product.stock === "in stock" ? "in" : "out"}`}>
               {product.stock === "in stock" ? "In stock" : "Out of stock"}
             </span>
@@ -365,13 +323,13 @@ function ProductPage() {
               Caracteristici
             </button>
 
-            {hasLegalInfo && (
+            {hasLabelInfo && (
               <button
                 type="button"
-                className={activeTab === "legal" ? "tab active" : "tab"}
-                onClick={() => setActiveTab("legal")}
+                className={activeTab === "label" ? "tab active" : "tab"}
+                onClick={() => setActiveTab("label")}
               >
-                Etichetă &amp; Legal
+                Etichetă (Obligatoriu)
               </button>
             )}
           </div>
@@ -392,7 +350,7 @@ function ProductPage() {
                 <p className="tab-text">{allergensText}</p>
 
                 <h4 className="tab-title">
-                  Informații nutriționale <span className="nutrition-note">(per 100 g)</span>
+                  Informații nutriționale <span className="nutrition-note">(per 100 g / 100 ml)</span>
                 </h4>
 
                 {hasNutrition ? (
@@ -426,111 +384,71 @@ function ProductPage() {
                   <span>Greutate netă</span>
                   <strong>{netWeight}</strong>
                 </div>
-
-                {/* Optional quick extras if you like */}
-                {safeProduct.unitsPerBox && (
-                  <div className="char-row">
-                    <span>Unități / cutie</span>
-                    <strong>{safeProduct.unitsPerBox}</strong>
-                  </div>
-                )}
-                {safeProduct.boxPerPalet && (
-                  <div className="char-row">
-                    <span>Cutii / palet</span>
-                    <strong>{safeProduct.boxPerPalet}</strong>
-                  </div>
-                )}
               </div>
             )}
 
-            {activeTab === "legal" && (
+            {activeTab === "label" && (
               <div className="characteristics">
-                <div className="char-row">
-                  <span>Brand</span>
-                  <strong>{brand}</strong>
-                </div>
+                {/* Storage conditions (mandatory when applicable) */}
+                {(storageConditions && storageConditions.trim()) && (
+                  <div className="char-row">
+                    <span>Condiții de depozitare</span>
+                    <strong>{storageConditions}</strong>
+                  </div>
+                )}
 
-                <div className="char-row">
-                  <span>Denumire legală</span>
-                  <strong>{legalName}</strong>
-                </div>
+                {/* Instructions (mandatory when needed) */}
+                {(instructionsForUse && instructionsForUse.trim()) && (
+                  <div className="char-row">
+                    <span>Instrucțiuni de utilizare</span>
+                    <strong>{instructionsForUse}</strong>
+                  </div>
+                )}
 
-                <div className="char-row">
-                  <span>Loc de proveniență</span>
-                  <strong>{placeOfProvenance}</strong>
-                </div>
-
-                <div className="char-row">
-                  <span>Condiții de depozitare</span>
-                  <strong>{storageConditions}</strong>
-                </div>
-
-                <div className="char-row">
-                  <span>Instrucțiuni de utilizare</span>
-                  <strong>{instructionsForUse}</strong>
-                </div>
-
-                <div className="char-row">
-                  <span>Alcool</span>
-                  <strong>{alcoholByVolume}</strong>
-                </div>
-
-                <div className="char-row">
-                  <span>Lot</span>
-                  <strong>{lotNumber}</strong>
-                </div>
-
-                <div className="char-row">
-                  <span>Mențiune durabilitate</span>
-                  <strong>{durabilityDateText}</strong>
-                </div>
-
-                <div className="char-row">
-                  <span>Preț / unitate</span>
-                  <strong>{unitPrice}</strong>
-                </div>
-
-                <div className="char-row">
-                  <span>TVA (%)</span>
-                  <strong>{vatRate}</strong>
-                </div>
-
-                <div className="char-row">
-                  <span>Preț include TVA</span>
-                  <strong>{priceIncludesVAT}</strong>
-                </div>
-
-                <div className="char-row">
-                  <span>Monedă</span>
-                  <strong>{currency}</strong>
-                </div>
-
-                {/* Operators */}
-                {renderOperator(safeProduct.foodBusinessOperator) && (
+                {/* High caffeine beverages (energy drinks) */}
+                {(caffeineMgPer100ml !== null || (highCaffeineWarningText && highCaffeineWarningText.trim())) && (
                   <>
                     <h4 className="tab-title" style={{ marginTop: 18 }}>
-                      Operator economic (responsabil)
+                      Avertizare cafeină (dacă este cazul)
                     </h4>
-                    {renderOperator(safeProduct.foodBusinessOperator)}
+
+                    {caffeineMgPer100ml !== null && (
+                      <div className="char-row">
+                        <span>Cafeină</span>
+                        <strong>{caffeineMgPer100ml} mg / 100 ml</strong>
+                      </div>
+                    )}
+
+                    {(highCaffeineWarningText && highCaffeineWarningText.trim()) && (
+                      <p className="tab-text">{highCaffeineWarningText}</p>
+                    )}
                   </>
                 )}
 
-                {renderOperator(safeProduct.importer) && (
+                {/* Responsible operator (mandatory) */}
+                {renderOperatorMinimal(foodBusinessOperator) && (
                   <>
                     <h4 className="tab-title" style={{ marginTop: 18 }}>
-                      Importator
+                      Operator economic responsabil
                     </h4>
-                    {renderOperator(safeProduct.importer)}
+                    {renderOperatorMinimal(foodBusinessOperator)}
                   </>
                 )}
 
-                {renderOperator(safeProduct.distributor) && (
+                {/* Importer (mandatory when applicable) */}
+                {renderOperatorMinimal(importer) && (
                   <>
                     <h4 className="tab-title" style={{ marginTop: 18 }}>
-                      Distribuitor
+                      Importator (dacă este cazul)
                     </h4>
-                    {renderOperator(safeProduct.distributor)}
+                    {renderOperatorMinimal(importer)}
                   </>
+                )}
+
+                {!hasLabelInfo && (
+                  <p className="tab-muted">
+                    Nu există informații suplimentare de etichetă introduse.
+                  </p>
                 )}
               </div>
             )}

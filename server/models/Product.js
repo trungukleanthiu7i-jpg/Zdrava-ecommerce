@@ -2,7 +2,7 @@
 import mongoose from "mongoose";
 
 /**
- * Nutrition values (per 100g).
+ * Optional sub-schema for nutrition values (per 100g / 100ml).
  * _id: false prevents Mongo from creating an _id for this nested object.
  */
 const nutritionPer100gSchema = new mongoose.Schema(
@@ -25,31 +25,16 @@ const nutritionPer100gSchema = new mongoose.Schema(
 );
 
 /**
- * Food business operator (responsible operator under whose name the food is marketed).
- * This is part of mandatory consumer info for prepacked foods (EU 1169/2011).
+ * Responsible food business operator (mandatory info for prepacked foods).
+ * (name + address of the operator under whose name the food is marketed)
  */
 const foodBusinessOperatorSchema = new mongoose.Schema(
   {
-    name: { type: String, default: "", trim: true }, // company name
-    address: { type: String, default: "", trim: true }, // full postal address (street, number, etc.)
+    name: { type: String, default: "", trim: true },
+    address: { type: String, default: "", trim: true },
     city: { type: String, default: "", trim: true },
     postalCode: { type: String, default: "", trim: true },
     country: { type: String, default: "", trim: true },
-    phone: { type: String, default: "", trim: true },
-    email: { type: String, default: "", trim: true },
-    website: { type: String, default: "", trim: true },
-  },
-  { _id: false }
-);
-
-/**
- * Ingredient with optional QUID percentage (quantity of certain ingredients/categories).
- * Useful when you must declare percentages for emphasized ingredients.
- */
-const ingredientItemSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true, trim: true },
-    percent: { type: Number, default: null }, // e.g., 60 for "Peaches 60%"
   },
   { _id: false }
 );
@@ -83,12 +68,12 @@ const productSchema = new mongoose.Schema(
 
     // ---------------- LOGISTICS (OPTIONAL) ----------------
     unitsPerBox: {
-      type: String,
+      type: String, // kept as string to match existing DB
       default: "",
     },
 
     boxPerPalet: {
-      type: String,
+      type: String, // kept as string to match existing DB
       default: "",
     },
 
@@ -127,26 +112,23 @@ const productSchema = new mongoose.Schema(
     },
 
     // =========================================================
-    // ✅ EXISTING OPTIONAL FIELDS (you already use these)
+    // ✅ FIELDS YOU ALREADY HAD (label tabs)
     // =========================================================
 
-    // Ingredients as one text field (easy to paste from labels)
     ingredientsText: {
       type: String,
       default: "",
       trim: true,
     },
 
-    // Allergens list (optional)
     allergens: {
       type: [String],
       default: [],
     },
 
-    // Nutrition per 100g (optional object)
     nutritionPer100g: {
       type: nutritionPer100gSchema,
-      default: undefined, // keeps it absent unless you send it
+      default: undefined, // important: keeps it absent unless you send it
     },
 
     originCountry: {
@@ -162,40 +144,12 @@ const productSchema = new mongoose.Schema(
     },
 
     // =========================================================
-    // ✅ NEW FIELDS (to cover mandatory info to show online)
+    // ✅ ONLY ADD WHAT YOU WERE MISSING (mandatory/conditional)
     // =========================================================
 
     /**
-     * Brand / commercial brand (not always mandatory, but commonly shown online).
-     */
-    brand: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-
-    /**
-     * Legal sales name (if different from "name").
-     * Example: "Gem de piersici extra" etc.
-     */
-    legalName: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-
-    /**
-     * Structured ingredient list (optional) + QUID percentages.
-     * You can still keep ingredientsText as your main field.
-     */
-    ingredients: {
-      type: [ingredientItemSchema],
-      default: [],
-    },
-
-    /**
-     * Special storage conditions / conditions of use (mandatory when applicable).
-     * Example: "A se păstra la loc uscat și răcoros. După deschidere, la frigider..."
+     * Storage conditions (mandatory when applicable).
+     * Example: "A se păstra la loc uscat și răcoros. După deschidere: la frigider."
      */
     storageConditions: {
       type: String,
@@ -205,7 +159,7 @@ const productSchema = new mongoose.Schema(
 
     /**
      * Instructions for use (mandatory when needed).
-     * Example: "A se consuma ca atare" / "Se încălzește înainte de consum" etc.
+     * Example: "A se agita înainte de consum."
      */
     instructionsForUse: {
       type: String,
@@ -214,8 +168,7 @@ const productSchema = new mongoose.Schema(
     },
 
     /**
-     * Responsible Food Business Operator (name + address).
-     * Mandatory consumer info (EU 1169/2011).
+     * Responsible operator (mandatory info).
      */
     foodBusinessOperator: {
       type: foodBusinessOperatorSchema,
@@ -223,105 +176,31 @@ const productSchema = new mongoose.Schema(
     },
 
     /**
-     * If you import products, storing importer/distributor helps in RO practice.
-     * Not always mandatory if operator already covers it, but useful.
+     * Importer (mandatory when applicable — e.g., products placed on EU market by an importer).
+     * Keep it optional because not all products have an importer.
      */
     importer: {
       type: foodBusinessOperatorSchema,
       default: undefined,
     },
 
-    distributor: {
-      type: foodBusinessOperatorSchema,
-      default: undefined,
-    },
-
     /**
-     * Place of provenance (when relevant / when required).
-     * Example: "UE / Non-UE", region, specific place.
+     * HIGH CAFFEINE beverages (energy drinks):
+     * If the product requires the "High caffeine content..." warning,
+     * store the caffeine level (mg/100ml) + warning text.
      */
-    placeOfProvenance: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-
-    /**
-     * Alcohol by volume (mandatory for beverages >1.2% alc, if you sell any).
-     */
-    alcoholByVolume: {
+    caffeineMgPer100ml: {
       type: Number,
-      default: null, // e.g., 5.0 for 5%
+      default: null, // e.g., 32 for 32 mg/100 ml
       min: 0,
     },
 
-    /**
-     * Dates:
-     * IMPORTANT: for distance selling, the "best before / use by" date is the main exception:
-     * it does NOT have to be shown online before purchase, but is usually on the label.
-     * Still, many shops store it for internal ops.
-     */
-    durabilityDateText: {
-      // e.g. "A se consuma de preferință înainte de: 12.08.2026"
+    highCaffeineWarningText: {
       type: String,
       default: "",
       trim: true,
-    },
-
-    /**
-     * Lot / batch (commonly required on packaging for traceability).
-     * Not typically required to show online, but useful for ops/recalls.
-     */
-    lotNumber: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-
-    /**
-     * Pricing compliance helpers (useful online):
-     * - unitPrice: price per kg/L when applicable (RO/EU consumer practice)
-     * - vatRate: if you need to show VAT breakdown
-     * Keep your existing "price" as-is.
-     */
-    currency: {
-      type: String,
-      default: "EUR",
-      trim: true,
-    },
-
-    priceIncludesVAT: {
-      type: Boolean,
-      default: true,
-    },
-
-    vatRate: {
-      type: Number,
-      default: null, // e.g. 9 or 19
-      min: 0,
-    },
-
-    unitPrice: {
-      // e.g. "11.40 EUR/kg" or computed value stored as number
-      type: String,
-      default: "",
-      trim: true,
-    },
-
-    /**
-     * Pack/serving helpers (not mandatory, but often helpful):
-     */
-    servingsPerPack: {
-      type: Number,
-      default: null,
-      min: 0,
-    },
-
-    portionSize: {
-      // e.g. "30 g"
-      type: String,
-      default: "",
-      trim: true,
+      // Example:
+      // "Conținut ridicat de cafeină. Nu este recomandat copiilor și femeilor însărcinate sau care alăptează."
     },
   },
   {
