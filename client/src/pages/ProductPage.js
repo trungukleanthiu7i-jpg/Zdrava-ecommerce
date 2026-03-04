@@ -329,7 +329,7 @@ function ProductPage() {
                 className={activeTab === "label" ? "tab active" : "tab"}
                 onClick={() => setActiveTab("label")}
               >
-                Etichetă (Obligatoriu)
+                Etichetă
               </button>
             )}
           </div>
@@ -409,7 +409,7 @@ function ProductPage() {
                 {(caffeineMgPer100ml !== null || (highCaffeineWarningText && highCaffeineWarningText.trim())) && (
                   <>
                     <h4 className="tab-title" style={{ marginTop: 18 }}>
-                      Avertizare cafeină (dacă este cazul)
+                      Avertizare cafeină 
                     </h4>
 
                     {caffeineMgPer100ml !== null && (
