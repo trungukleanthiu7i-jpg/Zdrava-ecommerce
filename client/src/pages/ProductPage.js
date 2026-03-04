@@ -31,10 +31,59 @@ function Barcode({ value }) {
   );
 }
 
+/* ================================
+   SMALL HELPERS
+================================ */
+const dash = "—";
+
+function formatMoney(amount, currency = "EUR") {
+  if (amount === undefined || amount === null || amount === "") return dash;
+
+  // Keep your existing display style, but safe-format if possible
+  const n = Number(amount);
+  if (Number.isFinite(n)) {
+    // Use comma for RO style if desired; keep simple to avoid breaking
+    return `${n} ${currency}`;
+  }
+  return `${amount} ${currency}`;
+}
+
+function renderOperator(op) {
+  if (!op || typeof op !== "object") return null;
+
+  const name = op.name?.trim();
+  const addressParts = [
+    op.address,
+    op.city,
+    op.postalCode,
+    op.country,
+  ]
+    .map((x) => (x ? String(x).trim() : ""))
+    .filter(Boolean);
+
+  const address = addressParts.length ? addressParts.join(", ") : "";
+  const phone = op.phone?.trim();
+  const email = op.email?.trim();
+  const website = op.website?.trim();
+
+  const hasAny = name || address || phone || email || website;
+  if (!hasAny) return null;
+
+  return (
+    <div className="legal-operator">
+      {name && <div className="char-row"><span>Denumire</span><strong>{name}</strong></div>}
+      {address && <div className="char-row"><span>Adresă</span><strong>{address}</strong></div>}
+      {phone && <div className="char-row"><span>Telefon</span><strong>{phone}</strong></div>}
+      {email && <div className="char-row"><span>Email</span><strong>{email}</strong></div>}
+      {website && <div className="char-row"><span>Website</span><strong>{website}</strong></div>}
+    </div>
+  );
+}
+
 function ProductPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart } = useCart(); // keep as-is (even if unused here)
 
   const [product, setProduct] = useState(null);
   const [recommended, setRecommended] = useState([]);
@@ -106,8 +155,38 @@ function ProductPage() {
     ? String(safeProduct.allergens)
     : "Nu conține alergeni declarați.";
 
-  const originCountry = safeProduct.originCountry || "—";
-  const netWeight = safeProduct.netWeight || "—";
+  const originCountry = safeProduct.originCountry || dash;
+  const netWeight = safeProduct.netWeight || dash;
+
+  // NEW: additional legal/label fields (all optional)
+  const brand = safeProduct.brand || dash;
+  const legalName = safeProduct.legalName || dash;
+  const storageConditions = safeProduct.storageConditions || dash;
+  const instructionsForUse = safeProduct.instructionsForUse || dash;
+  const placeOfProvenance = safeProduct.placeOfProvenance || dash;
+
+  const alcoholByVolume =
+    safeProduct.alcoholByVolume === null || safeProduct.alcoholByVolume === undefined
+      ? dash
+      : `${safeProduct.alcoholByVolume}%`;
+
+  const durabilityDateText = safeProduct.durabilityDateText || dash;
+  const lotNumber = safeProduct.lotNumber || dash;
+
+  const currency = safeProduct.currency || "EUR";
+  const unitPrice = safeProduct.unitPrice || dash;
+
+  const vatRate =
+    safeProduct.vatRate === null || safeProduct.vatRate === undefined
+      ? dash
+      : `${safeProduct.vatRate}%`;
+
+  const priceIncludesVAT =
+    safeProduct.priceIncludesVAT === undefined || safeProduct.priceIncludesVAT === null
+      ? dash
+      : safeProduct.priceIncludesVAT
+      ? "Da"
+      : "Nu";
 
   const nutrition = safeProduct.nutritionPer100g;
 
@@ -218,6 +297,23 @@ function ProductPage() {
   if (loading) return <p className="loading">Loading...</p>;
   if (!product) return <p>Product not found.</p>;
 
+  // Decide if we show the "Etichetă & Legal" tab at all (only if there is something real)
+  const hasLegalInfo =
+    (safeProduct.brand && safeProduct.brand.trim()) ||
+    (safeProduct.legalName && safeProduct.legalName.trim()) ||
+    (safeProduct.storageConditions && safeProduct.storageConditions.trim()) ||
+    (safeProduct.instructionsForUse && safeProduct.instructionsForUse.trim()) ||
+    (safeProduct.placeOfProvenance && safeProduct.placeOfProvenance.trim()) ||
+    safeProduct.alcoholByVolume !== null && safeProduct.alcoholByVolume !== undefined ||
+    (safeProduct.durabilityDateText && safeProduct.durabilityDateText.trim()) ||
+    (safeProduct.lotNumber && safeProduct.lotNumber.trim()) ||
+    (safeProduct.unitPrice && safeProduct.unitPrice.trim()) ||
+    safeProduct.vatRate !== null && safeProduct.vatRate !== undefined ||
+    safeProduct.priceIncludesVAT !== undefined ||
+    (safeProduct.foodBusinessOperator && Object.keys(safeProduct.foodBusinessOperator || {}).length > 0) ||
+    (safeProduct.importer && Object.keys(safeProduct.importer || {}).length > 0) ||
+    (safeProduct.distributor && Object.keys(safeProduct.distributor || {}).length > 0);
+
   return (
     <div className="product-page">
       <div className="product-page__container">
@@ -231,7 +327,9 @@ function ProductPage() {
           {product.description && <p>{product.description}</p>}
 
           <div className="product-page__price-stock">
-            <span className="price">{product.price} €</span>
+            <span className="price">
+              {product.price} €
+            </span>
             <span className={`stock ${product.stock === "in stock" ? "in" : "out"}`}>
               {product.stock === "in stock" ? "In stock" : "Out of stock"}
             </span>
@@ -266,6 +364,16 @@ function ProductPage() {
             >
               Caracteristici
             </button>
+
+            {hasLegalInfo && (
+              <button
+                type="button"
+                className={activeTab === "legal" ? "tab active" : "tab"}
+                onClick={() => setActiveTab("legal")}
+              >
+                Etichetă &amp; Legal
+              </button>
+            )}
           </div>
 
           <div className="tab-content">
@@ -318,6 +426,112 @@ function ProductPage() {
                   <span>Greutate netă</span>
                   <strong>{netWeight}</strong>
                 </div>
+
+                {/* Optional quick extras if you like */}
+                {safeProduct.unitsPerBox && (
+                  <div className="char-row">
+                    <span>Unități / cutie</span>
+                    <strong>{safeProduct.unitsPerBox}</strong>
+                  </div>
+                )}
+                {safeProduct.boxPerPalet && (
+                  <div className="char-row">
+                    <span>Cutii / palet</span>
+                    <strong>{safeProduct.boxPerPalet}</strong>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "legal" && (
+              <div className="characteristics">
+                <div className="char-row">
+                  <span>Brand</span>
+                  <strong>{brand}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Denumire legală</span>
+                  <strong>{legalName}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Loc de proveniență</span>
+                  <strong>{placeOfProvenance}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Condiții de depozitare</span>
+                  <strong>{storageConditions}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Instrucțiuni de utilizare</span>
+                  <strong>{instructionsForUse}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Alcool</span>
+                  <strong>{alcoholByVolume}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Lot</span>
+                  <strong>{lotNumber}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Mențiune durabilitate</span>
+                  <strong>{durabilityDateText}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Preț / unitate</span>
+                  <strong>{unitPrice}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>TVA (%)</span>
+                  <strong>{vatRate}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Preț include TVA</span>
+                  <strong>{priceIncludesVAT}</strong>
+                </div>
+
+                <div className="char-row">
+                  <span>Monedă</span>
+                  <strong>{currency}</strong>
+                </div>
+
+                {/* Operators */}
+                {renderOperator(safeProduct.foodBusinessOperator) && (
+                  <>
+                    <h4 className="tab-title" style={{ marginTop: 18 }}>
+                      Operator economic (responsabil)
+                    </h4>
+                    {renderOperator(safeProduct.foodBusinessOperator)}
+                  </>
+                )}
+
+                {renderOperator(safeProduct.importer) && (
+                  <>
+                    <h4 className="tab-title" style={{ marginTop: 18 }}>
+                      Importator
+                    </h4>
+                    {renderOperator(safeProduct.importer)}
+                  </>
+                )}
+
+                {renderOperator(safeProduct.distributor) && (
+                  <>
+                    <h4 className="tab-title" style={{ marginTop: 18 }}>
+                      Distribuitor
+                    </h4>
+                    {renderOperator(safeProduct.distributor)}
+                  </>
+                )}
               </div>
             )}
           </div>
