@@ -219,3 +219,41 @@
     opacity: 1;
   }
 }
+.checkout-page__agreements {
+  margin: 20px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.checkout-page__checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.checkout-page__checkboxLabel input[type="checkbox"] {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.checkout-page__checkboxLabel a {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.pay-now-btn--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checkout-total {
+  margin-top: 16px;
+  font-size: 16px;
+  color: #111;
+}

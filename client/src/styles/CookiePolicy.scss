@@ -1,0 +1,101 @@
+/* ===============================
+   LEGAL PAGES (TERMS / PRIVACY / COOKIES)
+================================ */
+
+.legalPage {
+  width: 100%;
+  min-height: 100vh;
+  background: #f7f7f7;
+  padding: 60px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.legalPage__container {
+  width: 100%;
+  max-width: 900px;
+  background: #ffffff;
+  padding: 50px;
+  border-radius: 10px;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+  line-height: 1.7;
+}
+
+/* TITLE */
+
+.legalPage h1 {
+  font-size: 34px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #1f1f1f;
+}
+
+/* LAST UPDATE */
+
+.legalPage__date {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 25px;
+}
+
+/* SECTIONS */
+
+.legalPage__section {
+  margin-top: 35px;
+}
+
+.legalPage__section h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #1f1f1f;
+}
+
+/* TEXT */
+
+.legalPage p {
+  font-size: 16px;
+  color: #444;
+  margin-bottom: 12px;
+}
+
+/* LIST */
+
+.legalPage ul {
+  margin-left: 18px;
+  margin-top: 10px;
+}
+
+.legalPage li {
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #444;
+}
+
+/* CONTACT EMAIL */
+
+.legalPage strong {
+  color: #111;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 768px) {
+  .legalPage {
+    padding: 40px 15px;
+  }
+
+  .legalPage__container {
+    padding: 35px 25px;
+  }
+
+  .legalPage h1 {
+    font-size: 28px;
+  }
+
+  .legalPage__section h3 {
+    font-size: 18px;
+  }
+}

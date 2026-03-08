@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import axiosClient from "../api/axiosClient";
 import "../styles/CheckoutPage.scss";
@@ -9,9 +10,10 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import { SiRevolut } from "react-icons/si";
-import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function CheckoutPage() {
+  const { t } = useTranslation();
   const { cartItems, getTotalPrice, clearCart } = useCart();
   const navigate = useNavigate();
 
@@ -40,15 +42,14 @@ export default function CheckoutPage() {
   });
 
   const [paymentMethod, setPaymentMethod] = useState("REVOLUT");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptCookies, setAcceptCookies] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [instructions, setInstructions] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const total = useMemo(
-    () => Number(getTotalPrice() || 0),
-    [getTotalPrice]
-  );
+  const total = useMemo(() => Number(getTotalPrice() || 0), [getTotalPrice]);
 
   /* ===============================
      Handlers
@@ -78,7 +79,7 @@ export default function CheckoutPage() {
       !shippingAddress.addressLine ||
       !shippingAddress.postalCode
     ) {
-      setError("Please complete all delivery details.");
+      setError(t("Please complete all delivery details."));
       return;
     }
 
@@ -86,7 +87,7 @@ export default function CheckoutPage() {
       customerType === "individual" &&
       (!customer.fullName || !customer.email || !customer.phone)
     ) {
-      setError("Please complete all personal details.");
+      setError(t("Please complete all personal details."));
       return;
     }
 
@@ -98,7 +99,16 @@ export default function CheckoutPage() {
         !customer.email ||
         !customer.phone)
     ) {
-      setError("Please complete all company details.");
+      setError(t("Please complete all company details."));
+      return;
+    }
+
+    if (!acceptTerms || !acceptCookies) {
+      setError(
+        t(
+          "You must accept the Terms and Conditions, Privacy Policy, and Cookie Policy to continue."
+        )
+      );
       return;
     }
 
@@ -140,13 +150,16 @@ export default function CheckoutPage() {
         addressLine: "",
         postalCode: "",
       });
+      setAcceptTerms(false);
+      setAcceptCookies(false);
 
       setTimeout(() => {
         navigate("/");
       }, 2500);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Checkout failed. Please try again."
+        err.response?.data?.message ||
+          t("Checkout failed. Please try again.")
       );
     } finally {
       setLoading(false);
@@ -160,8 +173,8 @@ export default function CheckoutPage() {
         <div className="success-modal-overlay">
           <div className="success-modal">
             <FaCheckCircle className="success-icon" />
-            <h2>Order sent successfully</h2>
-            <p>You will be redirected to the homepage.</p>
+            <h2>{t("Order sent successfully")}</h2>
+            <p>{t("You will be redirected to the homepage.")}</p>
           </div>
         </div>
       )}
@@ -171,7 +184,7 @@ export default function CheckoutPage() {
           {/* ================= LEFT ================= */}
           <div className="checkout-left">
             <div className="checkout-form">
-              <h2>Customer details</h2>
+              <h2>{t("Customer details")}</h2>
 
               <div className="customer-type-toggle">
                 <label>
@@ -180,7 +193,7 @@ export default function CheckoutPage() {
                     checked={customerType === "individual"}
                     onChange={() => setCustomerType("individual")}
                   />
-                  Physical person
+                  {t("Physical person")}
                 </label>
 
                 <label>
@@ -189,14 +202,14 @@ export default function CheckoutPage() {
                     checked={customerType === "company"}
                     onChange={() => setCustomerType("company")}
                   />
-                  Company
+                  {t("Company")}
                 </label>
               </div>
 
               {customerType === "individual" && (
                 <input
                   name="fullName"
-                  placeholder="Full name"
+                  placeholder={t("Full name")}
                   value={customer.fullName}
                   onChange={handleCustomerChange}
                 />
@@ -206,19 +219,19 @@ export default function CheckoutPage() {
                 <>
                   <input
                     name="companyName"
-                    placeholder="Company name"
+                    placeholder={t("Company name")}
                     value={company.companyName}
                     onChange={handleCompanyChange}
                   />
                   <input
                     name="vatNumber"
-                    placeholder="VAT number (CUI)"
+                    placeholder={t("VAT number (CUI)")}
                     value={company.vatNumber}
                     onChange={handleCompanyChange}
                   />
                   <input
                     name="contactPerson"
-                    placeholder="Contact person"
+                    placeholder={t("Contact person")}
                     value={company.contactPerson}
                     onChange={handleCompanyChange}
                   />
@@ -227,42 +240,42 @@ export default function CheckoutPage() {
 
               <input
                 name="email"
-                placeholder="Email"
+                placeholder={t("Email")}
                 value={customer.email}
                 onChange={handleCustomerChange}
               />
 
               <input
                 name="phone"
-                placeholder="Phone number"
+                placeholder={t("Phone number")}
                 value={customer.phone}
                 onChange={handleCustomerChange}
               />
 
               <input
                 name="country"
-                placeholder="Country"
+                placeholder={t("Country")}
                 value={shippingAddress.country}
                 onChange={handleAddressChange}
               />
 
               <input
                 name="city"
-                placeholder="City"
+                placeholder={t("City")}
                 value={shippingAddress.city}
                 onChange={handleAddressChange}
               />
 
               <input
                 name="addressLine"
-                placeholder="Street address"
+                placeholder={t("Street address")}
                 value={shippingAddress.addressLine}
                 onChange={handleAddressChange}
               />
 
               <input
                 name="postalCode"
-                placeholder="Postal code"
+                placeholder={t("Postal code")}
                 value={shippingAddress.postalCode}
                 onChange={handleAddressChange}
               />
@@ -271,10 +284,11 @@ export default function CheckoutPage() {
 
           {/* ================= RIGHT ================= */}
           <div className="checkout-right">
-            <h2>Checkout</h2>
+            <h2>{t("Checkout")}</h2>
 
             <div className="payment-methods-icons">
               <button
+                type="button"
                 className={`payment-card ${
                   paymentMethod === "REVOLUT" ? "active" : ""
                 }`}
@@ -284,6 +298,7 @@ export default function CheckoutPage() {
               </button>
 
               <button
+                type="button"
                 className={`payment-card ${
                   paymentMethod === "PAYPAL" ? "active" : ""
                 }`}
@@ -293,6 +308,7 @@ export default function CheckoutPage() {
               </button>
 
               <button
+                type="button"
                 className={`payment-card ${
                   paymentMethod === "IBAN_RON" ? "active" : ""
                 }`}
@@ -302,6 +318,7 @@ export default function CheckoutPage() {
               </button>
 
               <button
+                type="button"
                 className={`payment-card ${
                   paymentMethod === "IBAN_EUR" ? "active" : ""
                 }`}
@@ -311,6 +328,7 @@ export default function CheckoutPage() {
               </button>
 
               <button
+                type="button"
                 className={`payment-card ${
                   paymentMethod === "WU" ? "active" : ""
                 }`}
@@ -320,12 +338,51 @@ export default function CheckoutPage() {
               </button>
             </div>
 
+            {/* ================= AGREEMENTS ================= */}
+            <div className="checkout-page__agreements">
+              <label className="checkout-page__checkboxLabel">
+                <input
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                />
+                <span>
+                  {t("I have read and accept")}{" "}
+                  <Link to="/terms-and-conditions" target="_blank" rel="noopener noreferrer">
+                    {t("Terms and Conditions")}
+                  </Link>{" "}
+                  {t("and")}{" "}
+                  <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer">
+                    {t("Privacy Policy")}
+                  </Link>
+                  .
+                </span>
+              </label>
+
+              <label className="checkout-page__checkboxLabel">
+                <input
+                  type="checkbox"
+                  checked={acceptCookies}
+                  onChange={(e) => setAcceptCookies(e.target.checked)}
+                />
+                <span>
+                  {t("I have read")}{" "}
+                  <Link to="/cookie-policy" target="_blank" rel="noopener noreferrer">
+                    {t("Cookie Policy")}
+                  </Link>
+                  .
+                </span>
+              </label>
+            </div>
+
             <button
-              className="pay-now-btn"
+              className={`pay-now-btn ${
+                !acceptTerms || !acceptCookies ? "pay-now-btn--disabled" : ""
+              }`}
               onClick={placeOrder}
-              disabled={loading}
+              disabled={loading || !acceptTerms || !acceptCookies}
             >
-              {loading ? "Processing..." : "Pay now"}
+              {loading ? t("Processing...") : t("Pay now")}
             </button>
 
             {error && <p className="checkout-message error">{error}</p>}
@@ -340,6 +397,12 @@ export default function CheckoutPage() {
                 </ul>
               </div>
             )}
+
+            <div className="checkout-total">
+              <strong>
+                {t("Total")}: €{total.toFixed(2)}
+              </strong>
+            </div>
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ import "aos/dist/aos.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
+import CookieBanner from "./components/CookieBanner";
 
 // 📄 Pages
 import HomePage from "./pages/HomePage";
@@ -30,7 +31,11 @@ import AdminDashboard from "./pages/AdminDashboard";
 import MyOrders from "./pages/MyOrders";
 import OrderDetails from "./pages/OrderDetails";
 import Profile from "./pages/Profile";
-import OAuthSuccess from "./pages/OAuthSuccess"; // ✅ NEW
+import OAuthSuccess from "./pages/OAuthSuccess";
+import RecipeDetailsPage from "./pages/RecipeDetailsPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import CookiePolicy from "./pages/CookiePolicy";
+import ReturnPolicy from "./pages/ReturnPolicy";
 
 // 🔍 Other
 import SearchResults from "./components/SearchResults";
@@ -103,6 +108,14 @@ function AnimatedRoutes() {
           element={
             <AnimatedPage>
               <ProductPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/recipes/:slug"
+          element={
+            <AnimatedPage>
+              <RecipeDetailsPage />
             </AnimatedPage>
           }
         />
@@ -214,6 +227,30 @@ function AnimatedRoutes() {
             </AnimatedPage>
           }
         />
+        <Route
+          path="/privacy-policy"
+          element={
+            <AnimatedPage>
+              <PrivacyPolicy />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/cookie-policy"
+          element={
+            <AnimatedPage>
+              <CookiePolicy />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/return-policy"
+          element={
+            <AnimatedPage>
+              <ReturnPolicy />
+            </AnimatedPage>
+          }
+        />
 
         {/* 🧑‍💼 Admin */}
         <Route
@@ -256,6 +293,7 @@ function App() {
       <AnimatedRoutes />
       <CartDrawer />
       <Footer />
+      <CookieBanner />
     </Router>
   );
 }

@@ -6,16 +6,20 @@ import {
   FaMapMarkerAlt,
   FaTiktok,
   FaFacebookF,
+  FaBuilding,
+  FaIdCard,
 } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import "../styles/Footer.scss";
 
 const Footer = () => {
+  const { t } = useTranslation();
   const year = new Date().getFullYear();
 
   return (
     <footer className="footerPro">
       <div className="footerPro__inner">
-
         {/* LEFT: Logo + Social */}
         <div className="footerPro__col footerPro__brand">
           <div className="footerPro__logoWrap">
@@ -32,6 +36,7 @@ const Footer = () => {
               href="https://www.facebook.com/"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Facebook"
             >
               <FaFacebookF />
             </a>
@@ -41,6 +46,7 @@ const Footer = () => {
               href="https://www.instagram.com/zdravagroup.ro"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Instagram"
             >
               <FaInstagram />
             </a>
@@ -50,6 +56,7 @@ const Footer = () => {
               href="https://www.tiktok.com/@zdravafood.ro"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="TikTok"
             >
               <FaTiktok />
             </a>
@@ -58,35 +65,65 @@ const Footer = () => {
 
         {/* MIDDLE: Info */}
         <div className="footerPro__col">
-          <h4 className="footerPro__title">INFORMAȚII</h4>
+          <h4 className="footerPro__title">{t("INFORMAȚII")}</h4>
 
           <div className="footerPro__links">
-            <a className="footerPro__link" href="/terms-and-conditions">
-              Termeni și condiții
-            </a>
+            <Link className="footerPro__link" to="/terms-and-conditions">
+              {t("Termeni și condiții")}
+            </Link>
 
-            <a className="footerPro__link" href="/contact">
-              Contactează-ne
-            </a>
+            <Link className="footerPro__link" to="/privacy-policy">
+              {t("Politica de confidențialitate")}
+            </Link>
 
-            <a className="footerPro__link" href="/about">
-              Despre noi
-            </a>
+            <Link className="footerPro__link" to="/cookie-policy">
+              {t("Politica de cookies")}
+            </Link>
+
+            <Link className="footerPro__link" to="/return-policy">
+              {t("Politica de retur")}
+            </Link>
+
+            <Link className="footerPro__link" to="/contact">
+              {t("Contactează-ne")}
+            </Link>
+
+            <Link className="footerPro__link" to="/about">
+              {t("Despre noi")}
+            </Link>
           </div>
         </div>
 
-        {/* RIGHT: Contact */}
+        {/* RIGHT: Contact + Legal company details */}
         <div className="footerPro__col">
-          <h4 className="footerPro__title">DATE DE CONTACT</h4>
+          <h4 className="footerPro__title">{t("DATE DE CONTACT")}</h4>
 
           <div className="footerPro__contactList">
             <div className="footerPro__contactItem">
+              <FaBuilding className="footerPro__contactIcon" />
+              <span className="footerPro__contactText">
+                <strong>MERITA LOGISTIC S.R.L.</strong>
+              </span>
+            </div>
+
+            <div className="footerPro__contactItem">
+              <FaIdCard className="footerPro__contactIcon" />
+              <span className="footerPro__contactText">
+                {t("CUI")}: RO48977906
+              </span>
+            </div>
+
+            <div className="footerPro__contactItem">
+              <FaIdCard className="footerPro__contactIcon" />
+              <span className="footerPro__contactText">
+                {t("Nr. Reg. Com.")}: J2023002219162
+              </span>
+            </div>
+
+            <div className="footerPro__contactItem">
               <FaPhoneAlt className="footerPro__contactIcon" />
-              <a
-                className="footerPro__contactLink"
-                href="tel:+40712345678"
-              >
-                +40 712 345 678
+              <a className="footerPro__contactLink" href="tel:+40734844079">
+                0734844079
               </a>
             </div>
 
@@ -103,17 +140,15 @@ const Footer = () => {
             <div className="footerPro__contactItem">
               <FaMapMarkerAlt className="footerPro__contactIcon" />
               <span className="footerPro__contactText">
-                Aleea 1 Constantin Argetoianu, Breasta, Dolj, România
+                {t("Str. Cerna nr. 3, et. mansardă, ap. 3, Mun. Craiova, Jud. Dolj, România")}
               </span>
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Compliance Section */}
       <div className="footerPro__compliance">
-
         <a
           href="https://anpc.ro/"
           target="_blank"
@@ -149,25 +184,26 @@ const Footer = () => {
           <span> | </span>
 
           <a
-            href="https://ec.europa.eu/consumers/odr"
+            href="https://reclamatiisal.anpc.ro/"
             target="_blank"
             rel="noopener noreferrer"
           >
-            SOL (ODR)
+            {t("Depune reclamație SAL")}
           </a>
         </div>
-
       </div>
 
       {/* Bottom */}
       <div className="footerPro__bottom">
         <div className="footerPro__bottomInner">
           <p className="footerPro__legalLine">
-            © {year} Zdrava România. Toate drepturile rezervate.
+            {t("© {{year}} Zdrava România. Toate drepturile rezervate.", {
+              year,
+            })}
           </p>
 
           <p className="footerPro__madeby">
-            Creat de{" "}
+            {t("Creat de")}{" "}
             <a
               href="https://www.linkedin.com/in/kleanthi-trungu-491185336/"
               target="_blank"

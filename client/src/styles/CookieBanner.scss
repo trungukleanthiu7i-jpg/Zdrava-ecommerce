@@ -1,0 +1,250 @@
+.cookieBanner {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-family: inherit;
+}
+
+/* backdrop */
+.cookieBanner__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+/* main panel */
+.cookieBanner__panel {
+  position: relative;
+  width: 100%;
+  max-width: 980px;
+  margin: 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 26px 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  animation: cookieSlideUp 0.25s ease;
+}
+
+@keyframes cookieSlideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* badge */
+.cookieBanner__badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #16a34a;
+  margin-bottom: 6px;
+}
+
+/* title */
+.cookieBanner__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+/* text */
+.cookieBanner__text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+/* links */
+.cookieBanner__link {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* summary row */
+.cookieBanner__summary {
+  display: flex;
+  gap: 18px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: #f3f4f6;
+  border-radius: 10px;
+}
+
+.cookieBanner__summaryItem {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.cookieBanner__summaryLabel {
+  font-weight: 600;
+  color: #111827;
+}
+
+.cookieBanner__summaryValue {
+  color: #6b7280;
+}
+
+.cookieBanner__summaryValue--active {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+/* preferences */
+.cookieBanner__preferences {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* preference card */
+.cookieBanner__prefCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.cookieBanner__prefCard--locked {
+  background: #f9fafb;
+}
+
+.cookieBanner__prefInfo h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cookieBanner__prefInfo p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  max-width: 420px;
+}
+
+/* switch */
+.cookieBanner__switchWrap {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.cookieBanner__switchWrap input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cookieBanner__switchSlider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #d1d5db;
+  border-radius: 20px;
+  transition: 0.2s;
+}
+
+.cookieBanner__switchSlider:before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.cookieBanner__switchWrap input:checked + .cookieBanner__switchSlider {
+  background-color: #16a34a;
+}
+
+.cookieBanner__switchWrap input:checked + .cookieBanner__switchSlider:before {
+  transform: translateX(20px);
+}
+
+/* buttons */
+.cookieBanner__actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cookieBanner__btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cookieBanner__btn--primary {
+  background: #16a34a;
+  color: white;
+}
+
+.cookieBanner__btn--primary:hover {
+  background: #15803d;
+}
+
+.cookieBanner__btn--secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.cookieBanner__btn--secondary:hover {
+  background: #d1d5db;
+}
+
+.cookieBanner__btn--ghost {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+.cookieBanner__btn--ghost:hover {
+  background: #f3f4f6;
+}
+
+/* mobile */
+@media (max-width: 768px) {
+  .cookieBanner {
+    align-items: flex-end;
+  }
+
+  .cookieBanner__panel {
+    margin: 10px;
+    padding: 20px;
+  }
+
+  .cookieBanner__summary {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cookieBanner__actions {
+    flex-direction: column;
+  }
+
+  .cookieBanner__btn {
+    width: 100%;
+  }
+}

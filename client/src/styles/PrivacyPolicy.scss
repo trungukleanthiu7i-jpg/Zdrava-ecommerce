@@ -1,0 +1,111 @@
+/* =========================================
+   LEGAL PAGES STYLE (Privacy / Terms / Cookies)
+========================================= */
+
+.legalPage {
+  width: 100%;
+  min-height: 100vh;
+  background: #f9fafb;
+  padding: 80px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.legalPage__container {
+  max-width: 900px;
+  width: 100%;
+  background: #ffffff;
+  padding: 50px 60px;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* ================= TITLES ================= */
+
+.legalPage h1 {
+  font-size: 34px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 10px;
+}
+
+.legalPage h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 25px;
+}
+
+.legalPage h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #222;
+  margin-top: 40px;
+  margin-bottom: 12px;
+}
+
+/* ================= TEXT ================= */
+
+.legalPage p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+/* ================= LISTS ================= */
+
+.legalPage ul {
+  padding-left: 20px;
+  margin-bottom: 20px;
+}
+
+.legalPage li {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+/* ================= LINKS ================= */
+
+.legalPage a {
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+.legalPage a:hover {
+  text-decoration: underline;
+}
+
+/* ================= STRONG ================= */
+
+.legalPage strong {
+  font-weight: 600;
+  color: #111;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px) {
+  .legalPage__container {
+    padding: 35px 25px;
+  }
+
+  .legalPage h1 {
+    font-size: 28px;
+  }
+
+  .legalPage h2 {
+    font-size: 20px;
+  }
+
+  .legalPage h3 {
+    font-size: 18px;
+  }
+
+  .legalPage p,
+  .legalPage li {
+    font-size: 15px;
+  }
+}
