@@ -74,10 +74,8 @@ function ProductPage() {
   const [product, setProduct] = useState(null);
   const [recommended, setRecommended] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [activeTab, setActiveTab] = useState("description");
 
-  // ✅ Use deployed backend on Render, localhost in development
   const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   /* ================================
@@ -122,7 +120,6 @@ function ProductPage() {
     fetchRecommended();
   }, [product, API]);
 
-  // ✅ Safe fallbacks so hooks can run even when product is null
   const safeProduct = product || {};
 
   const productImageUrl = safeProduct.image
@@ -144,7 +141,6 @@ function ProductPage() {
   const originCountry = safeProduct.originCountry || dash;
   const netWeight = safeProduct.netWeight || dash;
 
-  // ✅ NEW (mandatory/conditional) fields you added in the minimal schema
   const storageConditions = safeProduct.storageConditions || "";
   const instructionsForUse = safeProduct.instructionsForUse || "";
   const caffeineMgPer100ml =
@@ -154,13 +150,10 @@ function ProductPage() {
       : safeProduct.caffeineMgPer100ml;
 
   const highCaffeineWarningText = safeProduct.highCaffeineWarningText || "";
-
   const foodBusinessOperator = safeProduct.foodBusinessOperator;
   const importer = safeProduct.importer;
-
   const nutrition = safeProduct.nutritionPer100g;
 
-  // ✅ Build nutrition display rows
   const nutritionDisplayRows = useMemo(() => {
     const normalizeVal = (v) => {
       if (v === undefined || v === null) return "";
@@ -175,7 +168,7 @@ function ProductPage() {
         .map((l) => l.trim())
         .filter(Boolean);
 
-      const rows = lines
+      return lines
         .map((line) => {
           const parts = line.split(":");
           if (parts.length < 2) return null;
@@ -185,8 +178,6 @@ function ProductPage() {
           return { label: left, value: right, unit: "" };
         })
         .filter(Boolean);
-
-      return rows;
     }
 
     const isObj = nutrition && typeof nutrition === "object" && !Array.isArray(nutrition);
@@ -195,6 +186,7 @@ function ProductPage() {
     const roEnergy = nutrition["Valoare energetică"] || nutrition["Valoare energetica"];
     let energyKj = "";
     let energyKcal = "";
+
     if (roEnergy) {
       const s = String(roEnergy);
       const kjMatch = s.match(/([0-9.,]+)\s*kj/i);
@@ -206,7 +198,7 @@ function ProductPage() {
     const enEnergyKj = nutrition.energyKj != null ? normalizeVal(nutrition.energyKj) : "";
     const enEnergyKcal = nutrition.energyKcal != null ? normalizeVal(nutrition.energyKcal) : "";
 
-    const rows = [
+    return [
       { label: "Valoare energetică", value: enEnergyKj || energyKj, unit: "kj" },
       { label: "Valoare energetică", value: enEnergyKcal || energyKcal, unit: "kcal" },
       {
@@ -215,7 +207,7 @@ function ProductPage() {
         unit: "g",
       },
       {
-        label: "din care acizi graşi saturaţi",
+        label: "din care acizi grași saturați",
         value: normalizeVal(
           nutrition["din care acizi graşi saturaţi"] ||
             nutrition["din care acizi grasi saturati"] ||
@@ -255,8 +247,6 @@ function ProductPage() {
         return { ...r, value: cleaned };
       })
       .filter((r) => r.value);
-
-    return rows;
   }, [nutrition]);
 
   const hasNutrition = nutritionDisplayRows.length > 0;
@@ -272,152 +262,362 @@ function ProductPage() {
   /* ================================
      PDF DOWNLOAD
   ================================ */
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!product) return;
 
     const pdf = new jsPDF("p", "mm", "a4");
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const maxWidth = 180;
-    const left = 15;
-    let y = 18;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 12;
+    const contentWidth = pageWidth - margin * 2;
 
-    const addWrappedText = (text, x, yPos, width = maxWidth, lineHeight = 6) => {
-      const lines = pdf.splitTextToSize(String(text || ""), width);
-      pdf.text(lines, x, yPos);
-      return yPos + lines.length * lineHeight;
+    let y = 12;
+
+    const normalizeText = (value) => {
+      if (value === null || value === undefined) return "";
+      return String(value)
+        .replace(/ă/g, "a")
+        .replace(/â/g, "a")
+        .replace(/î/g, "i")
+        .replace(/ș/g, "s")
+        .replace(/ş/g, "s")
+        .replace(/ț/g, "t")
+        .replace(/ţ/g, "t")
+        .replace(/Ă/g, "A")
+        .replace(/Â/g, "A")
+        .replace(/Î/g, "I")
+        .replace(/Ș/g, "S")
+        .replace(/Ş/g, "S")
+        .replace(/Ț/g, "T")
+        .replace(/Ţ/g, "T");
     };
 
-    const addSectionTitle = (title) => {
-      if (y > 270) {
+    const loadImageAsDataUrl = (src) =>
+      new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.onerror = reject;
+        img.src = src;
+      });
+
+    const ensurePageSpace = (needed = 10) => {
+      if (y + needed > pageHeight - 15) {
         pdf.addPage();
-        y = 18;
+        y = 15;
       }
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(14);
-      pdf.text(title, left, y);
-      y += 8;
     };
 
-    const addLine = (label, value) => {
+    const drawWrappedText = (text, x, width, fontSize = 10, lineHeight = 5) => {
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(fontSize);
+      const lines = pdf.splitTextToSize(normalizeText(text || ""), width);
+      pdf.text(lines, x, y);
+      y += lines.length * lineHeight;
+    };
+
+    const drawSectionTitle = (title) => {
+      ensurePageSpace(14);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(13);
+      pdf.setTextColor(24, 69, 140);
+      pdf.text(normalizeText(title), margin, y);
+
+      y += 4;
+
+      pdf.setDrawColor(24, 69, 140);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, y, pageWidth - margin, y);
+
+      y += 6;
+      pdf.setTextColor(0, 0, 0);
+    };
+
+    const drawLabelValue = (label, value, labelWidth = 46, fontSize = 10) => {
       if (!value || String(value).trim() === "") return;
-      if (y > 270) {
-        pdf.addPage();
-        y = 18;
-      }
+      ensurePageSpace(8);
+
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(11);
-      pdf.text(`${label}:`, left, y);
+      pdf.setFontSize(fontSize);
+      pdf.text(normalizeText(label), margin, y);
 
       pdf.setFont("helvetica", "normal");
-      y = addWrappedText(String(value), left + 35, y, 145);
-      y += 2;
+      const textX = margin + labelWidth;
+      const textWidth = contentWidth - labelWidth;
+      const lines = pdf.splitTextToSize(normalizeText(value), textWidth);
+      pdf.text(lines, textX, y);
+
+      y += Math.max(6, lines.length * 5);
     };
 
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(18);
-    pdf.text(product.name || "Produs", left, y);
-    y += 10;
+    try {
+      const logoUrl = `${process.env.PUBLIC_URL}/images/Zdrava-logo-color.png`;
 
-    pdf.setDrawColor(200, 200, 200);
-    pdf.line(left, y, pageWidth - 15, y);
-    y += 8;
+      let logoData = null;
+      let productData = null;
 
-    addLine("Preț", product.price ? `${product.price} €` : dash);
-    addLine(
-      "Stoc",
-      product.stock === "in stock"
-        ? "In stock"
-        : product.stock === "out of stock"
-        ? "Out of stock"
-        : product.stock || dash
-    );
-    addLine("Cod de bare", product.barcode || dash);
-    addLine("Categorie", product.category || dash);
-
-    addSectionTitle("Descriere");
-    y = addWrappedText(
-      product.description || "Nu există descriere pentru acest produs.",
-      left,
-      y
-    );
-    y += 6;
-
-    addSectionTitle("Ingrediente și alergeni");
-    addLine("Ingrediente", ingredientsText);
-    addLine("Alergeni", allergensText);
-
-    if (hasNutrition) {
-      addSectionTitle("Informații nutriționale (per 100 g / 100 ml)");
-      nutritionDisplayRows.forEach((row) => {
-        addLine(row.label, `${row.value} ${row.unit}`.trim());
-      });
-    }
-
-    addSectionTitle("Caracteristici");
-    addLine("Țara de origine", originCountry);
-    addLine("Greutate netă", netWeight);
-
-    if (hasLabelInfo) {
-      addSectionTitle("Etichetă");
-
-      if (storageConditions && storageConditions.trim()) {
-        addLine("Condiții de depozitare", storageConditions);
+      try {
+        logoData = await loadImageAsDataUrl(logoUrl);
+      } catch (e) {
+        console.warn("Logo could not be loaded for PDF.");
       }
 
-      if (instructionsForUse && instructionsForUse.trim()) {
-        addLine("Instrucțiuni de utilizare", instructionsForUse);
+      try {
+        if (productImageUrl) {
+          productData = await loadImageAsDataUrl(productImageUrl);
+        }
+      } catch (e) {
+        console.warn("Product image could not be loaded for PDF.");
       }
 
-      if (caffeineMgPer100ml !== null) {
-        addLine("Cafeină", `${caffeineMgPer100ml} mg / 100 ml`);
+      /* =========================
+         HEADER
+      ========================= */
+      pdf.setFillColor(242, 247, 243);
+      pdf.rect(0, 0, pageWidth, 44, "F");
+
+      if (logoData) {
+        pdf.addImage(logoData, "PNG", margin, 8, 46, 20);
+      } else {
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(20);
+        pdf.setTextColor(31, 122, 61);
+        pdf.text("ZDRAVA", margin, 20);
       }
 
-      if (highCaffeineWarningText && highCaffeineWarningText.trim()) {
-        addLine("Avertizare", highCaffeineWarningText);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("Fisa produs", margin, 34);
+
+      y = 54;
+
+      /* =========================
+         TITLE + PRODUCT BLOCK
+      ========================= */
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(18);
+      pdf.setTextColor(24, 69, 140);
+
+      const titleLines = pdf.splitTextToSize(normalizeText(product.name || "Produs"), 118);
+      pdf.text(titleLines, margin, y);
+      const titleHeight = titleLines.length * 7;
+
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+
+      let metaY = y + titleHeight + 4;
+
+      pdf.text(
+        `Pret: ${normalizeText(product.price ? `${product.price} EUR` : dash)}`,
+        margin,
+        metaY
+      );
+      metaY += 6;
+
+      pdf.text(
+        `Stoc: ${normalizeText(
+          product.stock === "in stock"
+            ? "In stock"
+            : product.stock === "out of stock"
+            ? "Out of stock"
+            : product.stock || dash
+        )}`,
+        margin,
+        metaY
+      );
+      metaY += 6;
+
+      if (product.barcode) {
+        pdf.text(`Cod de bare: ${normalizeText(product.barcode)}`, margin, metaY);
+        metaY += 6;
       }
 
-      if (foodBusinessOperator) {
-        const operatorName = foodBusinessOperator.name || "";
-        const operatorAddress = [
-          foodBusinessOperator.address,
-          foodBusinessOperator.city,
-          foodBusinessOperator.postalCode,
-          foodBusinessOperator.country,
-        ]
-          .filter(Boolean)
-          .join(", ");
+      if (product.category) {
+        pdf.text(`Categorie: ${normalizeText(product.category)}`, margin, metaY);
+        metaY += 6;
+      }
 
-        if (operatorName || operatorAddress) {
-          addSectionTitle("Operator economic responsabil");
-          if (operatorName) addLine("Denumire", operatorName);
-          if (operatorAddress) addLine("Adresă", operatorAddress);
+      if (productData) {
+        pdf.setDrawColor(220, 220, 220);
+        pdf.setFillColor(255, 255, 255);
+        pdf.roundedRect(146, 48, 48, 48, 3, 3, "FD");
+        pdf.addImage(productData, "PNG", 151, 53, 38, 38);
+      }
+
+      y = Math.max(metaY + 7, 104);
+
+      /* =========================
+         DESCRIPTION
+      ========================= */
+      drawSectionTitle("Descriere");
+      drawWrappedText(
+        product.description || "Nu exista descriere pentru acest produs.",
+        margin,
+        contentWidth,
+        10,
+        5
+      );
+      y += 4;
+
+      /* =========================
+         INGREDIENTE
+      ========================= */
+      drawSectionTitle("Ingrediente");
+      drawWrappedText(ingredientsText, margin, contentWidth, 10, 5);
+      y += 4;
+
+      drawSectionTitle("Alergeni");
+      drawWrappedText(allergensText, margin, contentWidth, 10, 5);
+      y += 4;
+
+      /* =========================
+         NUTRITION TABLE
+      ========================= */
+      if (hasNutrition) {
+        drawSectionTitle("Informatii nutritionale / 100 g / 100 ml");
+
+        const tableX = margin;
+        const tableY = y;
+        const col1 = 110;
+        const col2 = 68;
+        const rowH = 8;
+
+        pdf.setFillColor(24, 69, 140);
+        pdf.rect(tableX, tableY, col1 + col2, rowH, "F");
+
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(10);
+        pdf.text("Informatii nutritionale", tableX + 2, tableY + 5.5);
+        pdf.text("Valoare", tableX + col1 + 2, tableY + 5.5);
+
+        y = tableY + rowH;
+        pdf.setTextColor(0, 0, 0);
+
+        nutritionDisplayRows.forEach((row, index) => {
+          ensurePageSpace(rowH + 2);
+
+          if (index % 2 === 0) {
+            pdf.setFillColor(248, 248, 248);
+            pdf.rect(tableX, y, col1 + col2, rowH, "F");
+          }
+
+          pdf.setDrawColor(185, 185, 185);
+          pdf.rect(tableX, y, col1, rowH);
+          pdf.rect(tableX + col1, y, col2, rowH);
+
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(9.5);
+          pdf.text(normalizeText(row.label), tableX + 2, y + 5.4);
+          pdf.text(
+            normalizeText(`${row.value} ${row.unit}`.trim()),
+            tableX + col1 + 2,
+            y + 5.4
+          );
+
+          y += rowH;
+        });
+
+        y += 6;
+      }
+
+      /* =========================
+         CHARACTERISTICS
+      ========================= */
+      drawSectionTitle("Caracteristici");
+      drawLabelValue("Tara de origine", originCountry);
+      drawLabelValue("Greutate neta", netWeight);
+      y += 2;
+
+      /* =========================
+         LABEL
+      ========================= */
+      if (hasLabelInfo) {
+        drawSectionTitle("Eticheta");
+
+        if (storageConditions?.trim()) {
+          drawLabelValue("Conditii de depozitare", storageConditions);
+        }
+
+        if (instructionsForUse?.trim()) {
+          drawLabelValue("Instructiuni de utilizare", instructionsForUse);
+        }
+
+        if (caffeineMgPer100ml !== null) {
+          drawLabelValue("Cafeina", `${caffeineMgPer100ml} mg / 100 ml`);
+        }
+
+        if (highCaffeineWarningText?.trim()) {
+          drawLabelValue("Avertizare", highCaffeineWarningText);
+        }
+
+        if (foodBusinessOperator) {
+          const opName = foodBusinessOperator.name || "";
+          const opAddress = [
+            foodBusinessOperator.address,
+            foodBusinessOperator.city,
+            foodBusinessOperator.postalCode,
+            foodBusinessOperator.country,
+          ]
+            .filter(Boolean)
+            .join(", ");
+
+          if (opName || opAddress) {
+            drawSectionTitle("Operator economic responsabil");
+            if (opName) drawLabelValue("Denumire", opName);
+            if (opAddress) drawLabelValue("Adresa", opAddress);
+          }
+        }
+
+        if (importer) {
+          const importerName = importer.name || "";
+          const importerAddress = [
+            importer.address,
+            importer.city,
+            importer.postalCode,
+            importer.country,
+          ]
+            .filter(Boolean)
+            .join(", ");
+
+          if (importerName || importerAddress) {
+            drawSectionTitle("Importator");
+            if (importerName) drawLabelValue("Denumire", importerName);
+            if (importerAddress) drawLabelValue("Adresa", importerAddress);
+          }
         }
       }
 
-      if (importer) {
-        const importerName = importer.name || "";
-        const importerAddress = [
-          importer.address,
-          importer.city,
-          importer.postalCode,
-          importer.country,
-        ]
-          .filter(Boolean)
-          .join(", ");
+      /* =========================
+         FOOTER
+      ========================= */
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8);
+      pdf.setTextColor(120, 120, 120);
+      pdf.text(
+        "Document generat automat din fisa produsului Zdrava.",
+        margin,
+        pageHeight - 8
+      );
 
-        if (importerName || importerAddress) {
-          addSectionTitle("Importator");
-          if (importerName) addLine("Denumire", importerName);
-          if (importerAddress) addLine("Adresă", importerAddress);
-        }
-      }
+      const safeFileName = (product.name || "produs")
+        .replace(/[\\/:*?"<>|]+/g, "")
+        .trim();
+
+      pdf.save(`${safeFileName}-fisa-produs.pdf`);
+    } catch (err) {
+      console.error("PDF generation error:", err);
     }
-
-    const safeFileName = (product.name || "produs")
-      .replace(/[\\/:*?"<>|]+/g, "")
-      .trim();
-
-    pdf.save(`${safeFileName}-fisa-produs.pdf`);
   };
 
   if (loading) return <p className="loading">Loading...</p>;
@@ -451,7 +651,7 @@ function ProductPage() {
             className="download-pdf-btn"
             onClick={handleDownloadPdf}
           >
-            Descarcă fișa produsului PDF
+            Descarcă fișa produsului
           </button>
 
           {/* TABS */}
@@ -547,14 +747,14 @@ function ProductPage() {
 
             {activeTab === "label" && (
               <div className="characteristics">
-                {(storageConditions && storageConditions.trim()) && (
+                {storageConditions && storageConditions.trim() && (
                   <div className="char-row">
                     <span>Condiții de depozitare</span>
                     <strong>{storageConditions}</strong>
                   </div>
                 )}
 
-                {(instructionsForUse && instructionsForUse.trim()) && (
+                {instructionsForUse && instructionsForUse.trim() && (
                   <div className="char-row">
                     <span>Instrucțiuni de utilizare</span>
                     <strong>{instructionsForUse}</strong>
@@ -575,7 +775,7 @@ function ProductPage() {
                       </div>
                     )}
 
-                    {(highCaffeineWarningText && highCaffeineWarningText.trim()) && (
+                    {highCaffeineWarningText && highCaffeineWarningText.trim() && (
                       <p className="tab-text">{highCaffeineWarningText}</p>
                     )}
                   </>
