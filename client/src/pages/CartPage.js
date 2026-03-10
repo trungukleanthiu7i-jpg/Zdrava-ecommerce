@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useTranslation } from "react-i18next";
 import "../styles/CartPage.scss";
@@ -14,6 +14,7 @@ function CartPage() {
     clearCart,
     updateQuantity,
     updatePallets,
+    updatePieces, // ✅ new
     getTotalPrice,
   } = useCart();
 
@@ -38,11 +39,16 @@ function CartPage() {
         <>
           <ul className="cart-list">
             {cartItems.map((item) => {
-              const quantity = Number(item.quantity || 0);
+              const quantity = Number(item.quantity || 0); // boxes
+              const pallets = Number(item.pallets || 0);
+              const pieces = Number(item.pieces || 0);
               const unitsPerBox = Number(item.unitsPerBox || 1);
+              const boxPerPalet = Number(item.boxPerPalet || 0);
               const price = Number(item.price || 0);
 
-              const totalUnits = quantity * unitsPerBox;
+              const palletUnits = pallets * boxPerPalet * unitsPerBox;
+              const boxUnits = quantity * unitsPerBox;
+              const totalUnits = boxUnits + palletUnits + pieces;
               const itemTotal = totalUnits * price;
 
               return (
@@ -80,18 +86,34 @@ function CartPage() {
                       <input
                         type="number"
                         min="0"
-                        value={item.pallets || 0}
+                        value={pallets}
                         onChange={(e) =>
                           updatePallets(item._id, e.target.value)
                         }
                       />
                       <small>
-                        1 {t("palet")} = {item.boxPerPalet} boxes
+                        1 {t("palet")} = {boxPerPalet} boxes
                       </small>
+                    </div>
+
+                    {/* Pieces */}
+                    <div className="cart-field">
+                      <label>{t("Bucăți")}: </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={pieces}
+                        onChange={(e) =>
+                          updatePieces(item._id, e.target.value)
+                        }
+                      />
                     </div>
 
                     <p>
                       {quantity} boxes × {unitsPerBox} {t("unități")}
+                      {pallets > 0 &&
+                        ` + ${pallets} ${t("paleti")} × ${boxPerPalet} boxes × ${unitsPerBox} ${t("unități")}`}
+                      {pieces > 0 && ` + ${pieces} ${t("bucăți")}`}
                     </p>
 
                     <p className="item-total">
@@ -115,23 +137,6 @@ function CartPage() {
             <h2>
               {t("Total comandă")}: {Number(getTotalPrice()).toFixed(2)} €
             </h2>
-          </div>
-
-          {/* Legal notice */}
-          <div className="cart-legal-notice">
-            <p>
-              {t("Prin continuarea către checkout, confirmați că ați citit")}{" "}
-              <Link to="/terms-and-conditions">
-                {t("Termenii și condițiile")}
-              </Link>
-              ,{" "}
-              <Link to="/privacy-policy">
-                {t("Politica de confidențialitate")}
-              </Link>{" "}
-              {t("și")}{" "}
-              <Link to="/cookie-policy">{t("Politica de cookies")}</Link>
-              .
-            </p>
           </div>
 
           {/* Actions */}
