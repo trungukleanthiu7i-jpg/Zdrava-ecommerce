@@ -1,10 +1,12 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useTranslation } from "react-i18next";
 import "../styles/CartPage.scss";
 
 function CartPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const {
     cartItems,
@@ -28,10 +30,10 @@ function CartPage() {
 
   return (
     <div className="cart-page">
-      <h1>Coșul meu</h1>
+      <h1>{t("Coșul meu")}</h1>
 
       {cartItems.length === 0 ? (
-        <p>Coșul este gol</p>
+        <p>{t("Coșul este gol")}</p>
       ) : (
         <>
           <ul className="cart-list">
@@ -55,12 +57,13 @@ function CartPage() {
                     <h3>{item.name}</h3>
 
                     <p>
-                      Preț / unitate: <strong>{price.toFixed(2)} €</strong>
+                      {t("Preț / unitate")}:{" "}
+                      <strong>{price.toFixed(2)} €</strong>
                     </p>
 
                     {/* Boxes */}
                     <div className="cart-field">
-                      <label>Cantitate (boxes):</label>
+                      <label>{t("Cantitate (boxes)")}: </label>
                       <input
                         type="number"
                         min="0"
@@ -73,7 +76,7 @@ function CartPage() {
 
                     {/* Pallets */}
                     <div className="cart-field">
-                      <label>Paleti:</label>
+                      <label>{t("Paleti")}: </label>
                       <input
                         type="number"
                         min="0"
@@ -83,16 +86,16 @@ function CartPage() {
                         }
                       />
                       <small>
-                        1 palet = {item.boxPerPalet} boxes
+                        1 {t("palet")} = {item.boxPerPalet} boxes
                       </small>
                     </div>
 
                     <p>
-                      {quantity} boxes × {unitsPerBox} unități
+                      {quantity} boxes × {unitsPerBox} {t("unități")}
                     </p>
 
                     <p className="item-total">
-                      Total produs: {itemTotal.toFixed(2)} €
+                      {t("Total produs")}: {itemTotal.toFixed(2)} €
                     </p>
                   </div>
 
@@ -100,7 +103,7 @@ function CartPage() {
                     className="remove-btn"
                     onClick={() => removeFromCart(item._id)}
                   >
-                    Șterge
+                    {t("Șterge")}
                   </button>
                 </li>
               );
@@ -109,17 +112,36 @@ function CartPage() {
 
           {/* Total */}
           <div className="cart-total">
-            <h2>Total comandă: {Number(getTotalPrice()).toFixed(2)} €</h2>
+            <h2>
+              {t("Total comandă")}: {Number(getTotalPrice()).toFixed(2)} €
+            </h2>
+          </div>
+
+          {/* Legal notice */}
+          <div className="cart-legal-notice">
+            <p>
+              {t("Prin continuarea către checkout, confirmați că ați citit")}{" "}
+              <Link to="/terms-and-conditions">
+                {t("Termenii și condițiile")}
+              </Link>
+              ,{" "}
+              <Link to="/privacy-policy">
+                {t("Politica de confidențialitate")}
+              </Link>{" "}
+              {t("și")}{" "}
+              <Link to="/cookie-policy">{t("Politica de cookies")}</Link>
+              .
+            </p>
           </div>
 
           {/* Actions */}
           <div className="cart-actions">
             <button className="clear-cart-btn" onClick={clearCart}>
-              Șterge coșul
+              {t("Șterge coșul")}
             </button>
 
             <button className="checkout-btn" onClick={handleCheckout}>
-              Finalizează comanda
+              {t("Finalizează comanda")}
             </button>
           </div>
         </>
