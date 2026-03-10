@@ -623,6 +623,13 @@ const resources = {
 "6. Contact": "6. Contact",
 "Pentru orice întrebări legate de politica de retur, ne puteți contacta folosind datele de contact disponibile pe site.":
   "For any questions related to the return policy, you can contact us using the contact details available on the website.",
+
+  "Prin plasarea comenzii confirmați că ați citit și acceptat":
+  "By placing the order, you confirm that you have read and accepted",
+"Prin apăsarea butonului":
+  "By pressing the button",
+"confirmați că această comandă implică o obligație de plată.":
+  "you confirm that this order implies an obligation to pay.",
     },
   },
 
@@ -1252,6 +1259,13 @@ const resources = {
 "6. Contact": "6. Contact",
 "Pentru orice întrebări legate de politica de retur, ne puteți contacta folosind datele de contact disponibile pe site.":
   "Pentru orice întrebări legate de politica de retur, ne puteți contacta folosind datele de contact disponibile pe site.",
+
+  "Prin plasarea comenzii confirmați că ați citit și acceptat":
+  "Prin plasarea comenzii confirmați că ați citit și acceptat",
+"Prin apăsarea butonului":
+  "Prin apăsarea butonului",
+"confirmați că această comandă implică o obligație de plată.":
+  "confirmați că această comandă implică o obligație de plată.",
     },
   },
 };

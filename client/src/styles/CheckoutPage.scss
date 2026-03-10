@@ -257,3 +257,27 @@
   font-size: 16px;
   color: #111;
 }
+.checkout-legal-notice {
+  margin: 18px 0 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.checkout-legal-notice p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.checkout-legal-notice p:last-child {
+  margin-bottom: 0;
+}
+
+.checkout-legal-notice a {
+  color: #16a34a;
+  font-weight: 600;
+  text-decoration: underline;
+}

@@ -72,7 +72,6 @@ export default function CheckoutPage() {
     setError("");
     setInstructions(null);
 
-    // Validation
     if (
       !shippingAddress.country ||
       !shippingAddress.city ||
@@ -135,13 +134,9 @@ export default function CheckoutPage() {
         setInstructions(res.data.instructions);
       }
 
-      /* ===============================
-         ✅ SUCCESS FLOW
-      =============================== */
       clearCart();
       setShowSuccess(true);
 
-      // Reset form
       setCustomer({ fullName: "", email: "", phone: "" });
       setCompany({ companyName: "", vatNumber: "", contactPerson: "" });
       setShippingAddress({
@@ -168,7 +163,6 @@ export default function CheckoutPage() {
 
   return (
     <>
-      {/* ================= SUCCESS POPUP ================= */}
       {showSuccess && (
         <div className="success-modal-overlay">
           <div className="success-modal">
@@ -348,11 +342,19 @@ export default function CheckoutPage() {
                 />
                 <span>
                   {t("I have read and accept")}{" "}
-                  <Link to="/terms-and-conditions" target="_blank" rel="noopener noreferrer">
+                  <Link
+                    to="/terms-and-conditions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {t("Terms and Conditions")}
                   </Link>{" "}
                   {t("and")}{" "}
-                  <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer">
+                  <Link
+                    to="/privacy-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {t("Privacy Policy")}
                   </Link>
                   .
@@ -367,12 +369,40 @@ export default function CheckoutPage() {
                 />
                 <span>
                   {t("I have read")}{" "}
-                  <Link to="/cookie-policy" target="_blank" rel="noopener noreferrer">
+                  <Link
+                    to="/cookie-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {t("Cookie Policy")}
                   </Link>
                   .
                 </span>
               </label>
+            </div>
+
+            {/* ================= LEGAL NOTICE ================= */}
+            <div className="checkout-legal-notice">
+              <p>
+                {t("Prin plasarea comenzii confirmați că ați citit și acceptat")}{" "}
+                <Link to="/terms-and-conditions" target="_blank" rel="noopener noreferrer">
+                  {t("Termenii și condițiile")}
+                </Link>
+                ,{" "}
+                <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer">
+                  {t("Politica de confidențialitate")}
+                </Link>{" "}
+                {t("și")}{" "}
+                <Link to="/cookie-policy" target="_blank" rel="noopener noreferrer">
+                  {t("Politica de cookies")}
+                </Link>
+                .
+              </p>
+
+              <p>
+                {t("Prin apăsarea butonului")} <strong>„{t("Pay now")}”</strong>{" "}
+                {t("confirmați că această comandă implică o obligație de plată.")}
+              </p>
             </div>
 
             <button
