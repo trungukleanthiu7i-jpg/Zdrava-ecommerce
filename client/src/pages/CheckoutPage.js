@@ -123,9 +123,10 @@ export default function CheckoutPage() {
           productId: i._id,
           quantity: Number(i.quantity || 0),
           pallets: Number(i.pallets || 0),
+          pieces: Number(i.pieces || 0),
         })),
         paymentMethod,
-        currency: "€",
+        currency: "EUR",
       };
 
       const res = await axiosClient.post("/payments/initiate", payload);
@@ -175,7 +176,6 @@ export default function CheckoutPage() {
 
       <div className="checkout-wrapper">
         <div className="checkout-grid">
-          {/* ================= LEFT ================= */}
           <div className="checkout-left">
             <div className="checkout-form">
               <h2>{t("Customer details")}</h2>
@@ -276,7 +276,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* ================= RIGHT ================= */}
           <div className="checkout-right">
             <h2>{t("Checkout")}</h2>
 
@@ -332,7 +331,6 @@ export default function CheckoutPage() {
               </button>
             </div>
 
-            {/* ================= AGREEMENTS ================= */}
             <div className="checkout-page__agreements">
               <label className="checkout-page__checkboxLabel">
                 <input
@@ -381,19 +379,30 @@ export default function CheckoutPage() {
               </label>
             </div>
 
-            {/* ================= LEGAL NOTICE ================= */}
             <div className="checkout-legal-notice">
               <p>
                 {t("Prin plasarea comenzii confirmați că ați citit și acceptat")}{" "}
-                <Link to="/terms-and-conditions" target="_blank" rel="noopener noreferrer">
+                <Link
+                  to="/terms-and-conditions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {t("Termenii și condițiile")}
                 </Link>
                 ,{" "}
-                <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer">
+                <Link
+                  to="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {t("Politica de confidențialitate")}
                 </Link>{" "}
                 {t("și")}{" "}
-                <Link to="/cookie-policy" target="_blank" rel="noopener noreferrer">
+                <Link
+                  to="/cookie-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {t("Politica de cookies")}
                 </Link>
                 .
