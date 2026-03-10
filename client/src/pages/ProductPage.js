@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { jsPDF } from "jspdf";
 import { useCart } from "../context/CartContext";
 import JsBarcode from "jsbarcode";
 import "../styles/ProductPage.scss";
@@ -147,7 +148,8 @@ function ProductPage() {
   const storageConditions = safeProduct.storageConditions || "";
   const instructionsForUse = safeProduct.instructionsForUse || "";
   const caffeineMgPer100ml =
-    safeProduct.caffeineMgPer100ml === null || safeProduct.caffeineMgPer100ml === undefined
+    safeProduct.caffeineMgPer100ml === null ||
+    safeProduct.caffeineMgPer100ml === undefined
       ? null
       : safeProduct.caffeineMgPer100ml;
 
@@ -158,7 +160,7 @@ function ProductPage() {
 
   const nutrition = safeProduct.nutritionPer100g;
 
-  // ✅ Build nutrition display rows (supports RO keys object OR EN keys object OR string)
+  // ✅ Build nutrition display rows
   const nutritionDisplayRows = useMemo(() => {
     const normalizeVal = (v) => {
       if (v === undefined || v === null) return "";
@@ -167,7 +169,6 @@ function ProductPage() {
       return s.replace(/\./g, ",");
     };
 
-    // STRING case (optional)
     if (typeof nutrition === "string") {
       const lines = nutrition
         .split("\n")
@@ -188,7 +189,6 @@ function ProductPage() {
       return rows;
     }
 
-    // OBJECT case
     const isObj = nutrition && typeof nutrition === "object" && !Array.isArray(nutrition);
     if (!isObj) return [];
 
@@ -261,7 +261,6 @@ function ProductPage() {
 
   const hasNutrition = nutritionDisplayRows.length > 0;
 
-  // ✅ Show "Etichetă" tab only if there is something meaningful
   const hasLabelInfo =
     (storageConditions && storageConditions.trim()) ||
     (instructionsForUse && instructionsForUse.trim()) ||
@@ -270,7 +269,157 @@ function ProductPage() {
     caffeineMgPer100ml !== null ||
     (highCaffeineWarningText && highCaffeineWarningText.trim());
 
-  // ✅ Now it's safe to early return (hooks already ran)
+  /* ================================
+     PDF DOWNLOAD
+  ================================ */
+  const handleDownloadPdf = () => {
+    if (!product) return;
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const maxWidth = 180;
+    const left = 15;
+    let y = 18;
+
+    const addWrappedText = (text, x, yPos, width = maxWidth, lineHeight = 6) => {
+      const lines = pdf.splitTextToSize(String(text || ""), width);
+      pdf.text(lines, x, yPos);
+      return yPos + lines.length * lineHeight;
+    };
+
+    const addSectionTitle = (title) => {
+      if (y > 270) {
+        pdf.addPage();
+        y = 18;
+      }
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(14);
+      pdf.text(title, left, y);
+      y += 8;
+    };
+
+    const addLine = (label, value) => {
+      if (!value || String(value).trim() === "") return;
+      if (y > 270) {
+        pdf.addPage();
+        y = 18;
+      }
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text(`${label}:`, left, y);
+
+      pdf.setFont("helvetica", "normal");
+      y = addWrappedText(String(value), left + 35, y, 145);
+      y += 2;
+    };
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(18);
+    pdf.text(product.name || "Produs", left, y);
+    y += 10;
+
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(left, y, pageWidth - 15, y);
+    y += 8;
+
+    addLine("Preț", product.price ? `${product.price} €` : dash);
+    addLine(
+      "Stoc",
+      product.stock === "in stock"
+        ? "In stock"
+        : product.stock === "out of stock"
+        ? "Out of stock"
+        : product.stock || dash
+    );
+    addLine("Cod de bare", product.barcode || dash);
+    addLine("Categorie", product.category || dash);
+
+    addSectionTitle("Descriere");
+    y = addWrappedText(
+      product.description || "Nu există descriere pentru acest produs.",
+      left,
+      y
+    );
+    y += 6;
+
+    addSectionTitle("Ingrediente și alergeni");
+    addLine("Ingrediente", ingredientsText);
+    addLine("Alergeni", allergensText);
+
+    if (hasNutrition) {
+      addSectionTitle("Informații nutriționale (per 100 g / 100 ml)");
+      nutritionDisplayRows.forEach((row) => {
+        addLine(row.label, `${row.value} ${row.unit}`.trim());
+      });
+    }
+
+    addSectionTitle("Caracteristici");
+    addLine("Țara de origine", originCountry);
+    addLine("Greutate netă", netWeight);
+
+    if (hasLabelInfo) {
+      addSectionTitle("Etichetă");
+
+      if (storageConditions && storageConditions.trim()) {
+        addLine("Condiții de depozitare", storageConditions);
+      }
+
+      if (instructionsForUse && instructionsForUse.trim()) {
+        addLine("Instrucțiuni de utilizare", instructionsForUse);
+      }
+
+      if (caffeineMgPer100ml !== null) {
+        addLine("Cafeină", `${caffeineMgPer100ml} mg / 100 ml`);
+      }
+
+      if (highCaffeineWarningText && highCaffeineWarningText.trim()) {
+        addLine("Avertizare", highCaffeineWarningText);
+      }
+
+      if (foodBusinessOperator) {
+        const operatorName = foodBusinessOperator.name || "";
+        const operatorAddress = [
+          foodBusinessOperator.address,
+          foodBusinessOperator.city,
+          foodBusinessOperator.postalCode,
+          foodBusinessOperator.country,
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+        if (operatorName || operatorAddress) {
+          addSectionTitle("Operator economic responsabil");
+          if (operatorName) addLine("Denumire", operatorName);
+          if (operatorAddress) addLine("Adresă", operatorAddress);
+        }
+      }
+
+      if (importer) {
+        const importerName = importer.name || "";
+        const importerAddress = [
+          importer.address,
+          importer.city,
+          importer.postalCode,
+          importer.country,
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+        if (importerName || importerAddress) {
+          addSectionTitle("Importator");
+          if (importerName) addLine("Denumire", importerName);
+          if (importerAddress) addLine("Adresă", importerAddress);
+        }
+      }
+    }
+
+    const safeFileName = (product.name || "produs")
+      .replace(/[\\/:*?"<>|]+/g, "")
+      .trim();
+
+    pdf.save(`${safeFileName}-fisa-produs.pdf`);
+  };
+
   if (loading) return <p className="loading">Loading...</p>;
   if (!product) return <p>Product not found.</p>;
 
@@ -296,6 +445,14 @@ function ProductPage() {
           {product.barcode && <Barcode value={product.barcode} />}
 
           <AddToCartButton product={product} variant="single" />
+
+          <button
+            type="button"
+            className="download-pdf-btn"
+            onClick={handleDownloadPdf}
+          >
+            Descarcă fișa produsului PDF
+          </button>
 
           {/* TABS */}
           <div className="product-tabs">
@@ -350,7 +507,8 @@ function ProductPage() {
                 <p className="tab-text">{allergensText}</p>
 
                 <h4 className="tab-title">
-                  Informații nutriționale <span className="nutrition-note">(per 100 g / 100 ml)</span>
+                  Informații nutriționale{" "}
+                  <span className="nutrition-note">(per 100 g / 100 ml)</span>
                 </h4>
 
                 {hasNutrition ? (
@@ -389,7 +547,6 @@ function ProductPage() {
 
             {activeTab === "label" && (
               <div className="characteristics">
-                {/* Storage conditions (mandatory when applicable) */}
                 {(storageConditions && storageConditions.trim()) && (
                   <div className="char-row">
                     <span>Condiții de depozitare</span>
@@ -397,7 +554,6 @@ function ProductPage() {
                   </div>
                 )}
 
-                {/* Instructions (mandatory when needed) */}
                 {(instructionsForUse && instructionsForUse.trim()) && (
                   <div className="char-row">
                     <span>Instrucțiuni de utilizare</span>
@@ -405,11 +561,11 @@ function ProductPage() {
                   </div>
                 )}
 
-                {/* High caffeine beverages (energy drinks) */}
-                {(caffeineMgPer100ml !== null || (highCaffeineWarningText && highCaffeineWarningText.trim())) && (
+                {(caffeineMgPer100ml !== null ||
+                  (highCaffeineWarningText && highCaffeineWarningText.trim())) && (
                   <>
                     <h4 className="tab-title" style={{ marginTop: 18 }}>
-                      Avertizare cafeină 
+                      Avertizare cafeină
                     </h4>
 
                     {caffeineMgPer100ml !== null && (
@@ -425,7 +581,6 @@ function ProductPage() {
                   </>
                 )}
 
-                {/* Responsible operator (mandatory) */}
                 {renderOperatorMinimal(foodBusinessOperator) && (
                   <>
                     <h4 className="tab-title" style={{ marginTop: 18 }}>
@@ -435,7 +590,6 @@ function ProductPage() {
                   </>
                 )}
 
-                {/* Importer (mandatory when applicable) */}
                 {renderOperatorMinimal(importer) && (
                   <>
                     <h4 className="tab-title" style={{ marginTop: 18 }}>
