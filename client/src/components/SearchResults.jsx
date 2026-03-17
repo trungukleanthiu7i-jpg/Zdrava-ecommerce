@@ -12,39 +12,57 @@ const SearchResults = () => {
   const [addedItems, setAddedItems] = useState([]);
   const location = useLocation();
   const { addToCart } = useCart();
-  const query = new URLSearchParams(location.search).get("query");
 
-  // ✅ Backend image support
+  const query = new URLSearchParams(location.search).get("query") || "";
+
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return "/images/default.jpg";
-    return `${API}${imagePath}`;
+    if (!imagePath) {
+      return `${process.env.PUBLIC_URL}/images/no-image.png`;
+    }
+
+    // already full URL
+    if (
+      imagePath.startsWith("http://") ||
+      imagePath.startsWith("https://")
+    ) {
+      return imagePath;
+    }
+
+    // backend already sends something like /images/produse/file.jpg
+    if (imagePath.startsWith("/images/")) {
+      return `${API}${imagePath}`;
+    }
+
+    // most common case in your app: only filename stored
+    return `${API}/images/produse/${imagePath}`;
   };
 
-  // ✅ Fetch search results
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await axios.get(
-          `${API}/api/products/search?query=${query}`
+          `${API}/api/products/search?query=${encodeURIComponent(query)}`
         );
-        setProducts(res.data);
+        setProducts(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Error fetching search results:", err);
+        setProducts([]);
       }
     };
 
-    if (query) fetchProducts();
+    if (query.trim()) {
+      fetchProducts();
+    } else {
+      setProducts([]);
+    }
   }, [query]);
 
-  // ✅ Handle "Add to Cart" animation
   const handleAddToCart = (product) => {
     addToCart(product);
     setAddedItems((prev) => [...prev, product._id]);
 
     setTimeout(() => {
-      setAddedItems((prev) =>
-        prev.filter((id) => id !== product._id)
-      );
+      setAddedItems((prev) => prev.filter((id) => id !== product._id));
     }, 1000);
   };
 
@@ -59,14 +77,23 @@ const SearchResults = () => {
           products.map((p) => (
             <div key={p._id} className="product-card">
               <Link to={`/product/${p._id}`}>
-                <img src={getImageUrl(p.image)} alt={p.name} />
+                <img
+                  src={getImageUrl(p.image)}
+                  alt={p.name}
+                  onError={(e) => {
+                    e.currentTarget.src = `${process.env.PUBLIC_URL}/images/no-image.png`;
+                  }}
+                />
                 <div className="overlay">View Product</div>
               </Link>
 
               <h3>{p.name}</h3>
 
               <div className="price-add">
-                <span className="price">{p.price} lei</span>
+                <span className="price">
+                  {Number(p.price || 0).toFixed(2)} €
+                </span>
+
                 <button
                   className={`add-btn ${
                     addedItems.includes(p._id) ? "added" : ""
@@ -74,11 +101,7 @@ const SearchResults = () => {
                   onClick={() => handleAddToCart(p)}
                   title="Add to Cart"
                 >
-                  {addedItems.includes(p._id) ? (
-                    <FaCheck />
-                  ) : (
-                    <FaShoppingCart />
-                  )}
+                  {addedItems.includes(p._id) ? <FaCheck /> : <FaShoppingCart />}
                 </button>
               </div>
             </div>
