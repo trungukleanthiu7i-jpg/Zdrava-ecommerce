@@ -54,6 +54,51 @@ const orderItemSchema = new mongoose.Schema(
 );
 
 /* ============================
+   Oblio Invoice Snapshot
+============================ */
+const oblioInvoiceSchema = new mongoose.Schema(
+  {
+    issued: {
+      type: Boolean,
+      default: false,
+    },
+    invoiceId: {
+      type: String,
+      default: "",
+    },
+    seriesName: {
+      type: String,
+      default: "",
+    },
+    number: {
+      type: String,
+      default: "",
+    },
+    link: {
+      type: String,
+      default: "",
+    },
+    einvoice: {
+      type: String,
+      default: "",
+    },
+    total: {
+      type: Number,
+      default: 0,
+    },
+    issuedAt: {
+      type: Date,
+      default: null,
+    },
+    error: {
+      type: String,
+      default: "",
+    },
+  },
+  { _id: false }
+);
+
+/* ============================
    Order Schema
 ============================ */
 const orderSchema = new mongoose.Schema(
@@ -217,6 +262,14 @@ const orderSchema = new mongoose.Schema(
     providerRef: {
       type: String,
       default: "",
+    },
+
+    /* ------------------------
+       Oblio invoice
+    ------------------------ */
+    oblioInvoice: {
+      type: oblioInvoiceSchema,
+      default: () => ({}),
     },
 
     /* ------------------------

@@ -15,8 +15,10 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import paymentsRoutes from "./routes/payments.js";
+import netopiaRoutes from "./routes/netopiaRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import authOAuthRoutes from "./routes/authOAuthRoutes.js";
+import oblioRoutes from "./routes/oblioRoutes.js";
 
 /**
  * ENV loading
@@ -75,8 +77,10 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentsRoutes);
+app.use("/api/payments/netopia", netopiaRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/auth", authOAuthRoutes);
+app.use("/api/oblio", oblioRoutes);
 
 /* =========================
    ❤️ HEALTH CHECK

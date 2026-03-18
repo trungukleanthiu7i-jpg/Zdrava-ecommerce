@@ -16,3 +16,7 @@ yarn-error.log*
 # IDE / OS
 .vscode/
 .DS_Store
+
+# 🔐 NETOPIA CERTIFICATES (CRITICAL)
+server/certificates/
+certificates/

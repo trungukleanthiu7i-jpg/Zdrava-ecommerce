@@ -3,8 +3,153 @@ import authMiddleware from "../middleware/authMiddleware.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
+import {
+  createOblioInvoice,
+  searchOblioProducts,
+} from "../services/oblioService.js";
 
 const router = express.Router();
+
+/* ======================================================
+   HELPERS
+====================================================== */
+const OBLIO_WORKSTATION = "Depozit";
+const OBLIO_MANAGEMENT = "Depozit";
+
+function getClientDataFromOrder(order) {
+  const isCompany = order.customerType === "company";
+
+  if (isCompany) {
+    return {
+      name: order.company?.companyName || order.customer?.fullName || "Client",
+      cif: order.company?.vatNumber || "",
+      rc: order.company?.vatNumber || "",
+      address: order.shippingAddress?.addressLine || "",
+      state: order.shippingAddress?.country || "",
+      city: order.shippingAddress?.city || "",
+      country: order.shippingAddress?.country || "Romania",
+      email: order.customer?.email || "",
+      phone: order.customer?.phone || "",
+    };
+  }
+
+  return {
+    name: order.customer?.fullName || "Client persoana fizica",
+    address: order.shippingAddress?.addressLine || "",
+    state: order.shippingAddress?.country || "",
+    city: order.shippingAddress?.city || "",
+    country: order.shippingAddress?.country || "Romania",
+    email: order.customer?.email || "",
+    phone: order.customer?.phone || "",
+  };
+}
+
+async function buildOblioProductsFromOrder(order) {
+  const oblioProducts = [];
+
+  for (const item of order.items) {
+    const productName = item.name;
+
+    const productSearch = await searchOblioProducts(productName);
+    const foundProducts = Array.isArray(productSearch?.data)
+      ? productSearch.data
+      : Array.isArray(productSearch?.data?.data)
+      ? productSearch.data.data
+      : Array.isArray(productSearch?.data?.records)
+      ? productSearch.data.records
+      : [];
+
+    const exactProduct = foundProducts.find((p) => p.name === productName);
+
+    if (!exactProduct) {
+      throw new Error(
+        `Product "${productName}" was not found in Oblio.`
+      );
+    }
+
+    const stockEntry = Array.isArray(exactProduct.stock)
+      ? exactProduct.stock.find(
+          (s) =>
+            s.workStation === OBLIO_WORKSTATION &&
+            s.management === OBLIO_MANAGEMENT
+        )
+      : null;
+
+    if (!stockEntry) {
+      throw new Error(
+        `Product "${productName}" was not found in Oblio stock for ${OBLIO_WORKSTATION}/${OBLIO_MANAGEMENT}.`
+      );
+    }
+
+    const quantity = Number(item.boxes || 0) * Number(item.unitsPerBox || 1);
+
+    if (quantity <= 0) {
+      continue;
+    }
+
+    oblioProducts.push({
+      name: exactProduct.name,
+      quantity,
+      price: Number(item.unitPrice || 0),
+      measuringUnit: exactProduct.measuringUnit || "BUC",
+      vatName: stockEntry.vatName,
+      vatPercentage: Number(stockEntry.vatPercentage || 0),
+      vatIncluded: stockEntry.vatIncluded ? 1 : 0,
+      productType: exactProduct.productType || "Marfa",
+      management: OBLIO_MANAGEMENT,
+      save: 0,
+    });
+  }
+
+  if (oblioProducts.length === 0) {
+    throw new Error("No valid products found for Oblio invoice.");
+  }
+
+  return oblioProducts;
+}
+
+async function issueOblioInvoiceForOrder(order) {
+  if (order.oblioInvoice?.issued) {
+    return order.oblioInvoice;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  const client = getClientDataFromOrder(order);
+  const products = await buildOblioProductsFromOrder(order);
+
+  const payload = {
+    client,
+    workStation: OBLIO_WORKSTATION,
+    products,
+    issueDate: today,
+    dueDate: today,
+    currency: order.currency || "RON",
+    language: order.currency === "EUR" ? "EN" : "RO",
+    precision: 2,
+    sendEmail: 0,
+    orderNumber: order.orderNumber,
+  };
+
+  const result = await createOblioInvoice(payload);
+
+  const invoiceData = result?.data || {};
+
+  order.oblioInvoice = {
+    issued: true,
+    invoiceId: invoiceData.id ? String(invoiceData.id) : "",
+    seriesName: invoiceData.seriesName || "",
+    number: invoiceData.number || "",
+    link: invoiceData.link || "",
+    einvoice: invoiceData.einvoice || "",
+    total: Number(invoiceData.total || 0),
+    issuedAt: new Date(),
+    error: "",
+  };
+
+  await order.save();
+
+  return order.oblioInvoice;
+}
 
 /* ======================================================
    INITIATE PAYMENT / CREATE ORDER
@@ -38,12 +183,10 @@ router.post("/initiate", authMiddleware, async (req, res) => {
     const ids = cart.map((c) => c.productId);
     const products = await Product.find({ _id: { $in: ids } });
 
-    const productMap = new Map(
-      products.map((p) => [String(p._id), p])
-    );
+    const productMap = new Map(products.map((p) => [String(p._id), p]));
 
     /* -------------------------------
-       BUILD ORDER ITEMS (CRITICAL)
+       BUILD ORDER ITEMS
     -------------------------------- */
     const items = [];
     let subtotal = 0;
@@ -92,7 +235,7 @@ router.post("/initiate", authMiddleware, async (req, res) => {
     const total = subtotal + shipping;
 
     /* -------------------------------
-       CREATE ORDER (NOW IT PASSES)
+       CREATE ORDER
     -------------------------------- */
     const order = await Order.create({
       userId: req.user.id,
@@ -111,7 +254,7 @@ router.post("/initiate", authMiddleware, async (req, res) => {
     });
 
     /* =====================================================
-       🔄 SYNC USER PROFILE (UPGRADE ONLY)
+       SYNC USER PROFILE
     ===================================================== */
     if (customerType === "company") {
       await User.findByIdAndUpdate(req.user.id, {
@@ -138,9 +281,114 @@ router.post("/initiate", authMiddleware, async (req, res) => {
       orderId: order._id,
       updatedUser,
     });
-
   } catch (err) {
     console.error("❌ payments/initiate error:", err);
+    return res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
+/* ======================================================
+   CONFIRM PAYMENT + ISSUE OBLIO INVOICE
+   Use this after successful payment / webhook confirmation
+====================================================== */
+router.post("/confirm/:orderId", authMiddleware, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { provider = "", providerRef = "" } = req.body;
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    if (String(order.userId) !== String(req.user.id) && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Not allowed." });
+    }
+
+    /* -------------------------------
+       Prevent duplicate payment mark
+    -------------------------------- */
+    if (order.paymentStatus !== "paid") {
+      order.paymentStatus = "paid";
+      order.status = "paid";
+      order.provider = provider;
+      order.providerRef = providerRef;
+      await order.save();
+    }
+
+    /* -------------------------------
+       Prevent duplicate invoice issue
+    -------------------------------- */
+    if (!order.oblioInvoice?.issued) {
+      try {
+        await issueOblioInvoiceForOrder(order);
+      } catch (invoiceError) {
+        order.oblioInvoice = {
+          ...(order.oblioInvoice || {}),
+          issued: false,
+          error: invoiceError.message,
+        };
+        await order.save();
+
+        return res.status(500).json({
+          message: "Payment confirmed but Oblio invoice failed.",
+          error: invoiceError.message,
+          order,
+        });
+      }
+    }
+
+    return res.json({
+      message: "Payment confirmed and invoice processed successfully.",
+      order,
+    });
+  } catch (err) {
+    console.error("❌ payments/confirm error:", err);
+    return res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
+/* ======================================================
+   ADMIN / RETRY OBLIO INVOICE
+====================================================== */
+router.post("/retry-oblio/:orderId", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin only." });
+    }
+
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    if (order.paymentStatus !== "paid") {
+      return res.status(400).json({
+        message: "Invoice can only be issued for paid orders.",
+      });
+    }
+
+    if (order.oblioInvoice?.issued) {
+      return res.status(400).json({
+        message: "Invoice already issued.",
+        oblioInvoice: order.oblioInvoice,
+      });
+    }
+
+    await issueOblioInvoiceForOrder(order);
+
+    return res.json({
+      message: "Oblio invoice issued successfully.",
+      order,
+    });
+  } catch (err) {
+    console.error("❌ payments/retry-oblio error:", err);
     return res.status(500).json({
       message: err.message,
     });
