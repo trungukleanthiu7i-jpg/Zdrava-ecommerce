@@ -48,7 +48,18 @@ function resolveCertPath(relativeOrAbsolutePath) {
     : path.resolve(process.cwd(), relativeOrAbsolutePath);
 }
 
-function readFileSafe(filePath) {
+function readFileSafe(filePath, isPrivate = false) {
+  const base64 = isPrivate
+    ? process.env.NETOPIA_PRIVATE_KEY_BASE64
+    : process.env.NETOPIA_PUBLIC_CERT_BASE64;
+
+  if (base64) {
+    console.log(
+      `✅ Using NETOPIA ${isPrivate ? "private key" : "public cert"} from ENV`
+    );
+    return Buffer.from(base64, "base64");
+  }
+
   const resolvedPath = resolveCertPath(filePath);
 
   if (!fs.existsSync(resolvedPath)) {
@@ -106,9 +117,9 @@ export function buildNetopiaOrderXml({
    NETOPIA v1.x uses env_key + data, with optional cipher/iv
 ====================================================== */
 export function encryptNetopiaRequest(xmlString) {
-  const publicCert = readFileSafe(NETOPIA_PUBLIC_CERT_PATH);
+  const publicCert = readFileSafe(NETOPIA_PUBLIC_CERT_PATH, false);
 
-  const symmetricKey = crypto.randomBytes(32); // AES-256
+  const symmetricKey = crypto.randomBytes(32);
   const iv = crypto.randomBytes(16);
 
   const cipher = crypto.createCipheriv("aes-256-cbc", symmetricKey, iv);
@@ -152,7 +163,9 @@ export function createNetopiaPaymentPayload({
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
 
   const firstName = !isCompany ? parts[0] || "Client" : "Company";
-  const lastName = !isCompany ? parts.slice(1).join(" ") || "Customer" : "Client";
+  const lastName = !isCompany
+    ? parts.slice(1).join(" ") || "Customer"
+    : "Client";
 
   const xml = buildNetopiaOrderXml({
     orderId,
@@ -178,10 +191,14 @@ export function createNetopiaPaymentPayload({
 
 /* ======================================================
    DECRYPT CONFIRM/IPN RESPONSE
-   NETOPIA sends env_key + data (+ optional iv/cipher) to confirm URL
 ====================================================== */
-export function decryptNetopiaResponse({ env_key, data, iv, cipher = "aes-256-cbc" }) {
-  const privateKey = readFileSafe(NETOPIA_PRIVATE_KEY_PATH);
+export function decryptNetopiaResponse({
+  env_key,
+  data,
+  iv,
+  cipher = "aes-256-cbc",
+}) {
+  const privateKey = readFileSafe(NETOPIA_PRIVATE_KEY_PATH, true);
 
   const symmetricKey = crypto.privateDecrypt(
     {
@@ -205,16 +222,21 @@ export function decryptNetopiaResponse({ env_key, data, iv, cipher = "aes-256-cb
 
 /* ======================================================
    VERY LIGHT XML PARSER
-   enough for action/error/order fields from NETOPIA IPN
 ====================================================== */
 function extractTag(xml, tagName) {
-  const regex = new RegExp(`<${tagName}(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/${tagName}>`, "i");
+  const regex = new RegExp(
+    `<${tagName}(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/${tagName}>`,
+    "i"
+  );
   const match = xml.match(regex);
   return match ? match[1].trim() : "";
 }
 
 function extractTagAttribute(xml, tagName, attrName) {
-  const regex = new RegExp(`<${tagName}[^>]*\\s${attrName}="([^"]*)"[^>]*>`, "i");
+  const regex = new RegExp(
+    `<${tagName}[^>]*\\s${attrName}="([^"]*)"[^>]*>`,
+    "i"
+  );
   const match = xml.match(regex);
   return match ? match[1] : "";
 }
@@ -234,22 +256,28 @@ export function parseNetopiaIpnXml(xml) {
 
 /* ======================================================
    SUCCESS RULE
-   NETOPIA success is action paid/confirmed + error code 0
 ====================================================== */
 export function isNetopiaPaymentSuccessful(ipnData) {
   const okCode = String(ipnData?.errorCode || "") === "0";
   const action = String(ipnData?.action || "").toLowerCase();
 
-  return okCode && ["paid", "confirmed", "paid_pending", "confirmed_pending"].includes(action);
+  return okCode &&
+    ["paid", "confirmed", "paid_pending", "confirmed_pending"].includes(action);
 }
 
 /* ======================================================
    MERCHANT XML ACK
 ====================================================== */
-export function buildNetopiaAckXml({ errorType = null, errorCode = null, message = "" } = {}) {
+export function buildNetopiaAckXml({
+  errorType = null,
+  errorCode = null,
+  message = "",
+} = {}) {
   if (errorType && errorCode) {
     return `<?xml version="1.0" encoding="utf-8"?>
-<crc error_type="${errorType}" error_code="${errorCode}">${escapeXml(message)}</crc>`;
+<crc error_type="${errorType}" error_code="${errorCode}">${escapeXml(
+      message
+    )}</crc>`;
   }
 
   return `<?xml version="1.0" encoding="utf-8"?>
