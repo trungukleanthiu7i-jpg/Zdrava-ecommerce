@@ -51,6 +51,8 @@ export default function CheckoutPage() {
 
   const total = useMemo(() => Number(getTotalPrice() || 0), [getTotalPrice]);
 
+  const ONLINE_NETOPIA_METHOD = "REVOLUT";
+
   /* ===============================
      Handlers
   =============================== */
@@ -62,6 +64,40 @@ export default function CheckoutPage() {
 
   const handleAddressChange = (e) =>
     setShippingAddress({ ...shippingAddress, [e.target.name]: e.target.value });
+
+  /* ===============================
+     Helpers
+  =============================== */
+  const resetCheckoutForm = () => {
+    setCustomer({ fullName: "", email: "", phone: "" });
+    setCompany({ companyName: "", vatNumber: "", contactPerson: "" });
+    setShippingAddress({
+      country: "",
+      city: "",
+      addressLine: "",
+      postalCode: "",
+    });
+    setAcceptTerms(false);
+    setAcceptCookies(false);
+  };
+
+  const submitNetopiaForm = (paymentUrl, formData) => {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = paymentUrl;
+    form.style.display = "none";
+
+    Object.entries(formData).forEach(([key, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = value ?? "";
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  };
 
   /* ===============================
      Place Order
@@ -111,6 +147,11 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!cartItems || cartItems.length === 0) {
+      setError(t("Your cart is empty."));
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -130,6 +171,29 @@ export default function CheckoutPage() {
       };
 
       const res = await axiosClient.post("/payments/initiate", payload);
+      const orderId = res?.data?.orderId;
+
+      if (!orderId) {
+        throw new Error("Order ID was not returned.");
+      }
+
+      if (paymentMethod === ONLINE_NETOPIA_METHOD) {
+        const paymentRes = await axiosClient.post(
+          `/payments/netopia/start/${orderId}`
+        );
+
+        const paymentUrl = paymentRes?.data?.paymentUrl;
+        const formData = paymentRes?.data?.formData;
+
+        if (!paymentUrl || !formData?.env_key || !formData?.data) {
+          throw new Error("NETOPIA payment data is incomplete.");
+        }
+
+        clearCart();
+        resetCheckoutForm();
+        submitNetopiaForm(paymentUrl, formData);
+        return;
+      }
 
       if (res.data.instructions) {
         setInstructions(res.data.instructions);
@@ -137,17 +201,7 @@ export default function CheckoutPage() {
 
       clearCart();
       setShowSuccess(true);
-
-      setCustomer({ fullName: "", email: "", phone: "" });
-      setCompany({ companyName: "", vatNumber: "", contactPerson: "" });
-      setShippingAddress({
-        country: "",
-        city: "",
-        addressLine: "",
-        postalCode: "",
-      });
-      setAcceptTerms(false);
-      setAcceptCookies(false);
+      resetCheckoutForm();
 
       setTimeout(() => {
         navigate("/");
@@ -155,6 +209,7 @@ export default function CheckoutPage() {
     } catch (err) {
       setError(
         err.response?.data?.message ||
+          err.message ||
           t("Checkout failed. Please try again.")
       );
     } finally {
