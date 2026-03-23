@@ -1,6 +1,64 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "../styles/NewProductsPage.scss";
+
+const categories = [
+  {
+    title: "HORECA",
+    items: [
+      {
+        label: "Legume conservate HORECA",
+        slug: "legume-conservate-horeca",
+      },
+      {
+        label: "Sosuri HORECA",
+        slug: "sosuri-horeca",
+      },
+      {
+        label: "Dulcețuri",
+        slug: "dulceturi",
+      },
+    ],
+  },
+  {
+    title: "SUPERMARKET",
+    items: [
+      {
+        label: "Legume conservate",
+        slug: "legume-conservate",
+      },
+      {
+        label: "Produse din brânză",
+        slug: "produse-din-branza",
+      },
+      {
+        label: "Dulciuri și snacks-uri",
+        slug: "dulciuri-si-snacks-uri",
+      },
+      {
+        label: "Cafea și băuturi",
+        slug: "cafea-si-bauturi",
+      },
+      {
+        label: "Sosuri",
+        slug: "sosuri",
+      },
+      {
+        label: "Măsline",
+        slug: "masline",
+      },
+      {
+        label: "Alimente cu amidon",
+        slug: "alimente-cu-amidon",
+      },
+      {
+        label: "Plăcintă",
+        slug: "placinta",
+      },
+    ],
+  },
+];
 
 const NewProductsPage = () => {
   const { t } = useTranslation();
@@ -13,64 +71,20 @@ const NewProductsPage = () => {
           <h2>{t("All Categories")}</h2>
 
           <div className="categories-columns">
-            {/* HORECA column */}
-            <div className="category-column">
-              <h4>HORECA</h4>
-              <ul>
-                <li>
-                  <a href="/category/legume-conservate-horeca">
-                    {t("Legume conservate HORECA")}
-                  </a>
-                </li>
-                <li>
-                  <a href="/category/sosuri-horeca">{t("Sosuri HORECA")}</a>
-                </li>
-                <li>
-                  <a href="/category/dulceturi">{t("Dulcețuri")}</a>
-                </li>
-              </ul>
-            </div>
-
-            {/* SUPERMARKET column */}
-            <div className="category-column">
-              <h4>SUPERMARKET</h4>
-              <ul>
-                <li>
-                  <a href="/category/legume-conservate">
-                    {t("Legume conservate")}
-                  </a>
-                </li>
-                <li>
-                  <a href="/category/produse-din-branza">
-                    {t("Produse din brânză")}
-                  </a>
-                </li>
-                <li>
-                  <a href="/category/dulciuri-si-snacks-uri">
-                    {t("Dulciuri și snacks-uri")}
-                  </a>
-                </li>
-                <li>
-                  <a href="/category/cafea-si-bauturi">
-                    {t("Cafea și băuturi")}
-                  </a>
-                </li>
-                <li>
-                  <a href="/category/sosuri">{t("Sosuri")}</a>
-                </li>
-                <li>
-                  <a href="/category/masline">{t("Măsline")}</a>
-                </li>
-                <li>
-                  <a href="/category/alimente-cu-amidon">
-                    {t("Alimente cu amidon")}
-                  </a>
-                </li>
-                <li>
-                  <a href="/category/placinta">{t("Plăcintă")}</a>
-                </li>
-              </ul>
-            </div>
+            {categories.map((column) => (
+              <div className="category-column" key={column.title}>
+                <h4>{column.title}</h4>
+                <ul>
+                  {column.items.map((item) => (
+                    <li key={item.slug}>
+                      <Link to={`/products?category=${encodeURIComponent(item.slug)}`}>
+                        {t(item.label)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
 

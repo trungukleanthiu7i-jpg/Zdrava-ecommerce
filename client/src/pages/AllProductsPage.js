@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { FaShoppingBasket, FaCheck } from "react-icons/fa";
 import {
@@ -114,19 +114,37 @@ function AllProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ default: show first category products on open
-  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].key);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+
+  // ✅ Read category from URL query first
+  const queryCategory = new URLSearchParams(location.search).get("category");
+  const validCategory =
+    CATEGORIES.find((c) => c.key === queryCategory)?.key || CATEGORIES[0].key;
+
+  // ✅ default category can come from URL
+  const [activeCategory, setActiveCategory] = useState(validCategory);
 
   // pagination for the FILTERED list
   const [currentPage, setCurrentPage] = useState(1);
   const [addedItems, setAddedItems] = useState([]);
 
   const productsPerPage = 12;
-  const navigate = useNavigate();
-  const { addToCart } = useCart();
 
   // ✅ Use deployed backend on Render, localhost in development
   const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+  /* ================================
+     SYNC CATEGORY WITH URL
+  ================================ */
+  useEffect(() => {
+    if (queryCategory && CATEGORIES.some((c) => c.key === queryCategory)) {
+      setActiveCategory(queryCategory);
+    } else if (!queryCategory) {
+      setActiveCategory(CATEGORIES[0].key);
+    }
+  }, [queryCategory]);
 
   /* ================================
      FETCH PRODUCTS
@@ -151,8 +169,8 @@ function AllProductsPage() {
   ================================ */
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      const cat = (p.category || "").toLowerCase();
-      return cat === activeCategory.toLowerCase();
+      const cat = (p.category || "").toLowerCase().trim();
+      return cat === activeCategory.toLowerCase().trim();
     });
   }, [products, activeCategory]);
 
@@ -180,6 +198,14 @@ function AllProductsPage() {
   };
 
   /* ================================
+     CATEGORY CLICK
+  ================================ */
+  const handleCategoryClick = (categoryKey) => {
+    setActiveCategory(categoryKey);
+    navigate(`/products?category=${encodeURIComponent(categoryKey)}`);
+  };
+
+  /* ================================
      ADD TO CART
   ================================ */
   const handleAddToCart = (e, product) => {
@@ -197,7 +223,7 @@ function AllProductsPage() {
   /* ================================
      IMAGE URL (PRODUCTION SAFE)
      Backend returns image like "/images/produse/filename.jpg"
-================================ */
+  ================================ */
   const getImageUrl = (imagePath) => {
     if (!imagePath) return `${process.env.PUBLIC_URL}/images/no-image.png`;
     if (imagePath.startsWith("/")) return `${API}${imagePath}`;
@@ -209,7 +235,6 @@ function AllProductsPage() {
 
   return (
     <div className="all-products-layout">
-      {/* ✅ NEW: INNER WRAPPER (keeps content centered, background stays full width) */}
       <div className="all-products-layout__inner">
         {/* LEFT SIDEBAR */}
         <aside className="category-sidebar">
@@ -223,7 +248,7 @@ function AllProductsPage() {
                 className={`category-item ${
                   activeCategory === cat.key ? "active" : ""
                 }`}
-                onClick={() => setActiveCategory(cat.key)}
+                onClick={() => handleCategoryClick(cat.key)}
               >
                 <span className="category-item__icon">{cat.icon}</span>
                 <span className="category-item__label">{cat.label}</span>
@@ -247,57 +272,68 @@ function AllProductsPage() {
             <p>Loading products...</p>
           ) : (
             <>
-              <div className="products-grid">
-                {currentProducts.map((product) => {
-                  const isOutOfStock = product.stock === "out of stock";
+              {filteredProducts.length === 0 ? (
+                <div className="no-products-message">
+                  <p>Nu există produse în această categorie momentan.</p>
+                </div>
+              ) : (
+                <div className="products-grid">
+                  {currentProducts.map((product) => {
+                    const isOutOfStock = product.stock === "out of stock";
 
-                  return (
-                    <div
-                      key={product._id}
-                      className={`product-card ${
-                        isOutOfStock ? "out-of-stock" : ""
-                      }`}
-                      onClick={() => navigate(`/product/${product._id}`)}
-                    >
-                      {/* IMAGE */}
-                      <img src={getImageUrl(product.image)} alt={product.name} />
-
-                      {/* NAME */}
-                      <h3>{product.name}</h3>
-
-                      {/* PRICE (EUR) */}
-                      <p className="price">
-                        €{Number(product.price || 0).toFixed(2)}
-                      </p>
-
-                      {/* BARCODE */}
-                      {product.barcode && <Barcode value={product.barcode} />}
-
-                      {/* STOCK STATUS */}
+                    return (
                       <div
-                        className={`stock-status ${isOutOfStock ? "out" : "in"}`}
+                        key={product._id}
+                        className={`product-card ${
+                          isOutOfStock ? "out-of-stock" : ""
+                        }`}
+                        onClick={() => navigate(`/product/${product._id}`)}
                       >
-                        {isOutOfStock ? "Out of stock" : "In stock"}
-                      </div>
+                        {/* IMAGE */}
+                        <img
+                          src={getImageUrl(product.image)}
+                          alt={product.name}
+                        />
 
-                      {/* ADD TO CART */}
-                      <button
-                        className={`add-to-cart-btn ${
-                          addedItems.includes(product._id) ? "added" : ""
-                        } ${isOutOfStock ? "disabled" : ""}`}
-                        onClick={(e) => handleAddToCart(e, product)}
-                        disabled={isOutOfStock}
-                      >
-                        {addedItems.includes(product._id) ? (
-                          <FaCheck />
-                        ) : (
-                          <FaShoppingBasket />
-                        )}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
+                        {/* NAME */}
+                        <h3>{product.name}</h3>
+
+                        {/* PRICE (EUR) */}
+                        <p className="price">
+                          €{Number(product.price || 0).toFixed(2)}
+                        </p>
+
+                        {/* BARCODE */}
+                        {product.barcode && <Barcode value={product.barcode} />}
+
+                        {/* STOCK STATUS */}
+                        <div
+                          className={`stock-status ${
+                            isOutOfStock ? "out" : "in"
+                          }`}
+                        >
+                          {isOutOfStock ? "Out of stock" : "In stock"}
+                        </div>
+
+                        {/* ADD TO CART */}
+                        <button
+                          className={`add-to-cart-btn ${
+                            addedItems.includes(product._id) ? "added" : ""
+                          } ${isOutOfStock ? "disabled" : ""}`}
+                          onClick={(e) => handleAddToCart(e, product)}
+                          disabled={isOutOfStock}
+                        >
+                          {addedItems.includes(product._id) ? (
+                            <FaCheck />
+                          ) : (
+                            <FaShoppingBasket />
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* PAGINATION */}
               {filteredProducts.length > productsPerPage && (
