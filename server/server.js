@@ -30,11 +30,29 @@ dotenv.config();
 const app = express();
 
 /* =========================
-   🧰 MIDDLEWARE
+   🌍 CORS CONFIG
 ========================= */
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  process.env.FRONTEND_URL,
+  "https://albaniaproduct.com",
+  "https://www.albaniaproduct.com",
+  "https://zdrava-ecommerce-frontend-lv0k.onrender.com",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // allow requests with no origin (Postman, server-to-server, health checks)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   })
 );
@@ -63,6 +81,7 @@ mongoose
   .then(() => {
     console.log("✅ MongoDB connected successfully");
     console.log("✅ Connected DB:", mongoose.connection.name);
+    console.log("✅ Allowed CORS origins:", allowedOrigins);
   })
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err);
