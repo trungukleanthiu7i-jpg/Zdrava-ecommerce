@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jsPDF } from "jspdf";
-import { useCart } from "../context/CartContext";
 import JsBarcode from "jsbarcode";
 import "../styles/ProductPage.scss";
 import AddToCartButton from "../components/AddToCartButton";
@@ -66,10 +65,61 @@ function renderOperatorMinimal(op) {
   );
 }
 
+function isProductOutOfStock(product) {
+  if (!product) return true;
+
+  const stockState = String(product.stockState || product.stock || "")
+    .trim()
+    .toLowerCase();
+
+  const blockedStates = [
+    "out_of_stock",
+    "out of stock",
+    "stoc epuizat",
+    "unavailable",
+    "unavailable for sale",
+    "sold out",
+  ];
+
+  if (blockedStates.includes(stockState)) return true;
+
+  const numericCandidates = [
+    product.countInStock,
+    product.stockQuantity,
+    product.quantity,
+    product.qty,
+  ];
+
+  const hasNumericStock = numericCandidates.some(
+    (value) => value !== undefined && value !== null && value !== ""
+  );
+
+  if (hasNumericStock) {
+    const numericStock = Number(
+      numericCandidates.find(
+        (value) => value !== undefined && value !== null && value !== ""
+      )
+    );
+
+    if (!Number.isNaN(numericStock) && numericStock <= 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function getStockLabel(product) {
+  return isProductOutOfStock(product) ? "Out of stock" : "In stock";
+}
+
+function getStockClass(product) {
+  return isProductOutOfStock(product) ? "out" : "in";
+}
+
 function ProductPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart(); // keep as-is
 
   const [product, setProduct] = useState(null);
   const [recommended, setRecommended] = useState([]);
@@ -121,6 +171,7 @@ function ProductPage() {
   }, [product, API]);
 
   const safeProduct = product || {};
+  const isOutOfStock = isProductOutOfStock(safeProduct);
 
   const productImageUrl = safeProduct.image
     ? `${API}/images/produse/${safeProduct.image}`
@@ -180,7 +231,8 @@ function ProductPage() {
         .filter(Boolean);
     }
 
-    const isObj = nutrition && typeof nutrition === "object" && !Array.isArray(nutrition);
+    const isObj =
+      nutrition && typeof nutrition === "object" && !Array.isArray(nutrition);
     if (!isObj) return [];
 
     const roEnergy = nutrition["Valoare energetică"] || nutrition["Valoare energetica"];
@@ -195,12 +247,18 @@ function ProductPage() {
       energyKcal = kcalMatch ? normalizeVal(kcalMatch[1]) : "";
     }
 
-    const enEnergyKj = nutrition.energyKj != null ? normalizeVal(nutrition.energyKj) : "";
-    const enEnergyKcal = nutrition.energyKcal != null ? normalizeVal(nutrition.energyKcal) : "";
+    const enEnergyKj =
+      nutrition.energyKj != null ? normalizeVal(nutrition.energyKj) : "";
+    const enEnergyKcal =
+      nutrition.energyKcal != null ? normalizeVal(nutrition.energyKcal) : "";
 
     return [
       { label: "Valoare energetică", value: enEnergyKj || energyKj, unit: "kj" },
-      { label: "Valoare energetică", value: enEnergyKcal || energyKcal, unit: "kcal" },
+      {
+        label: "Valoare energetică",
+        value: enEnergyKcal || energyKcal,
+        unit: "kcal",
+      },
       {
         label: "Grăsimi",
         value: normalizeVal(nutrition["Grăsimi"] || nutrition["Grasimi"] || nutrition.fat),
@@ -424,17 +482,7 @@ function ProductPage() {
       );
       metaY += 6;
 
-      pdf.text(
-        `Stoc: ${normalizeText(
-          product.stock === "in stock"
-            ? "In stock"
-            : product.stock === "out of stock"
-            ? "Out of stock"
-            : product.stock || dash
-        )}`,
-        margin,
-        metaY
-      );
+      pdf.text(`Stoc: ${normalizeText(getStockLabel(product))}`, margin, metaY);
       metaY += 6;
 
       if (product.barcode) {
@@ -637,14 +685,25 @@ function ProductPage() {
 
           <div className="product-page__price-stock">
             <span className="price">{product.price} €</span>
-            <span className={`stock ${product.stock === "in stock" ? "in" : "out"}`}>
-              {product.stock === "in stock" ? "In stock" : "Out of stock"}
+            <span className={`stock ${getStockClass(product)}`}>
+              {getStockLabel(product)}
             </span>
           </div>
 
           {product.barcode && <Barcode value={product.barcode} />}
 
-          <AddToCartButton product={product} variant="single" />
+          {isOutOfStock ? (
+            <button
+              type="button"
+              className="add-to-cart-btn disabled"
+              disabled
+              style={{ cursor: "not-allowed", opacity: 0.7 }}
+            >
+              Out of stock
+            </button>
+          ) : (
+            <AddToCartButton product={product} variant="single" />
+          )}
 
           <button
             type="button"
@@ -822,6 +881,8 @@ function ProductPage() {
                 ? `${API}/images/produse/${item.image}`
                 : `${process.env.PUBLIC_URL}/images/no-image.png`;
 
+              const recommendedOutOfStock = isProductOutOfStock(item);
+
               return (
                 <div
                   key={item._id}
@@ -831,7 +892,21 @@ function ProductPage() {
                   <img src={recommendedImageUrl} alt={item.name} />
                   <h3>{item.name}</h3>
                   <p>{item.price} €</p>
-                  <AddToCartButton product={item} />
+
+                  <div onClick={(e) => e.stopPropagation()}>
+                    {recommendedOutOfStock ? (
+                      <button
+                        type="button"
+                        className="add-to-cart-btn disabled"
+                        disabled
+                        style={{ cursor: "not-allowed", opacity: 0.7 }}
+                      >
+                        Out of stock
+                      </button>
+                    ) : (
+                      <AddToCartButton product={item} />
+                    )}
+                  </div>
                 </div>
               );
             })}
