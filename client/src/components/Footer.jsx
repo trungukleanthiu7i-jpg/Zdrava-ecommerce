@@ -94,7 +94,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* RIGHT: Contact + Legal company details */}
+        {/* RIGHT: Contact + Legal */}
         <div className="footerPro__col">
           <h4 className="footerPro__title">{t("DATE DE CONTACT")}</h4>
 
@@ -140,15 +140,18 @@ const Footer = () => {
             <div className="footerPro__contactItem">
               <FaMapMarkerAlt className="footerPro__contactIcon" />
               <span className="footerPro__contactText">
-                {t("Str. Cerna nr. 3, et. mansardă, ap. 3, Mun. Craiova, Jud. Dolj, România")}
+                {t(
+                  "Str. Cerna nr. 3, et. mansardă, ap. 3, Mun. Craiova, Jud. Dolj, România"
+                )}
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Compliance Section */}
+      {/* ✅ Compliance Section */}
       <div className="footerPro__compliance">
+        {/* ANPC */}
         <a
           href="https://anpc.ro/"
           target="_blank"
@@ -162,12 +165,17 @@ const Footer = () => {
           />
         </a>
 
+        {/* ✅ NETOPIA LOGO */}
+        <div className="footerPro__netopia">
+          <img
+            src={`${process.env.PUBLIC_URL}/images/netopia-logo.svg`}
+            alt="Plăți securizate prin NETOPIA Payments"
+            className="footerPro__netopiaLogo"
+          />
+        </div>
+
         <div className="footerPro__complianceLinks">
-          <a
-            href="https://anpc.ro/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href="https://anpc.ro/" target="_blank" rel="noopener noreferrer">
             ANPC
           </a>
 
