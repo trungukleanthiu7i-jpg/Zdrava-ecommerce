@@ -3,13 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import axiosClient from "../api/axiosClient";
 import "../styles/CheckoutPage.scss";
-import {
-  FaCcPaypal,
-  FaUniversity,
-  FaMoneyBillWave,
-  FaCheckCircle,
-} from "react-icons/fa";
-import { SiRevolut } from "react-icons/si";
+import { FaUniversity, FaCheckCircle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 export default function CheckoutPage() {
@@ -41,7 +35,7 @@ export default function CheckoutPage() {
     postalCode: "",
   });
 
-  const [paymentMethod, setPaymentMethod] = useState("REVOLUT");
+  const [paymentMethod, setPaymentMethod] = useState("NETOPIA");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptCookies, setAcceptCookies] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -154,6 +148,24 @@ export default function CheckoutPage() {
 
       if (res.data.instructions) {
         setInstructions(res.data.instructions);
+      }
+
+      // NETOPIA / hosted payment redirect support
+      if (
+        paymentMethod === "NETOPIA" &&
+        (res.data.redirectUrl ||
+          res.data.paymentUrl ||
+          res.data.url ||
+          res.data.payment?.url)
+      ) {
+        const redirectUrl =
+          res.data.redirectUrl ||
+          res.data.paymentUrl ||
+          res.data.url ||
+          res.data.payment?.url;
+
+        window.location.href = redirectUrl;
+        return;
       }
 
       clearCart();
@@ -299,21 +311,16 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 className={`payment-card ${
-                  paymentMethod === "REVOLUT" ? "active" : ""
+                  paymentMethod === "NETOPIA" ? "active" : ""
                 }`}
-                onClick={() => setPaymentMethod("REVOLUT")}
+                onClick={() => setPaymentMethod("NETOPIA")}
               >
-                <SiRevolut className="payment-icon" /> Revolut
-              </button>
-
-              <button
-                type="button"
-                className={`payment-card ${
-                  paymentMethod === "PAYPAL" ? "active" : ""
-                }`}
-                onClick={() => setPaymentMethod("PAYPAL")}
-              >
-                <FaCcPaypal className="payment-icon" /> PayPal
+                <img
+                  src="/images/netopia-logo.webp"
+                  alt="Netopia"
+                  className="payment-icon payment-icon-image"
+                />
+                Netopia
               </button>
 
               <button
@@ -334,16 +341,6 @@ export default function CheckoutPage() {
                 onClick={() => setPaymentMethod("IBAN_EUR")}
               >
                 <FaUniversity className="payment-icon" /> IBAN EUR
-              </button>
-
-              <button
-                type="button"
-                className={`payment-card ${
-                  paymentMethod === "WU" ? "active" : ""
-                }`}
-                onClick={() => setPaymentMethod("WU")}
-              >
-                <FaMoneyBillWave className="payment-icon" /> Western Union
               </button>
             </div>
 
@@ -437,7 +434,11 @@ export default function CheckoutPage() {
               onClick={placeOrder}
               disabled={loading || !acceptTerms || !acceptCookies}
             >
-              {loading ? t("Processing...") : t("Pay now")}
+              {loading
+                ? t("Processing...")
+                : paymentMethod === "NETOPIA"
+                ? t("Pay with card")
+                : t("Pay now")}
             </button>
 
             {error && <p className="checkout-message error">{error}</p>}
