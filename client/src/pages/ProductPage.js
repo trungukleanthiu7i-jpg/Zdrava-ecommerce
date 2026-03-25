@@ -436,9 +436,6 @@ function ProductPage() {
         console.warn("Product image could not be loaded for PDF.");
       }
 
-      /* =========================
-         HEADER
-      ========================= */
       pdf.setFillColor(242, 247, 243);
       pdf.rect(0, 0, pageWidth, 44, "F");
 
@@ -458,9 +455,6 @@ function ProductPage() {
 
       y = 54;
 
-      /* =========================
-         TITLE + PRODUCT BLOCK
-      ========================= */
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(18);
       pdf.setTextColor(24, 69, 140);
@@ -504,9 +498,6 @@ function ProductPage() {
 
       y = Math.max(metaY + 7, 104);
 
-      /* =========================
-         DESCRIPTION
-      ========================= */
       drawSectionTitle("Descriere");
       drawWrappedText(
         product.description || "Nu exista descriere pentru acest produs.",
@@ -517,9 +508,6 @@ function ProductPage() {
       );
       y += 4;
 
-      /* =========================
-         INGREDIENTE
-      ========================= */
       drawSectionTitle("Ingrediente");
       drawWrappedText(ingredientsText, margin, contentWidth, 10, 5);
       y += 4;
@@ -528,9 +516,6 @@ function ProductPage() {
       drawWrappedText(allergensText, margin, contentWidth, 10, 5);
       y += 4;
 
-      /* =========================
-         NUTRITION TABLE
-      ========================= */
       if (hasNutrition) {
         drawSectionTitle("Informatii nutritionale / 100 g / 100 ml");
 
@@ -579,17 +564,11 @@ function ProductPage() {
         y += 6;
       }
 
-      /* =========================
-         CHARACTERISTICS
-      ========================= */
       drawSectionTitle("Caracteristici");
       drawLabelValue("Tara de origine", originCountry);
       drawLabelValue("Greutate neta", netWeight);
       y += 2;
 
-      /* =========================
-         LABEL
-      ========================= */
       if (hasLabelInfo) {
         drawSectionTitle("Eticheta");
 
@@ -646,9 +625,6 @@ function ProductPage() {
         }
       }
 
-      /* =========================
-         FOOTER
-      ========================= */
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(8);
       pdf.setTextColor(120, 120, 120);
@@ -680,8 +656,6 @@ function ProductPage() {
 
         <div className="product-page__info">
           <h1>{product.name}</h1>
-
-          {product.description && <p>{product.description}</p>}
 
           <div className="product-page__price-stock">
             <span className="price">{product.price} €</span>
