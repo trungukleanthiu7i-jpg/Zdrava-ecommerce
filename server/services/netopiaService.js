@@ -69,6 +69,66 @@ function readFileSafe(filePath, isPrivate = false) {
   return fs.readFileSync(resolvedPath);
 }
 
+function isPem(buffer) {
+  const text = buffer.toString("utf8");
+  return text.includes("-----BEGIN");
+}
+
+function getNetopiaPublicKey() {
+  const raw = readFileSafe(NETOPIA_PUBLIC_CERT_PATH, false);
+
+  if (isPem(raw)) {
+    try {
+      return crypto.createPublicKey(raw);
+    } catch (err) {
+      throw new Error(
+        `Invalid NETOPIA public certificate/key (PEM): ${err.message}`
+      );
+    }
+  }
+
+  try {
+    const x509 = new crypto.X509Certificate(raw);
+    return x509.publicKey;
+  } catch (err) {
+    throw new Error(
+      `Invalid NETOPIA public certificate (DER/PEM): ${err.message}`
+    );
+  }
+}
+
+function getNetopiaPrivateKey() {
+  const raw = readFileSafe(NETOPIA_PRIVATE_KEY_PATH, true);
+
+  if (isPem(raw)) {
+    try {
+      return crypto.createPrivateKey(raw);
+    } catch (err) {
+      throw new Error(`Invalid NETOPIA private key (PEM): ${err.message}`);
+    }
+  }
+
+  const attempts = [
+    { format: "der", type: "pkcs8" },
+    { format: "der", type: "pkcs1" },
+  ];
+
+  for (const opts of attempts) {
+    try {
+      return crypto.createPrivateKey({
+        key: raw,
+        ...opts,
+      });
+    } catch (err) {
+      // try next format
+    }
+  }
+
+  throw new Error(
+    "Invalid NETOPIA private key. Could not parse as PEM, DER PKCS#8, or DER PKCS#1."
+  );
+}
+
 /* ======================================================
    XML BUILDER
    NETOPIA v1.x expects an XML order request
@@ -92,7 +152,9 @@ export function buildNetopiaOrderXml({
   return `<?xml version="1.0" encoding="utf-8"?>
 <order type="card" id="${escapeXml(orderId)}" timestamp="${timestamp}">
   <signature>${escapeXml(NETOPIA_SIGNATURE)}</signature>
-  <invoice currency="${escapeXml(currency)}" amount="${Number(amount).toFixed(2)}">
+  <invoice currency="${escapeXml(currency)}" amount="${Number(amount).toFixed(
+    2
+  )}">
     <details>${escapeXml(details)}</details>
     <contact_info>
       <billing type="${escapeXml(customerType)}">
@@ -117,7 +179,7 @@ export function buildNetopiaOrderXml({
    NETOPIA v1.x uses env_key + data, with optional cipher/iv
 ====================================================== */
 export function encryptNetopiaRequest(xmlString) {
-  const publicCert = readFileSafe(NETOPIA_PUBLIC_CERT_PATH, false);
+  const publicKey = getNetopiaPublicKey();
 
   const symmetricKey = crypto.randomBytes(32);
   const iv = crypto.randomBytes(16);
@@ -128,7 +190,7 @@ export function encryptNetopiaRequest(xmlString) {
 
   const envKey = crypto.publicEncrypt(
     {
-      key: publicCert,
+      key: publicKey,
       padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
     },
     symmetricKey
@@ -198,7 +260,7 @@ export function decryptNetopiaResponse({
   iv,
   cipher = "aes-256-cbc",
 }) {
-  const privateKey = readFileSafe(NETOPIA_PRIVATE_KEY_PATH, true);
+  const privateKey = getNetopiaPrivateKey();
 
   const symmetricKey = crypto.privateDecrypt(
     {
@@ -261,8 +323,10 @@ export function isNetopiaPaymentSuccessful(ipnData) {
   const okCode = String(ipnData?.errorCode || "") === "0";
   const action = String(ipnData?.action || "").toLowerCase();
 
-  return okCode &&
-    ["paid", "confirmed", "paid_pending", "confirmed_pending"].includes(action);
+  return (
+    okCode &&
+    ["paid", "confirmed", "paid_pending", "confirmed_pending"].includes(action)
+  );
 }
 
 /* ======================================================
