@@ -228,7 +228,7 @@ const orderSchema = new mongoose.Schema(
     ------------------------ */
     paymentMethod: {
       type: String,
-      enum: ["REVOLUT", "PAYPAL", "IBAN_RON", "IBAN_EUR", "WU"],
+      enum: ["NETOPIA", "REVOLUT", "PAYPAL", "IBAN_RON", "IBAN_EUR", "WU"],
       required: true,
     },
 
