@@ -7,6 +7,7 @@ import {
   createOblioInvoice,
   searchOblioProducts,
 } from "../services/oblioService.js";
+import { createNetopiaPaymentPayload } from "../services/netopiaService.js";
 
 const router = express.Router();
 
@@ -62,9 +63,7 @@ async function buildOblioProductsFromOrder(order) {
     const exactProduct = foundProducts.find((p) => p.name === productName);
 
     if (!exactProduct) {
-      throw new Error(
-        `Product "${productName}" was not found in Oblio.`
-      );
+      throw new Error(`Product "${productName}" was not found in Oblio.`);
     }
 
     const stockEntry = Array.isArray(exactProduct.stock)
@@ -177,6 +176,10 @@ router.post("/initiate", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Invalid customer type." });
     }
 
+    if (!paymentMethod) {
+      return res.status(400).json({ message: "Payment method is required." });
+    }
+
     /* -------------------------------
        FETCH PRODUCTS
     -------------------------------- */
@@ -193,6 +196,7 @@ router.post("/initiate", authMiddleware, async (req, res) => {
 
     for (const c of cart) {
       const p = productMap.get(String(c.productId));
+
       if (!p) {
         return res.status(400).json({
           message: "Product not found.",
@@ -251,6 +255,7 @@ router.post("/initiate", authMiddleware, async (req, res) => {
       paymentMethod,
       status: "pending_payment",
       paymentStatus: "unpaid",
+      provider: paymentMethod === "NETOPIA" ? "NETOPIA" : "",
     });
 
     /* =====================================================
@@ -276,14 +281,78 @@ router.post("/initiate", authMiddleware, async (req, res) => {
 
     const updatedUser = await User.findById(req.user.id).select("-password");
 
+    /* =====================================================
+       NETOPIA PAYMENT
+    ===================================================== */
+    if (paymentMethod === "NETOPIA") {
+      const details = `Order ${order.orderNumber || order._id}`;
+
+      const paymentPayload = createNetopiaPaymentPayload({
+        orderId: String(order._id),
+        amount: Number(order.total || 0),
+        currency: order.currency || "RON",
+        details,
+        customer: order.customer,
+        shippingAddress: order.shippingAddress,
+        customerType: order.customerType,
+      });
+
+      return res.json({
+        success: true,
+        message: "Order created successfully.",
+        orderId: order._id,
+        updatedUser,
+        paymentMethod: "NETOPIA",
+        paymentUrl: paymentPayload.url,
+        formData: {
+          env_key: paymentPayload.env_key,
+          data: paymentPayload.data,
+          cipher: paymentPayload.cipher,
+          iv: paymentPayload.iv,
+        },
+      });
+    }
+
+    /* =====================================================
+       IBAN / MANUAL PAYMENT
+    ===================================================== */
+    let instructions = null;
+
+    if (paymentMethod === "IBAN_RON") {
+      instructions = {
+        title: "Plată prin transfer bancar (RON)",
+        details: [
+          "Beneficiar: MERITA LOGISTIC S.R.L.",
+          "Valuta: RON",
+          `Număr comandă: ${order.orderNumber || order._id}`,
+          "Vă rugăm să menționați numărul comenzii în detaliile plății.",
+        ],
+      };
+    }
+
+    if (paymentMethod === "IBAN_EUR") {
+      instructions = {
+        title: "Plată prin transfer bancar (EUR)",
+        details: [
+          "Beneficiar: MERITA LOGISTIC S.R.L.",
+          "Valuta: EUR",
+          `Număr comandă: ${order.orderNumber || order._id}`,
+          "Vă rugăm să menționați numărul comenzii în detaliile plății.",
+        ],
+      };
+    }
+
     return res.json({
+      success: true,
       message: "Order created successfully.",
       orderId: order._id,
       updatedUser,
+      instructions,
     });
   } catch (err) {
     console.error("❌ payments/initiate error:", err);
     return res.status(500).json({
+      success: false,
       message: err.message,
     });
   }
@@ -291,7 +360,6 @@ router.post("/initiate", authMiddleware, async (req, res) => {
 
 /* ======================================================
    CONFIRM PAYMENT + ISSUE OBLIO INVOICE
-   Use this after successful payment / webhook confirmation
 ====================================================== */
 router.post("/confirm/:orderId", authMiddleware, async (req, res) => {
   try {
@@ -304,13 +372,13 @@ router.post("/confirm/:orderId", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Order not found." });
     }
 
-    if (String(order.userId) !== String(req.user.id) && req.user.role !== "admin") {
+    if (
+      String(order.userId) !== String(req.user.id) &&
+      req.user.role !== "admin"
+    ) {
       return res.status(403).json({ message: "Not allowed." });
     }
 
-    /* -------------------------------
-       Prevent duplicate payment mark
-    -------------------------------- */
     if (order.paymentStatus !== "paid") {
       order.paymentStatus = "paid";
       order.status = "paid";
@@ -319,9 +387,6 @@ router.post("/confirm/:orderId", authMiddleware, async (req, res) => {
       await order.save();
     }
 
-    /* -------------------------------
-       Prevent duplicate invoice issue
-    -------------------------------- */
     if (!order.oblioInvoice?.issued) {
       try {
         await issueOblioInvoiceForOrder(order);

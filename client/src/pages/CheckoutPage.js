@@ -73,6 +73,37 @@ export default function CheckoutPage() {
     setAcceptCookies(false);
   };
 
+  const submitNetopiaForm = ({ paymentUrl, formData }) => {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = paymentUrl;
+    form.style.display = "none";
+
+    const fields = {
+      env_key: formData.env_key,
+      data: formData.data,
+    };
+
+    if (formData.cipher) {
+      fields.cipher = formData.cipher;
+    }
+
+    if (formData.iv) {
+      fields.iv = formData.iv;
+    }
+
+    Object.entries(fields).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value || "";
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  };
+
   /* ===============================
      Place Order
   =============================== */
@@ -146,26 +177,21 @@ export default function CheckoutPage() {
 
       const res = await axiosClient.post("/payments/initiate", payload);
 
-      if (res.data.instructions) {
-        setInstructions(res.data.instructions);
-      }
-
-      // NETOPIA / hosted payment redirect support
       if (
         paymentMethod === "NETOPIA" &&
-        (res.data.redirectUrl ||
-          res.data.paymentUrl ||
-          res.data.url ||
-          res.data.payment?.url)
+        res.data.paymentUrl &&
+        res.data.formData?.env_key &&
+        res.data.formData?.data
       ) {
-        const redirectUrl =
-          res.data.redirectUrl ||
-          res.data.paymentUrl ||
-          res.data.url ||
-          res.data.payment?.url;
-
-        window.location.href = redirectUrl;
+        submitNetopiaForm({
+          paymentUrl: res.data.paymentUrl,
+          formData: res.data.formData,
+        });
         return;
+      }
+
+      if (res.data.instructions) {
+        setInstructions(res.data.instructions);
       }
 
       clearCart();
