@@ -66,7 +66,8 @@ function readFileSafe(filePath) {
 function getNetopiaPublicKey() {
   if (NETOPIA_PUBLIC_CERT_PEM) {
     try {
-      return crypto.createPublicKey(NETOPIA_PUBLIC_CERT_PEM);
+      const x509 = new crypto.X509Certificate(NETOPIA_PUBLIC_CERT_PEM);
+      return x509.publicKey;
     } catch (err) {
       throw new Error(
         `Invalid NETOPIA public certificate PEM: ${err.message}`
