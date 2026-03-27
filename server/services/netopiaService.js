@@ -8,7 +8,7 @@ import crypto from "crypto";
 const NETOPIA_SIGNATURE = process.env.NETOPIA_SIGNATURE;
 const NETOPIA_IS_LIVE = String(process.env.NETOPIA_IS_LIVE) === "true";
 
-const NETOPIA_PUBLIC_CERT_PEM = process.env.NETOPIA_PUBLIC_CERT_PEM;
+const NETOPIA_PUBLIC_CERT_DER_BASE64 = process.env.NETOPIA_PUBLIC_CERT_DER_BASE64;
 const NETOPIA_PRIVATE_KEY_PEM = process.env.NETOPIA_PRIVATE_KEY_PEM;
 
 const NETOPIA_PUBLIC_CERT_PATH = process.env.NETOPIA_PUBLIC_CERT_PATH;
@@ -63,14 +63,22 @@ function readFileSafe(filePath) {
   return fs.readFileSync(resolvedPath);
 }
 
+function normalizePem(value = "") {
+  return String(value).replace(/\r/g, "").replace(/\\n/g, "\n").trim();
+}
+
 function getNetopiaPublicKey() {
-  if (NETOPIA_PUBLIC_CERT_PEM) {
+  if (NETOPIA_PUBLIC_CERT_DER_BASE64) {
     try {
-      const x509 = new crypto.X509Certificate(NETOPIA_PUBLIC_CERT_PEM);
+      const der = Buffer.from(
+        String(NETOPIA_PUBLIC_CERT_DER_BASE64).replace(/\s+/g, ""),
+        "base64"
+      );
+      const x509 = new crypto.X509Certificate(der);
       return x509.publicKey;
     } catch (err) {
       throw new Error(
-        `Invalid NETOPIA public certificate PEM: ${err.message}`
+        `Invalid NETOPIA public certificate DER base64: ${err.message}`
       );
     }
   }
@@ -88,14 +96,14 @@ function getNetopiaPublicKey() {
   }
 
   throw new Error(
-    "Missing NETOPIA public certificate. Set NETOPIA_PUBLIC_CERT_PEM or NETOPIA_PUBLIC_CERT_PATH."
+    "Missing NETOPIA public certificate. Set NETOPIA_PUBLIC_CERT_DER_BASE64 or NETOPIA_PUBLIC_CERT_PATH."
   );
 }
 
 function getNetopiaPrivateKey() {
   if (NETOPIA_PRIVATE_KEY_PEM) {
     try {
-      return crypto.createPrivateKey(NETOPIA_PRIVATE_KEY_PEM);
+      return crypto.createPrivateKey(normalizePem(NETOPIA_PRIVATE_KEY_PEM));
     } catch (err) {
       throw new Error(`Invalid NETOPIA private key PEM: ${err.message}`);
     }
@@ -118,7 +126,6 @@ function getNetopiaPrivateKey() {
 
 /* ======================================================
    XML BUILDER
-   NETOPIA v1.x expects an XML order request
 ====================================================== */
 export function buildNetopiaOrderXml({
   orderId,
@@ -163,7 +170,6 @@ export function buildNetopiaOrderXml({
 
 /* ======================================================
    ENCRYPT REQUEST
-   NETOPIA v1.x uses env_key + data, with optional cipher/iv
 ====================================================== */
 export function encryptNetopiaRequest(xmlString) {
   const publicKey = getNetopiaPublicKey();
@@ -303,9 +309,6 @@ export function parseNetopiaIpnXml(xml) {
   };
 }
 
-/* ======================================================
-   SUCCESS RULE
-====================================================== */
 export function isNetopiaPaymentSuccessful(ipnData) {
   const okCode = String(ipnData?.errorCode || "") === "0";
   const action = String(ipnData?.action || "").toLowerCase();
@@ -316,9 +319,6 @@ export function isNetopiaPaymentSuccessful(ipnData) {
   );
 }
 
-/* ======================================================
-   MERCHANT XML ACK
-====================================================== */
 export function buildNetopiaAckXml({
   errorType = null,
   errorCode = null,
