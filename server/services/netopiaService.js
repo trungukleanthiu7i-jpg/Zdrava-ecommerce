@@ -7,8 +7,13 @@ import crypto from "crypto";
 ====================================================== */
 const NETOPIA_SIGNATURE = process.env.NETOPIA_SIGNATURE;
 const NETOPIA_IS_LIVE = String(process.env.NETOPIA_IS_LIVE) === "true";
+
+const NETOPIA_PUBLIC_CERT_PEM = process.env.NETOPIA_PUBLIC_CERT_PEM;
+const NETOPIA_PRIVATE_KEY_PEM = process.env.NETOPIA_PRIVATE_KEY_PEM;
+
 const NETOPIA_PUBLIC_CERT_PATH = process.env.NETOPIA_PUBLIC_CERT_PATH;
 const NETOPIA_PRIVATE_KEY_PATH = process.env.NETOPIA_PRIVATE_KEY_PATH;
+
 const NETOPIA_CONFIRM_URL = process.env.NETOPIA_CONFIRM_URL;
 const NETOPIA_RETURN_URL = process.env.NETOPIA_RETURN_URL;
 
@@ -48,18 +53,7 @@ function resolveCertPath(relativeOrAbsolutePath) {
     : path.resolve(process.cwd(), relativeOrAbsolutePath);
 }
 
-function readFileSafe(filePath, isPrivate = false) {
-  const base64 = isPrivate
-    ? process.env.NETOPIA_PRIVATE_KEY_BASE64
-    : process.env.NETOPIA_PUBLIC_CERT_BASE64;
-
-  if (base64) {
-    console.log(
-      `✅ Using NETOPIA ${isPrivate ? "private key" : "public cert"} from ENV`
-    );
-    return Buffer.from(base64, "base64");
-  }
-
+function readFileSafe(filePath) {
   const resolvedPath = resolveCertPath(filePath);
 
   if (!fs.existsSync(resolvedPath)) {
@@ -69,63 +63,55 @@ function readFileSafe(filePath, isPrivate = false) {
   return fs.readFileSync(resolvedPath);
 }
 
-function isPem(buffer) {
-  const text = buffer.toString("utf8");
-  return text.includes("-----BEGIN");
-}
-
 function getNetopiaPublicKey() {
-  const raw = readFileSafe(NETOPIA_PUBLIC_CERT_PATH, false);
-
-  if (isPem(raw)) {
+  if (NETOPIA_PUBLIC_CERT_PEM) {
     try {
-      return crypto.createPublicKey(raw);
+      return crypto.createPublicKey(NETOPIA_PUBLIC_CERT_PEM);
     } catch (err) {
       throw new Error(
-        `Invalid NETOPIA public certificate/key (PEM): ${err.message}`
+        `Invalid NETOPIA public certificate PEM: ${err.message}`
       );
     }
   }
 
-  try {
-    const x509 = new crypto.X509Certificate(raw);
-    return x509.publicKey;
-  } catch (err) {
-    throw new Error(
-      `Invalid NETOPIA public certificate (DER/PEM): ${err.message}`
-    );
-  }
-}
-
-function getNetopiaPrivateKey() {
-  const raw = readFileSafe(NETOPIA_PRIVATE_KEY_PATH, true);
-
-  if (isPem(raw)) {
+  if (NETOPIA_PUBLIC_CERT_PATH) {
     try {
-      return crypto.createPrivateKey(raw);
+      const raw = readFileSafe(NETOPIA_PUBLIC_CERT_PATH);
+      const x509 = new crypto.X509Certificate(raw);
+      return x509.publicKey;
     } catch (err) {
-      throw new Error(`Invalid NETOPIA private key (PEM): ${err.message}`);
-    }
-  }
-
-  const attempts = [
-    { format: "der", type: "pkcs8" },
-    { format: "der", type: "pkcs1" },
-  ];
-
-  for (const opts of attempts) {
-    try {
-      return crypto.createPrivateKey({
-        key: raw,
-        ...opts,
-      });
-    } catch (err) {
-      // try next format
+      throw new Error(
+        `Invalid NETOPIA public certificate file: ${err.message}`
+      );
     }
   }
 
   throw new Error(
-    "Invalid NETOPIA private key. Could not parse as PEM, DER PKCS#8, or DER PKCS#1."
+    "Missing NETOPIA public certificate. Set NETOPIA_PUBLIC_CERT_PEM or NETOPIA_PUBLIC_CERT_PATH."
+  );
+}
+
+function getNetopiaPrivateKey() {
+  if (NETOPIA_PRIVATE_KEY_PEM) {
+    try {
+      return crypto.createPrivateKey(NETOPIA_PRIVATE_KEY_PEM);
+    } catch (err) {
+      throw new Error(`Invalid NETOPIA private key PEM: ${err.message}`);
+    }
+  }
+
+  if (NETOPIA_PRIVATE_KEY_PATH) {
+    try {
+      const raw = readFileSafe(NETOPIA_PRIVATE_KEY_PATH);
+      const text = raw.toString("utf8");
+      return crypto.createPrivateKey(text);
+    } catch (err) {
+      throw new Error(`Invalid NETOPIA private key file: ${err.message}`);
+    }
+  }
+
+  throw new Error(
+    "Missing NETOPIA private key. Set NETOPIA_PRIVATE_KEY_PEM or NETOPIA_PRIVATE_KEY_PATH."
   );
 }
 
