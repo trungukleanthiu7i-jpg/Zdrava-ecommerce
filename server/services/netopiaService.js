@@ -8,7 +8,8 @@ import crypto from "crypto";
 const NETOPIA_SIGNATURE = process.env.NETOPIA_SIGNATURE;
 const NETOPIA_IS_LIVE = String(process.env.NETOPIA_IS_LIVE) === "true";
 
-const NETOPIA_PUBLIC_CERT_DER_BASE64 = process.env.NETOPIA_PUBLIC_CERT_DER_BASE64;
+const NETOPIA_PUBLIC_CERT_DER_BASE64 =
+  process.env.NETOPIA_PUBLIC_CERT_DER_BASE64;
 const NETOPIA_PRIVATE_KEY_PEM = process.env.NETOPIA_PRIVATE_KEY_PEM;
 
 const NETOPIA_PUBLIC_CERT_PATH = process.env.NETOPIA_PUBLIC_CERT_PATH;
@@ -184,7 +185,7 @@ export function encryptNetopiaRequest(xmlString) {
   const envKey = crypto.publicEncrypt(
     {
       key: publicKey,
-      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      padding: crypto.constants.RSA_PKCS1_PADDING,
     },
     symmetricKey
   );
@@ -258,7 +259,7 @@ export function decryptNetopiaResponse({
   const symmetricKey = crypto.privateDecrypt(
     {
       key: privateKey,
-      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      padding: crypto.constants.RSA_PKCS1_PADDING,
     },
     Buffer.from(env_key, "base64")
   );
