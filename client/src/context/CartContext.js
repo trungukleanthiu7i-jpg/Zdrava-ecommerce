@@ -54,7 +54,26 @@ export function CartProvider({ children }) {
   useEffect(() => {
     const savedCart = localStorage.getItem("cartItems");
     if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+      try {
+        const parsed = JSON.parse(savedCart);
+
+        const normalizedCart = Array.isArray(parsed)
+          ? parsed.map((item) => ({
+              ...item,
+              quantity: Number(item.quantity || 0),
+              pallets: Number(item.pallets || 0),
+              pieces: Number(item.pieces || 0),
+              unitsPerBox: Number(item.unitsPerBox || 1),
+              boxPerPalet: Number(item.boxPerPalet || 0),
+              price: Number(item.price || 0),
+            }))
+          : [];
+
+        setCartItems(normalizedCart);
+      } catch (error) {
+        console.error("Failed to parse cartItems from localStorage:", error);
+        setCartItems([]);
+      }
     }
   }, []);
 
@@ -64,6 +83,7 @@ export function CartProvider({ children }) {
   }, [cartItems]);
 
   // ➕ Add product to cart
+  // ✅ Default behavior: add 1 piece, not 1 box
   const addToCart = (product) => {
     if (!product || isProductOutOfStock(product)) {
       return;
@@ -79,7 +99,10 @@ export function CartProvider({ children }) {
 
         return prev.map((item) =>
           item._id === product._id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                pieces: Number(item.pieces || 0) + 1,
+              }
             : item
         );
       }
@@ -88,8 +111,12 @@ export function CartProvider({ children }) {
         ...prev,
         {
           ...product,
-          quantity: 1, // boxes
+          quantity: 0, // boxes
           pallets: 0,
+          pieces: 1, // ✅ default add = 1 piece
+          unitsPerBox: Number(product.unitsPerBox || 1),
+          boxPerPalet: Number(product.boxPerPalet || 0),
+          price: Number(product.price || 0),
         },
       ];
     });
@@ -97,54 +124,93 @@ export function CartProvider({ children }) {
     setCartAnimationTrigger((prev) => prev + 1);
   };
 
+  const shouldRemoveItem = (item) => {
+    const quantity = Number(item.quantity || 0);
+    const pallets = Number(item.pallets || 0);
+    const pieces = Number(item.pieces || 0);
+
+    return quantity <= 0 && pallets <= 0 && pieces <= 0;
+  };
+
   // ✏️ Update quantity directly (boxes)
   const updateQuantity = (productId, quantity) => {
     const q = Math.max(0, Number(quantity) || 0);
 
     setCartItems((prev) =>
-      q === 0
-        ? prev.filter((item) => item._id !== productId)
-        : prev.map((item) => {
-            if (item._id !== productId) return item;
-            if (isProductOutOfStock(item)) return item;
+      prev
+        .map((item) => {
+          if (item._id !== productId) return item;
+          if (isProductOutOfStock(item)) return item;
 
-            return {
-              ...item,
-              quantity: q,
-              pallets: 0, // reset pallets when editing boxes
-            };
-          })
+          return {
+            ...item,
+            quantity: q,
+          };
+        })
+        .filter((item) => !shouldRemoveItem(item))
     );
   };
 
-  // 🧱 Update pallets (B2B logic)
+  // 🧱 Update pallets
+  // ✅ Do not overwrite boxes
   const updatePallets = (productId, pallets) => {
     const p = Math.max(0, Number(pallets) || 0);
 
     setCartItems((prev) =>
-      prev.map((item) => {
-        if (item._id !== productId) return item;
-        if (isProductOutOfStock(item)) return item;
+      prev
+        .map((item) => {
+          if (item._id !== productId) return item;
+          if (isProductOutOfStock(item)) return item;
 
-        return {
-          ...item,
-          pallets: p,
-          quantity: p * item.boxPerPalet, // ✅ product-specific
-        };
-      })
+          return {
+            ...item,
+            pallets: p,
+          };
+        })
+        .filter((item) => !shouldRemoveItem(item))
     );
   };
 
-  // ➖ Decrease quantity by 1 box
+  // 🧩 Update pieces
+  const updatePieces = (productId, pieces) => {
+    const p = Math.max(0, Number(pieces) || 0);
+
+    setCartItems((prev) =>
+      prev
+        .map((item) => {
+          if (item._id !== productId) return item;
+          if (isProductOutOfStock(item)) return item;
+
+          return {
+            ...item,
+            pieces: p,
+          };
+        })
+        .filter((item) => !shouldRemoveItem(item))
+    );
+  };
+
+  // ➖ Decrease by 1 piece first, then box if needed
   const decreaseQuantity = (productId) => {
     setCartItems((prev) =>
       prev
-        .map((item) =>
-          item._id === productId
-            ? { ...item, quantity: item.quantity - 1 }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
+        .map((item) => {
+          if (item._id !== productId) return item;
+
+          const pieces = Number(item.pieces || 0);
+          const quantity = Number(item.quantity || 0);
+
+          if (pieces > 0) {
+            return { ...item, pieces: pieces - 1 };
+          }
+
+          if (quantity > 0) {
+            return { ...item, quantity: quantity - 1 };
+          }
+
+          return item;
+        })
+        .filter((item) => !shouldRemoveItem(item))
     );
   };
 
@@ -158,16 +224,34 @@ export function CartProvider({ children }) {
     setCartItems([]);
   };
 
-  // 🔢 Total boxes count
+  // 🔢 Cart badge count
+  // ✅ Count total selectable purchase groups, not only boxes
   const getCartCount = () => {
-    return cartItems.reduce((acc, item) => acc + item.quantity, 0);
+    return cartItems.reduce((acc, item) => {
+      const pieces = Number(item.pieces || 0);
+      const boxes = Number(item.quantity || 0);
+      const pallets = Number(item.pallets || 0);
+      return acc + pieces + boxes + pallets;
+    }, 0);
   };
 
-  // 💰 FINAL TOTAL PRICE (exact)
+  // 💰 FINAL TOTAL PRICE
   const getTotalPrice = () => {
     return cartItems.reduce((total, item) => {
-      const units = item.quantity * item.unitsPerBox; // boxes → units
-      return total + units * item.price;
+      const pieces = Number(item.pieces || 0);
+      const boxes = Number(item.quantity || 0);
+      const pallets = Number(item.pallets || 0);
+      const unitsPerBox = Number(item.unitsPerBox || 1);
+      const boxPerPalet = Number(item.boxPerPalet || 0);
+      const price = Number(item.price || 0);
+
+      const pieceUnits = pieces;
+      const boxUnits = boxes * unitsPerBox;
+      const palletUnits = pallets * boxPerPalet * unitsPerBox;
+
+      const totalUnits = pieceUnits + boxUnits + palletUnits;
+
+      return total + totalUnits * price;
     }, 0);
   };
 
@@ -179,6 +263,7 @@ export function CartProvider({ children }) {
         decreaseQuantity,
         updateQuantity,
         updatePallets,
+        updatePieces,
         removeFromCart,
         clearCart,
         getCartCount,
