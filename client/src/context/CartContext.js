@@ -46,6 +46,32 @@ function isProductOutOfStock(product) {
   return false;
 }
 
+function normalizeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+function normalizeCartItem(item) {
+  return {
+    ...item,
+    quantity: Math.max(0, normalizeNumber(item.quantity, 0)), // boxes
+    pallets: Math.max(0, normalizeNumber(item.pallets, 0)),
+    pieces: Math.max(0, normalizeNumber(item.pieces, 0)),
+    unitsPerBox: Math.max(1, normalizeNumber(item.unitsPerBox, 1)),
+    boxPerPalet: Math.max(0, normalizeNumber(item.boxPerPalet, 0)),
+    price: Math.max(0, normalizeNumber(item.price, 0)),
+  };
+}
+
+function hasAnyAmount(item) {
+  const normalized = normalizeCartItem(item);
+  return (
+    normalized.quantity > 0 ||
+    normalized.pallets > 0 ||
+    normalized.pieces > 0
+  );
+}
+
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [cartAnimationTrigger, setCartAnimationTrigger] = useState(0);
@@ -53,23 +79,16 @@ export function CartProvider({ children }) {
   // 🔁 Load cart from localStorage
   useEffect(() => {
     const savedCart = localStorage.getItem("cartItems");
+
     if (savedCart) {
       try {
         const parsed = JSON.parse(savedCart);
 
-        const normalizedCart = Array.isArray(parsed)
-          ? parsed.map((item) => ({
-              ...item,
-              quantity: Number(item.quantity || 0),
-              pallets: Number(item.pallets || 0),
-              pieces: Number(item.pieces || 0),
-              unitsPerBox: Number(item.unitsPerBox || 1),
-              boxPerPalet: Number(item.boxPerPalet || 0),
-              price: Number(item.price || 0),
-            }))
-          : [];
-
-        setCartItems(normalizedCart);
+        if (Array.isArray(parsed)) {
+          setCartItems(parsed.map(normalizeCartItem));
+        } else {
+          setCartItems([]);
+        }
       } catch (error) {
         console.error("Failed to parse cartItems from localStorage:", error);
         setCartItems([]);
@@ -83,11 +102,9 @@ export function CartProvider({ children }) {
   }, [cartItems]);
 
   // ➕ Add product to cart
-  // ✅ Default behavior: add 1 piece, not 1 box
+  // default = 1 piece
   const addToCart = (product) => {
-    if (!product || isProductOutOfStock(product)) {
-      return;
-    }
+    if (!product || isProductOutOfStock(product)) return;
 
     setCartItems((prev) => {
       const existing = prev.find((item) => item._id === product._id);
@@ -99,118 +116,128 @@ export function CartProvider({ children }) {
 
         return prev.map((item) =>
           item._id === product._id
-            ? {
+            ? normalizeCartItem({
                 ...item,
-                pieces: Number(item.pieces || 0) + 1,
-              }
+                pieces: normalizeNumber(item.pieces, 0) + 1,
+              })
             : item
         );
       }
 
       return [
         ...prev,
-        {
+        normalizeCartItem({
           ...product,
-          quantity: 0, // boxes
+          quantity: 0,
           pallets: 0,
-          pieces: 1, // ✅ default add = 1 piece
-          unitsPerBox: Number(product.unitsPerBox || 1),
-          boxPerPalet: Number(product.boxPerPalet || 0),
-          price: Number(product.price || 0),
-        },
+          pieces: 1,
+        }),
       ];
     });
 
     setCartAnimationTrigger((prev) => prev + 1);
   };
 
-  const shouldRemoveItem = (item) => {
-    const quantity = Number(item.quantity || 0);
-    const pallets = Number(item.pallets || 0);
-    const pieces = Number(item.pieces || 0);
-
-    return quantity <= 0 && pallets <= 0 && pieces <= 0;
-  };
-
-  // ✏️ Update quantity directly (boxes)
+  // ✏️ Update boxes
   const updateQuantity = (productId, quantity) => {
-    const q = Math.max(0, Number(quantity) || 0);
+    const q = Math.max(0, normalizeNumber(quantity, 0));
 
     setCartItems((prev) =>
-      prev
-        .map((item) => {
-          if (item._id !== productId) return item;
-          if (isProductOutOfStock(item)) return item;
+      prev.flatMap((item) => {
+        if (item._id !== productId) {
+          return [normalizeCartItem(item)];
+        }
 
-          return {
-            ...item,
-            quantity: q,
-          };
-        })
-        .filter((item) => !shouldRemoveItem(item))
+        if (isProductOutOfStock(item)) {
+          return [normalizeCartItem(item)];
+        }
+
+        const updatedItem = normalizeCartItem({
+          ...item,
+          quantity: q,
+        });
+
+        return hasAnyAmount(updatedItem) ? [updatedItem] : [];
+      })
     );
   };
 
   // 🧱 Update pallets
-  // ✅ Do not overwrite boxes
   const updatePallets = (productId, pallets) => {
-    const p = Math.max(0, Number(pallets) || 0);
+    const p = Math.max(0, normalizeNumber(pallets, 0));
 
     setCartItems((prev) =>
-      prev
-        .map((item) => {
-          if (item._id !== productId) return item;
-          if (isProductOutOfStock(item)) return item;
+      prev.flatMap((item) => {
+        if (item._id !== productId) {
+          return [normalizeCartItem(item)];
+        }
 
-          return {
-            ...item,
-            pallets: p,
-          };
-        })
-        .filter((item) => !shouldRemoveItem(item))
+        if (isProductOutOfStock(item)) {
+          return [normalizeCartItem(item)];
+        }
+
+        const updatedItem = normalizeCartItem({
+          ...item,
+          pallets: p,
+        });
+
+        return hasAnyAmount(updatedItem) ? [updatedItem] : [];
+      })
     );
   };
 
   // 🧩 Update pieces
   const updatePieces = (productId, pieces) => {
-    const p = Math.max(0, Number(pieces) || 0);
+    const p = Math.max(0, normalizeNumber(pieces, 0));
 
     setCartItems((prev) =>
-      prev
-        .map((item) => {
-          if (item._id !== productId) return item;
-          if (isProductOutOfStock(item)) return item;
+      prev.flatMap((item) => {
+        if (item._id !== productId) {
+          return [normalizeCartItem(item)];
+        }
 
-          return {
-            ...item,
-            pieces: p,
-          };
-        })
-        .filter((item) => !shouldRemoveItem(item))
+        if (isProductOutOfStock(item)) {
+          return [normalizeCartItem(item)];
+        }
+
+        const updatedItem = normalizeCartItem({
+          ...item,
+          pieces: p,
+        });
+
+        return hasAnyAmount(updatedItem) ? [updatedItem] : [];
+      })
     );
   };
 
-  // ➖ Decrease by 1 piece first, then box if needed
+  // ➖ Decrease piece first, then box
   const decreaseQuantity = (productId) => {
     setCartItems((prev) =>
-      prev
-        .map((item) => {
-          if (item._id !== productId) return item;
+      prev.flatMap((item) => {
+        if (item._id !== productId) {
+          return [normalizeCartItem(item)];
+        }
 
-          const pieces = Number(item.pieces || 0);
-          const quantity = Number(item.quantity || 0);
+        const normalized = normalizeCartItem(item);
 
-          if (pieces > 0) {
-            return { ...item, pieces: pieces - 1 };
-          }
+        let updatedItem = normalized;
 
-          if (quantity > 0) {
-            return { ...item, quantity: quantity - 1 };
-          }
+        if (normalized.pieces > 0) {
+          updatedItem = {
+            ...normalized,
+            pieces: normalized.pieces - 1,
+          };
+        } else if (normalized.quantity > 0) {
+          updatedItem = {
+            ...normalized,
+            quantity: normalized.quantity - 1,
+          };
+        }
 
-          return item;
-        })
-        .filter((item) => !shouldRemoveItem(item))
+        updatedItem = normalizeCartItem(updatedItem);
+
+        return hasAnyAmount(updatedItem) ? [updatedItem] : [];
+      })
     );
   };
 
@@ -219,39 +246,39 @@ export function CartProvider({ children }) {
     setCartItems((prev) => prev.filter((item) => item._id !== productId));
   };
 
-  // 🧹 Clear entire cart
+  // 🧹 Clear cart
   const clearCart = () => {
     setCartItems([]);
   };
 
   // 🔢 Cart badge count
-  // ✅ Count total selectable purchase groups, not only boxes
   const getCartCount = () => {
     return cartItems.reduce((acc, item) => {
-      const pieces = Number(item.pieces || 0);
-      const boxes = Number(item.quantity || 0);
-      const pallets = Number(item.pallets || 0);
-      return acc + pieces + boxes + pallets;
+      const normalized = normalizeCartItem(item);
+      return (
+        acc +
+        normalized.pieces +
+        normalized.quantity +
+        normalized.pallets
+      );
     }, 0);
   };
 
-  // 💰 FINAL TOTAL PRICE
+  // 💰 Total price
   const getTotalPrice = () => {
     return cartItems.reduce((total, item) => {
-      const pieces = Number(item.pieces || 0);
-      const boxes = Number(item.quantity || 0);
-      const pallets = Number(item.pallets || 0);
-      const unitsPerBox = Number(item.unitsPerBox || 1);
-      const boxPerPalet = Number(item.boxPerPalet || 0);
-      const price = Number(item.price || 0);
+      const normalized = normalizeCartItem(item);
 
-      const pieceUnits = pieces;
-      const boxUnits = boxes * unitsPerBox;
-      const palletUnits = pallets * boxPerPalet * unitsPerBox;
+      const pieceUnits = normalized.pieces;
+      const boxUnits = normalized.quantity * normalized.unitsPerBox;
+      const palletUnits =
+        normalized.pallets *
+        normalized.boxPerPalet *
+        normalized.unitsPerBox;
 
       const totalUnits = pieceUnits + boxUnits + palletUnits;
 
-      return total + totalUnits * price;
+      return total + totalUnits * normalized.price;
     }, 0);
   };
 
