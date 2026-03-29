@@ -59,10 +59,10 @@ async function buildOblioProductsFromOrder(order) {
     const foundProducts = Array.isArray(productSearch?.data)
       ? productSearch.data
       : Array.isArray(productSearch?.data?.data)
-      ? productSearch.data.data
-      : Array.isArray(productSearch?.data?.records)
-      ? productSearch.data.records
-      : [];
+        ? productSearch.data.data
+        : Array.isArray(productSearch?.data?.records)
+          ? productSearch.data.records
+          : [];
 
     const exactProduct = foundProducts.find((p) => p.name === productName);
 
@@ -72,10 +72,10 @@ async function buildOblioProductsFromOrder(order) {
 
     const stockEntry = Array.isArray(exactProduct.stock)
       ? exactProduct.stock.find(
-          (s) =>
-            s.workStation === OBLIO_WORKSTATION &&
-            s.management === OBLIO_MANAGEMENT
-        )
+        (s) =>
+          s.workStation === OBLIO_WORKSTATION &&
+          s.management === OBLIO_MANAGEMENT
+      )
       : null;
 
     if (!stockEntry) {
@@ -84,7 +84,16 @@ async function buildOblioProductsFromOrder(order) {
       );
     }
 
-    const quantity = Number(item.boxes || 0) * Number(item.unitsPerBox || 1);
+    const pieces = Number(item.pieces || 0);
+    const boxes = Number(item.boxes || 0);
+    const pallets = Number(item.pallets || 0);
+    const unitsPerBox = Number(item.unitsPerBox || 1);
+    const boxPerPalet = Number(item.boxPerPalet || 0);
+
+    const quantity =
+      pieces +
+      boxes * unitsPerBox +
+      pallets * boxPerPalet * unitsPerBox;
 
     if (quantity <= 0) continue;
 
