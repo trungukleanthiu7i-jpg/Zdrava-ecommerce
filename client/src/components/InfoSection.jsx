@@ -20,7 +20,7 @@ const InfoSection = () => {
         <FaHeadset className="info-icon" />
         <div className="info-text">
           <h4>{t("SUPPORT")}</h4>
-          <p>{t("Contact us 9AM–6PM")}</p>
+          <p>{t("Contact us 8AM–4PM")}</p>
         </div>
       </div>
 
