@@ -80,7 +80,12 @@ async function buildOblioProductsFromOrder(order) {
       );
     }
 
-    const quantity = Number(item.boxes || 0) * Number(item.unitsPerBox || 1);
+    const quantity =
+      Number(item.pieces || 0) +
+      Number(item.boxes || 0) * Number(item.unitsPerBox || 1) +
+      Number(item.pallets || 0) *
+        Number(item.boxPerPalet || 0) *
+        Number(item.unitsPerBox || 1);
 
     if (quantity <= 0) {
       continue;
@@ -105,49 +110,6 @@ async function buildOblioProductsFromOrder(order) {
   }
 
   return oblioProducts;
-}
-
-async function issueOblioInvoiceForOrder(order) {
-  if (order.oblioInvoice?.issued) {
-    return order.oblioInvoice;
-  }
-
-  const today = new Date().toISOString().split("T")[0];
-  const client = getClientDataFromOrder(order);
-  const products = await buildOblioProductsFromOrder(order);
-
-  const payload = {
-    client,
-    workStation: OBLIO_WORKSTATION,
-    products,
-    issueDate: today,
-    dueDate: today,
-    currency: order.currency || "RON",
-    language: order.currency === "EUR" ? "EN" : "RO",
-    precision: 2,
-    sendEmail: 0,
-    orderNumber: order.orderNumber,
-  };
-
-  const result = await createOblioInvoice(payload);
-
-  const invoiceData = result?.data || {};
-
-  order.oblioInvoice = {
-    issued: true,
-    invoiceId: invoiceData.id ? String(invoiceData.id) : "",
-    seriesName: invoiceData.seriesName || "",
-    number: invoiceData.number || "",
-    link: invoiceData.link || "",
-    einvoice: invoiceData.einvoice || "",
-    total: Number(invoiceData.total || 0),
-    issuedAt: new Date(),
-    error: "",
-  };
-
-  await order.save();
-
-  return order.oblioInvoice;
 }
 
 /* ======================================================
@@ -204,12 +166,20 @@ router.post("/initiate", authMiddleware, async (req, res) => {
       }
 
       const boxes = Number(c.quantity || 0);
-      if (boxes <= 0) continue;
+      const pallets = Number(c.pallets || 0);
+      const pieces = Number(c.pieces || 0);
 
       const unitsPerBox = Number(p.unitsPerBox || 1);
+      const boxPerPalet = Number(p.boxPerPalet || 0);
       const unitPrice = Number(p.price || 0);
 
-      const totalUnits = boxes * unitsPerBox;
+      const pieceUnits = pieces;
+      const boxUnits = boxes * unitsPerBox;
+      const palletUnits = pallets * boxPerPalet * unitsPerBox;
+      const totalUnits = pieceUnits + boxUnits + palletUnits;
+
+      if (totalUnits <= 0) continue;
+
       const lineTotal = totalUnits * unitPrice;
 
       items.push({
@@ -218,8 +188,10 @@ router.post("/initiate", authMiddleware, async (req, res) => {
         image: p.image,
         unitPrice,
         unitsPerBox,
+        boxPerPalet,
+        pieces,
         boxes,
-        pallets: Number(c.pallets || 0),
+        pallets,
         lineTotal,
       });
 
