@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useTranslation } from "react-i18next";
@@ -7,7 +7,6 @@ import "../styles/CartPage.scss";
 function CartPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const migratedItemsRef = useRef(new Set());
 
   const {
     cartItems,
@@ -29,28 +28,6 @@ function CartPage() {
     }
     navigate("/checkout");
   };
-
-  // ✅ Convert old default add-to-cart behavior:
-  // if product was added as quantity=1 box and pieces=0,
-  // automatically convert it to 1 piece instead.
-  useEffect(() => {
-    cartItems.forEach((item) => {
-      const alreadyMigrated = migratedItemsRef.current.has(item._id);
-
-      const quantity = Number(item.quantity || 0);
-      const pieces = Number(item.pieces || 0);
-      const pallets = Number(item.pallets || 0);
-
-      const shouldConvertToPiece =
-        !alreadyMigrated && quantity === 1 && pieces === 0 && pallets === 0;
-
-      if (shouldConvertToPiece) {
-        updateQuantity(item._id, 0);
-        updatePieces(item._id, 1);
-        migratedItemsRef.current.add(item._id);
-      }
-    });
-  }, [cartItems, updateQuantity, updatePieces]);
 
   const handleNumberChange = (callback, id, value) => {
     const safeValue = Math.max(0, Number(value) || 0);
@@ -74,9 +51,10 @@ function CartPage() {
               const boxPerPalet = Number(item.boxPerPalet || 0);
               const price = Number(item.price || 0);
 
-              const palletUnits = pallets * boxPerPalet * unitsPerBox;
+              const pieceUnits = pieces;
               const boxUnits = boxes * unitsPerBox;
-              const totalUnits = pieces + boxUnits + palletUnits;
+              const palletUnits = pallets * boxPerPalet * unitsPerBox;
+              const totalUnits = pieceUnits + boxUnits + palletUnits;
               const itemTotal = totalUnits * price;
 
               return (
