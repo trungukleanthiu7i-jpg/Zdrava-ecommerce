@@ -127,12 +127,6 @@ async function issueOblioInvoiceForOrder(order) {
   const client = getClientDataFromOrder(order);
   const products = await buildOblioProductsFromOrder(order);
 
-  console.error("🧾 OBLIO INVOICE CLIENT:", client);
-  console.error(
-    "🧾 OBLIO INVOICE PRODUCTS:",
-    JSON.stringify(products, null, 2)
-  );
-
   const payload = {
     client,
     workStation: OBLIO_WORKSTATION,
@@ -166,6 +160,16 @@ async function issueOblioInvoiceForOrder(order) {
 
   await order.save();
   return order.oblioInvoice;
+}
+
+function parseNetopiaFormBody(rawBody = "") {
+  const params = new URLSearchParams(String(rawBody || ""));
+  return {
+    env_key: params.get("env_key") || "",
+    data: params.get("data") || "",
+    iv: params.get("iv") || "",
+    cipher: params.get("cipher") || "aes-256-cbc",
+  };
 }
 
 /* ======================================================
@@ -233,14 +237,21 @@ router.post("/start/:orderId", authMiddleware, async (req, res) => {
 ====================================================== */
 router.post(
   "/confirm",
-  express.urlencoded({ extended: true, type: "*/*" }),
+  express.text({ type: "*/*" }),
   async (req, res) => {
     try {
       console.error("🔥 NETOPIA CONFIRM HIT");
       console.error("📥 NETOPIA HEADERS:", req.headers);
-      console.error("📥 NETOPIA RAW BODY:", req.body);
+      console.error("📥 NETOPIA RAW TEXT BODY:", req.body);
 
-      const { env_key, data, iv, cipher } = req.body || {};
+      const { env_key, data, iv, cipher } = parseNetopiaFormBody(req.body);
+
+      console.error("📥 NETOPIA PARSED FORM:", {
+        hasEnvKey: Boolean(env_key),
+        hasData: Boolean(data),
+        hasIv: Boolean(iv),
+        cipher,
+      });
 
       if (!env_key || !data) {
         console.error("❌ NETOPIA CONFIRM MISSING env_key OR data");
@@ -336,10 +347,7 @@ router.post(
             console.error("✅ OBLIO INVOICE CREATED SUCCESSFULLY");
           } catch (invoiceError) {
             console.error("❌ Oblio invoice creation failed:", invoiceError);
-            console.error(
-              "❌ Oblio invoice error message:",
-              invoiceError.message
-            );
+            console.error("❌ Oblio invoice error message:", invoiceError.message);
 
             order.oblioInvoice = {
               ...(order.oblioInvoice || {}),
