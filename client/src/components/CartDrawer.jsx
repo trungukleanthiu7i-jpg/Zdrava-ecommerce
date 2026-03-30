@@ -14,6 +14,7 @@ const CartDrawer = () => {
     addToCart,
     removeFromCart,
     getTotalPrice,
+    getCartCount,
     cartAnimationTrigger,
   } = useCart();
 
@@ -25,18 +26,32 @@ const CartDrawer = () => {
   const [cartAnimation, setCartAnimation] = useState(false);
   const navigate = useNavigate();
 
-  /* ✅ Safe quantity getter */
-  const getItemQuantity = (item) => {
-    return Number(item.quantity ?? item.qty ?? item.count ?? 1);
+  /* ✅ total visible units for one item */
+  const getItemUnits = (item) => {
+    const pieces = Number(item.pieces || 0);
+    const boxes = Number(item.quantity || 0);
+    const pallets = Number(item.pallets || 0);
+    const unitsPerBox = Number(item.unitsPerBox || 1);
+    const boxPerPalet = Number(item.boxPerPalet || 0);
+
+    return pieces + boxes * unitsPerBox + pallets * boxPerPalet * unitsPerBox;
   };
 
-  /* ✅ Better cart badge count */
-  const totalItemsInCart = cartItems.reduce(
-    (total, item) => total + getItemQuantity(item),
-    0
-  );
+  /* ✅ label for quantity details */
+  const getItemBreakdown = (item) => {
+    const pieces = Number(item.pieces || 0);
+    const boxes = Number(item.quantity || 0);
+    const pallets = Number(item.pallets || 0);
 
-  /* 🌀 Cart animation (clients only) */
+    const parts = [];
+
+    if (pieces > 0) parts.push(`${pieces} buc`);
+    if (boxes > 0) parts.push(`${boxes} cutii`);
+    if (pallets > 0) parts.push(`${pallets} paleți`);
+
+    return parts.join(" + ");
+  };
+
   useEffect(() => {
     if (!isAdmin && cartAnimationTrigger > 0) {
       setCartAnimation(true);
@@ -44,7 +59,6 @@ const CartDrawer = () => {
     }
   }, [cartAnimationTrigger, isAdmin]);
 
-  /* 🧭 Go to Cart */
   const handleGoToCart = () => {
     if (isAdmin) return;
     setClosing(true);
@@ -55,7 +69,6 @@ const CartDrawer = () => {
     }, 400);
   };
 
-  /* ✅ Checkout logic (AUTH AWARE) */
   const handleCheckout = () => {
     if (isAdmin || cartItems.length === 0) return;
 
@@ -72,7 +85,6 @@ const CartDrawer = () => {
     }, 400);
   };
 
-  /* 🌫️ Close drawer */
   const handleOverlayClick = () => {
     if (isAdmin) return;
     setClosing(true);
@@ -95,8 +107,8 @@ const CartDrawer = () => {
         >
           <FaShoppingCart className="cart-icon" />
 
-          {!isAdmin && totalItemsInCart > 0 && (
-            <span className="cart-count">{totalItemsInCart}</span>
+          {!isAdmin && getCartCount() > 0 && (
+            <span className="cart-count">{getCartCount()}</span>
           )}
         </button>
       )}
@@ -125,7 +137,8 @@ const CartDrawer = () => {
             <>
               <ul className="cart-drawer__list">
                 {cartItems.map((item) => {
-                  const quantity = getItemQuantity(item);
+                  const totalUnits = getItemUnits(item);
+                  const breakdown = getItemBreakdown(item);
 
                   return (
                     <li key={item._id} className="cart-drawer__item">
@@ -141,11 +154,12 @@ const CartDrawer = () => {
                       <div className="cart-drawer__info">
                         <h4>{item.name}</h4>
                         <p>
-                          {item.price} € × {quantity}
+                          {item.price} € × {totalUnits}
                         </p>
-                        <strong>
-                          {(item.price * quantity).toFixed(2)} €
-                        </strong>
+
+                        {breakdown && <small>{breakdown}</small>}
+
+                        <strong>{(item.price * totalUnits).toFixed(2)} €</strong>
                       </div>
 
                       <div className="cart-drawer__actions">
