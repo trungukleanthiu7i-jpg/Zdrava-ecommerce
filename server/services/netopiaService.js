@@ -68,6 +68,15 @@ function normalizePem(value = "") {
   return String(value).replace(/\r/g, "").replace(/\\n/g, "\n").trim();
 }
 
+function decodeXmlEntities(value = "") {
+  return String(value)
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
 function getNetopiaPublicKey() {
   if (NETOPIA_PUBLIC_CERT_DER_BASE64) {
     try {
@@ -285,7 +294,7 @@ function extractTag(xml, tagName) {
     "i"
   );
   const match = xml.match(regex);
-  return match ? match[1].trim() : "";
+  return match ? decodeXmlEntities(match[1].trim()) : "";
 }
 
 function extractTagAttribute(xml, tagName, attrName) {
@@ -294,7 +303,11 @@ function extractTagAttribute(xml, tagName, attrName) {
     "i"
   );
   const match = xml.match(regex);
-  return match ? match[1] : "";
+  return match ? decodeXmlEntities(match[1]) : "";
+}
+
+function compactAction(value = "") {
+  return String(value).toLowerCase().replace(/[\s-]+/g, "_").trim();
 }
 
 export function parseNetopiaIpnXml(xml) {
@@ -311,13 +324,26 @@ export function parseNetopiaIpnXml(xml) {
 }
 
 export function isNetopiaPaymentSuccessful(ipnData) {
-  const okCode = String(ipnData?.errorCode || "") === "0";
-  const action = String(ipnData?.action || "").toLowerCase();
+  const normalizedAction = compactAction(ipnData?.action || "");
+  const errorCode = String(ipnData?.errorCode || "").trim();
 
-  return (
-    okCode &&
-    ["paid", "confirmed", "paid_pending", "confirmed_pending"].includes(action)
-  );
+  const successActions = new Set([
+    "paid",
+    "confirmed",
+    "paid_pending",
+    "confirmed_pending",
+    "payment_confirmed",
+    "payment_confirmed_pending",
+    "captured",
+    "completed",
+  ]);
+
+  const okCode =
+    errorCode === "" ||
+    errorCode === "0" ||
+    errorCode.toLowerCase() === "00";
+
+  return okCode && successActions.has(normalizedAction);
 }
 
 export function buildNetopiaAckXml({
