@@ -233,13 +233,14 @@ router.post("/start/:orderId", authMiddleware, async (req, res) => {
 ====================================================== */
 router.post(
   "/confirm",
-  express.urlencoded({ extended: true }),
+  express.urlencoded({ extended: true, type: "*/*" }),
   async (req, res) => {
     try {
       console.error("🔥 NETOPIA CONFIRM HIT");
+      console.error("📥 NETOPIA HEADERS:", req.headers);
       console.error("📥 NETOPIA RAW BODY:", req.body);
 
-      const { env_key, data, iv, cipher } = req.body;
+      const { env_key, data, iv, cipher } = req.body || {};
 
       if (!env_key || !data) {
         console.error("❌ NETOPIA CONFIRM MISSING env_key OR data");
