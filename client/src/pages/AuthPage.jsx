@@ -14,6 +14,7 @@ const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const { user, loginUser } = useContext(UserContext);
@@ -32,22 +33,58 @@ const AuthPage = () => {
     }
   }, [user, navigate]);
 
+  const validatePassword = (password) => {
+    const minLength = password.length >= 6;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    return minLength && hasUppercase && hasNumber;
+  };
+
   const toggleForm = () => {
     setIsSignUp((prev) => !prev);
     setMessage("");
+    setPasswordError("");
+    setFormData({ username: "", password: "" });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "password" && isSignUp) {
+      if (!value) {
+        setPasswordError("");
+      } else if (!validatePassword(value)) {
+        setPasswordError(
+          t(
+            "Password must contain at least 6 characters, one uppercase letter and one number."
+          )
+        );
+      } else {
+        setPasswordError("");
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitting) return;
 
-    setSubmitting(true);
     setMessage("");
+    setPasswordError("");
+
+    if (isSignUp && !validatePassword(formData.password)) {
+      setPasswordError(
+        t(
+          "Password must contain at least 6 characters, one uppercase letter and one number."
+        )
+      );
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
       const endpoint = isSignUp
@@ -66,18 +103,20 @@ const AuthPage = () => {
         return;
       }
 
-      // 🔐 Save token
       localStorage.setItem("token", token);
-
-      // ✅ Save user in context
       loginUser(userData);
-
       setFormData({ username: "", password: "" });
+      setPasswordError("");
     } catch (err) {
-      setMessage(
+      const backendMsg =
         err.response?.data?.message ||
-          t("Authentication failed. Please try again.")
-      );
+        t("Authentication failed. Please try again.");
+
+      if (isSignUp && backendMsg.toLowerCase().includes("password")) {
+        setPasswordError(backendMsg);
+      } else {
+        setMessage(backendMsg);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -113,7 +152,6 @@ const AuthPage = () => {
           <form onSubmit={handleSubmit} className="auth-form">
             <h2>{t("Sign In")}</h2>
 
-            {/* 🔐 SOCIAL LOGIN */}
             <div className="social-login">
               <button
                 type="button"
@@ -192,6 +230,22 @@ const AuthPage = () => {
               onChange={handleChange}
               required
             />
+
+            {passwordError && (
+              <p
+                className="msg"
+                style={{
+                  color: "#d93025",
+                  fontSize: "13px",
+                  marginTop: "-6px",
+                  marginBottom: "10px",
+                  textAlign: "left",
+                  width: "100%",
+                }}
+              >
+                {passwordError}
+              </p>
+            )}
 
             <button type="submit" className="btn" disabled={submitting}>
               {submitting ? t("Creating account...") : t("Sign Up")}

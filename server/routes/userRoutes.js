@@ -4,10 +4,20 @@ import jwt from "jsonwebtoken";
 import authMiddleware from "../middleware/authMiddleware.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
 
-
 const router = express.Router();
 
 console.log("✅ userRoutes FILE LOADED");
+
+function isStrongPassword(password = "") {
+  const minLength = password.length >= 6;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+
+  return minLength && hasUppercase && hasNumber;
+}
+
+const passwordRuleMessage =
+  "Password must contain at least 6 characters, one uppercase letter and one number.";
 
 /* =============================
    🔎 TEST ROUTE
@@ -21,7 +31,7 @@ router.get("/ping", (req, res) => {
 ============================= */
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    res.json(req.user); // already loaded in middleware
+    res.json(req.user);
   } catch (err) {
     console.error("❌ GET /me error:", err);
     res.status(500).json({ message: "Failed to fetch profile." });
@@ -108,10 +118,8 @@ router.put("/me/password", authMiddleware, async (req, res) => {
         .json({ message: "Old password and new password are required." });
     }
 
-    if (newPassword.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "New password must be at least 6 characters." });
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({ message: passwordRuleMessage });
     }
 
     const user = await User.findById(req.user._id).select("+password");
@@ -121,8 +129,8 @@ router.put("/me/password", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Old password is incorrect." });
     }
 
-    user.password = newPassword; // plain
-    await user.save(); // hashed by model
+    user.password = newPassword;
+    await user.save();
 
     res.json({ message: "Password updated successfully." });
   } catch (err) {
@@ -142,6 +150,10 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "All fields required." });
     }
 
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ message: passwordRuleMessage });
+    }
+
     const exists = await User.findOne({ username });
     if (exists) {
       return res.status(400).json({ message: "Username already exists." });
@@ -149,15 +161,13 @@ router.post("/register", async (req, res) => {
 
     const user = await User.create({
       username,
-      password, // plain → hashed by model
+      password,
       role: "client",
     });
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.status(201).json({
       token,
@@ -191,18 +201,16 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.json({
       token,
       user: {
         _id: user._id,
         username: user.username,
-        role: user.role,          // 🔥 IMPORTANT
+        role: user.role,
         accountType: user.accountType,
       },
     });
