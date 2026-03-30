@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import {
   FaShoppingCart,
   FaSearch,
@@ -15,11 +15,11 @@ import "../styles/Header.scss";
 const Header = () => {
   const { t, i18n } = useTranslation();
 
-  // ✅ default to RO, but sync from localStorage on load
   const [language, setLanguage] = useState("ro");
-
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+
+  const accountCloseTimeoutRef = useRef(null);
 
   const { user, logoutUser } = useContext(UserContext);
   const isAdmin = user?.role === "admin";
@@ -29,7 +29,6 @@ const Header = () => {
 
   const [cartAnimation, setCartAnimation] = useState(false);
 
-  /* ✅ Sync language on first load (refresh safe) */
   useEffect(() => {
     const savedLang = localStorage.getItem("lang");
     const langToUse = savedLang || "ro";
@@ -38,7 +37,6 @@ const Header = () => {
     i18n.changeLanguage(langToUse);
   }, [i18n]);
 
-  /* 🟢 Cart animation */
   useEffect(() => {
     if (cartAnimationTrigger > 0) {
       setCartAnimation(true);
@@ -46,10 +44,18 @@ const Header = () => {
     }
   }, [cartAnimationTrigger]);
 
+  useEffect(() => {
+    return () => {
+      if (accountCloseTimeoutRef.current) {
+        clearTimeout(accountCloseTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const changeLanguage = (lang) => {
     setLanguage(lang);
     i18n.changeLanguage(lang);
-    localStorage.setItem("lang", lang); // ✅ persist language
+    localStorage.setItem("lang", lang);
   };
 
   const handleLogout = () => {
@@ -61,21 +67,32 @@ const Header = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (isAdmin) return; // 🔒 Admin cannot search / shop
+    if (isAdmin) return;
     if (searchTerm.trim()) {
       navigate(`/search?query=${encodeURIComponent(searchTerm)}`);
       setSearchTerm("");
     }
   };
 
-  /* 🔒 Admin disabled link */
+  const handleAccountMouseEnter = () => {
+    if (accountCloseTimeoutRef.current) {
+      clearTimeout(accountCloseTimeoutRef.current);
+    }
+    setAccountMenuOpen(true);
+  };
+
+  const handleAccountMouseLeave = () => {
+    accountCloseTimeoutRef.current = setTimeout(() => {
+      setAccountMenuOpen(false);
+    }, 180);
+  };
+
   const AdminDisabledLink = ({ children }) => (
     <span className="nav-disabled">{children}</span>
   );
 
   return (
     <header className="header">
-      {/* ================= TOP BAR ================= */}
       <div className="header__top">
         <div className="header__left">
           <Link to="/">
@@ -87,7 +104,6 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* 🔍 Search */}
         <form className="header__search" onSubmit={handleSearch}>
           <input
             type="text"
@@ -105,7 +121,6 @@ const Header = () => {
           </button>
         </form>
 
-        {/* 🛒 Cart + Language */}
         <div className="header__right">
           <div
             className={`header__cart ${
@@ -126,16 +141,13 @@ const Header = () => {
             onChange={(e) => changeLanguage(e.target.value)}
             className="header__lang"
           >
-            {/* ✅ Romanian first */}
             <option value="ro">Română</option>
             <option value="en">English</option>
           </select>
         </div>
       </div>
 
-      {/* ================= NAV BAR ================= */}
       <nav className="header__nav">
-        {/* 📂 Categories */}
         <div
           className={`categories-dropdown ${isAdmin ? "nav-disabled" : ""}`}
           onMouseEnter={() => !isAdmin && setDropdownOpen(true)}
@@ -148,7 +160,6 @@ const Header = () => {
 
           {!isAdmin && dropdownOpen && (
             <div className="dropdown-mega-menu">
-              {/* ===== HORECA ===== */}
               <div className="dropdown-column">
                 <h4>HORECA</h4>
 
@@ -163,7 +174,6 @@ const Header = () => {
                 <Link to="/category/dulceturi">{t("Dulcețuri")}</Link>
               </div>
 
-              {/* ===== SUPERMARKET ===== */}
               <div className="dropdown-column">
                 <h4>SUPERMARKET</h4>
 
@@ -197,7 +207,6 @@ const Header = () => {
           )}
         </div>
 
-        {/* 🧭 Navigation */}
         {isAdmin ? (
           <AdminDisabledLink>{t("Home")}</AdminDisabledLink>
         ) : (
@@ -228,11 +237,10 @@ const Header = () => {
           <Link to="/contact">{t("Contact")}</Link>
         )}
 
-        {/* 👤 Account */}
         <div
           className="header__account"
-          onMouseEnter={() => setAccountMenuOpen(true)}
-          onMouseLeave={() => setAccountMenuOpen(false)}
+          onMouseEnter={handleAccountMouseEnter}
+          onMouseLeave={handleAccountMouseLeave}
         >
           <FaUser />
 
@@ -244,7 +252,11 @@ const Header = () => {
               </span>
 
               {accountMenuOpen && (
-                <div className="account-dropdown">
+                <div
+                  className="account-dropdown"
+                  onMouseEnter={handleAccountMouseEnter}
+                  onMouseLeave={handleAccountMouseLeave}
+                >
                   {isAdmin ? (
                     <Link to="/admin" className="dropdown-item">
                       🛠 Admin Panel
