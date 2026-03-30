@@ -25,6 +25,17 @@ const CartDrawer = () => {
   const [cartAnimation, setCartAnimation] = useState(false);
   const navigate = useNavigate();
 
+  /* ✅ Safe quantity getter */
+  const getItemQuantity = (item) => {
+    return Number(item.quantity ?? item.qty ?? item.count ?? 1);
+  };
+
+  /* ✅ Better cart badge count */
+  const totalItemsInCart = cartItems.reduce(
+    (total, item) => total + getItemQuantity(item),
+    0
+  );
+
   /* 🌀 Cart animation (clients only) */
   useEffect(() => {
     if (!isAdmin && cartAnimationTrigger > 0) {
@@ -54,9 +65,9 @@ const CartDrawer = () => {
       setClosing(false);
 
       if (!user) {
-        navigate("/auth"); // ❌ not logged in
+        navigate("/auth");
       } else {
-        navigate("/checkout"); // ✅ logged in
+        navigate("/checkout");
       }
     }, 400);
   };
@@ -73,7 +84,6 @@ const CartDrawer = () => {
 
   return (
     <>
-      {/* 🛒 Floating Cart Button (HIDDEN when drawer open) */}
       {!open && (
         <button
           className={`floating-cart-btn ${
@@ -85,13 +95,12 @@ const CartDrawer = () => {
         >
           <FaShoppingCart className="cart-icon" />
 
-          {!isAdmin && cartItems.length > 0 && (
-            <span className="cart-count">{cartItems.length}</span>
+          {!isAdmin && totalItemsInCart > 0 && (
+            <span className="cart-count">{totalItemsInCart}</span>
           )}
         </button>
       )}
 
-      {/* 🌫️ Overlay */}
       {!isAdmin && open && (
         <div
           className={`cart-overlay ${closing ? "fade-out" : "fade-in"}`}
@@ -99,7 +108,6 @@ const CartDrawer = () => {
         />
       )}
 
-      {/* 🧾 Cart Drawer */}
       {!isAdmin && (
         <div
           className={`cart-drawer ${open ? "open" : ""} ${
@@ -116,40 +124,44 @@ const CartDrawer = () => {
           ) : (
             <>
               <ul className="cart-drawer__list">
-                {cartItems.map((item) => (
-                  <li key={item._id} className="cart-drawer__item">
-                    <img
-                      src={
-                        item.image?.startsWith("/images")
-                          ? item.image
-                          : `/images/produse/${item.image}`
-                      }
-                      alt={item.name}
-                    />
-                    <div className="cart-drawer__info">
-                      <h4>{item.name}</h4>
-                      <p>
-                        {item.price} € × {item.quantity}
-                      </p>
-                      <strong>
-                        {(item.price * item.quantity).toFixed(2)} €
-                      </strong>
-                    </div>
-                    <div className="cart-drawer__actions">
-                      <button onClick={() => removeFromCart(item._id)}>
-                        <FaTrash />
-                      </button>
-                      <button onClick={() => addToCart(item)}>
-                        <FaPlus />
-                      </button>
-                    </div>
-                  </li>
-                ))}
+                {cartItems.map((item) => {
+                  const quantity = getItemQuantity(item);
+
+                  return (
+                    <li key={item._id} className="cart-drawer__item">
+                      <img
+                        src={
+                          item.image?.startsWith("/images")
+                            ? item.image
+                            : `/images/produse/${item.image}`
+                        }
+                        alt={item.name}
+                      />
+
+                      <div className="cart-drawer__info">
+                        <h4>{item.name}</h4>
+                        <p>
+                          {item.price} € × {quantity}
+                        </p>
+                        <strong>
+                          {(item.price * quantity).toFixed(2)} €
+                        </strong>
+                      </div>
+
+                      <div className="cart-drawer__actions">
+                        <button onClick={() => removeFromCart(item._id)}>
+                          <FaTrash />
+                        </button>
+                        <button onClick={() => addToCart(item)}>
+                          <FaPlus />
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
 
-              {/* 🧮 Footer */}
               <div className="cart-drawer__footer">
-                {/* ✅ changed RON -> € */}
                 <h3>Total: {getTotalPrice().toFixed(2)} €</h3>
 
                 <div className="drawer-buttons">
