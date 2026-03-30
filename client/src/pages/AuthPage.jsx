@@ -1,7 +1,14 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import "../styles/AuthPage.scss";
-import { FaFacebookF, FaGoogle } from "react-icons/fa";
+import {
+  FaFacebookF,
+  FaGoogle,
+  FaEye,
+  FaEyeSlash,
+  FaCheckCircle,
+  FaTimesCircle,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useTranslation } from "react-i18next";
@@ -16,6 +23,10 @@ const AuthPage = () => {
   const [message, setMessage] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState({
+    signIn: false,
+    signUp: false,
+  });
 
   const { user, loginUser } = useContext(UserContext);
   const navigate = useNavigate();
@@ -33,12 +44,17 @@ const AuthPage = () => {
     }
   }, [user, navigate]);
 
-  const validatePassword = (password) => {
-    const minLength = password.length >= 6;
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
+  const getPasswordChecks = (password) => {
+    return {
+      minLength: password.length >= 6,
+      hasUppercase: /[A-Z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+    };
+  };
 
-    return minLength && hasUppercase && hasNumber;
+  const validatePassword = (password) => {
+    const checks = getPasswordChecks(password);
+    return checks.minLength && checks.hasUppercase && checks.hasNumber;
   };
 
   const toggleForm = () => {
@@ -46,6 +62,10 @@ const AuthPage = () => {
     setMessage("");
     setPasswordError("");
     setFormData({ username: "", password: "" });
+    setShowPassword({
+      signIn: false,
+      signUp: false,
+    });
   };
 
   const handleChange = (e) => {
@@ -133,6 +153,8 @@ const AuthPage = () => {
     window.location.href = `${API}/api/auth/facebook`;
   };
 
+  const passwordChecks = getPasswordChecks(formData.password);
+
   return (
     <div className="auth-wrapper">
       <div className="background-particles">
@@ -181,14 +203,33 @@ const AuthPage = () => {
               required
             />
 
-            <input
-              type="password"
-              name="password"
-              placeholder={t("Password")}
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword.signIn ? "text" : "password"}
+                name="password"
+                placeholder={t("Password")}
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() =>
+                  setShowPassword((prev) => ({
+                    ...prev,
+                    signIn: !prev.signIn,
+                  }))
+                }
+                aria-label={
+                  showPassword.signIn
+                    ? t("Hide password")
+                    : t("Show password")
+                }
+              >
+                {showPassword.signIn ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
 
             <button type="submit" className="btn" disabled={submitting}>
               {submitting ? t("Signing in...") : t("Sign In")}
@@ -222,14 +263,76 @@ const AuthPage = () => {
               required
             />
 
-            <input
-              type="password"
-              name="password"
-              placeholder={t("Password")}
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword.signUp ? "text" : "password"}
+                name="password"
+                placeholder={t("Password")}
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() =>
+                  setShowPassword((prev) => ({
+                    ...prev,
+                    signUp: !prev.signUp,
+                  }))
+                }
+                aria-label={
+                  showPassword.signUp
+                    ? t("Hide password")
+                    : t("Show password")
+                }
+              >
+                {showPassword.signUp ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+
+            {isSignUp && formData.password && (
+              <div className="password-rules">
+                <div
+                  className={`password-rule ${
+                    passwordChecks.minLength ? "valid" : "invalid"
+                  }`}
+                >
+                  {passwordChecks.minLength ? (
+                    <FaCheckCircle />
+                  ) : (
+                    <FaTimesCircle />
+                  )}
+                  <span>{t("At least 6 characters")}</span>
+                </div>
+
+                <div
+                  className={`password-rule ${
+                    passwordChecks.hasUppercase ? "valid" : "invalid"
+                  }`}
+                >
+                  {passwordChecks.hasUppercase ? (
+                    <FaCheckCircle />
+                  ) : (
+                    <FaTimesCircle />
+                  )}
+                  <span>{t("At least one uppercase letter")}</span>
+                </div>
+
+                <div
+                  className={`password-rule ${
+                    passwordChecks.hasNumber ? "valid" : "invalid"
+                  }`}
+                >
+                  {passwordChecks.hasNumber ? (
+                    <FaCheckCircle />
+                  ) : (
+                    <FaTimesCircle />
+                  )}
+                  <span>{t("At least one number")}</span>
+                </div>
+              </div>
+            )}
 
             {passwordError && (
               <p
@@ -237,7 +340,7 @@ const AuthPage = () => {
                 style={{
                   color: "#d93025",
                   fontSize: "13px",
-                  marginTop: "-6px",
+                  marginTop: "4px",
                   marginBottom: "10px",
                   textAlign: "left",
                   width: "100%",
