@@ -52,8 +52,12 @@ async function buildOblioProductsFromOrder(order) {
     const productName = item.name;
 
     const productSearch = await searchOblioProducts(productName);
-    const foundProducts = Array.isArray(productSearch?.data)
+    const foundProducts = Array.isArray(productSearch)
+      ? productSearch
+      : Array.isArray(productSearch?.data)
       ? productSearch.data
+      : Array.isArray(productSearch?.records)
+      ? productSearch.records
       : Array.isArray(productSearch?.data?.data)
       ? productSearch.data.data
       : Array.isArray(productSearch?.data?.records)
@@ -112,6 +116,46 @@ async function buildOblioProductsFromOrder(order) {
   return oblioProducts;
 }
 
+async function issueOblioInvoiceForOrder(order) {
+  if (order.oblioInvoice?.issued) {
+    return order.oblioInvoice;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  const client = getClientDataFromOrder(order);
+  const products = await buildOblioProductsFromOrder(order);
+
+  const payload = {
+    client,
+    workStation: OBLIO_WORKSTATION,
+    products,
+    issueDate: today,
+    dueDate: today,
+    currency: order.currency || "RON",
+    language: order.currency === "EUR" ? "EN" : "RO",
+    precision: 2,
+    sendEmail: 0,
+    orderNumber: order.orderNumber,
+  };
+
+  const invoiceData = await createOblioInvoice(payload);
+
+  order.oblioInvoice = {
+    issued: true,
+    invoiceId: invoiceData?.id ? String(invoiceData.id) : "",
+    seriesName: invoiceData?.seriesName || "",
+    number: invoiceData?.number || "",
+    link: invoiceData?.link || "",
+    einvoice: invoiceData?.einvoice || "",
+    total: Number(invoiceData?.total || 0),
+    issuedAt: new Date(),
+    error: "",
+  };
+
+  await order.save();
+  return order.oblioInvoice;
+}
+
 /* ======================================================
    INITIATE PAYMENT / CREATE ORDER
 ====================================================== */
@@ -127,9 +171,6 @@ router.post("/initiate", authMiddleware, async (req, res) => {
       shippingAddress,
     } = req.body;
 
-    /* -------------------------------
-       VALIDATION
-    -------------------------------- */
     if (!cart || !Array.isArray(cart) || cart.length === 0) {
       return res.status(400).json({ message: "Cart is empty." });
     }
@@ -142,17 +183,11 @@ router.post("/initiate", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Payment method is required." });
     }
 
-    /* -------------------------------
-       FETCH PRODUCTS
-    -------------------------------- */
     const ids = cart.map((c) => c.productId);
     const products = await Product.find({ _id: { $in: ids } });
 
     const productMap = new Map(products.map((p) => [String(p._id), p]));
 
-    /* -------------------------------
-       BUILD ORDER ITEMS
-    -------------------------------- */
     const items = [];
     let subtotal = 0;
 
@@ -204,15 +239,9 @@ router.post("/initiate", authMiddleware, async (req, res) => {
       });
     }
 
-    /* -------------------------------
-       TOTALS
-    -------------------------------- */
     const shipping = 0;
     const total = subtotal + shipping;
 
-    /* -------------------------------
-       CREATE ORDER
-    -------------------------------- */
     const order = await Order.create({
       userId: req.user.id,
       customerType,
@@ -230,9 +259,6 @@ router.post("/initiate", authMiddleware, async (req, res) => {
       provider: paymentMethod === "NETOPIA" ? "NETOPIA" : "",
     });
 
-    /* =====================================================
-       SYNC USER PROFILE
-    ===================================================== */
     if (customerType === "company") {
       await User.findByIdAndUpdate(req.user.id, {
         $set: {
@@ -253,9 +279,6 @@ router.post("/initiate", authMiddleware, async (req, res) => {
 
     const updatedUser = await User.findById(req.user.id).select("-password");
 
-    /* =====================================================
-       NETOPIA PAYMENT
-    ===================================================== */
     if (paymentMethod === "NETOPIA") {
       const details = `Order ${order.orderNumber || order._id}`;
 
@@ -285,9 +308,6 @@ router.post("/initiate", authMiddleware, async (req, res) => {
       });
     }
 
-    /* =====================================================
-       IBAN / MANUAL PAYMENT
-    ===================================================== */
     let instructions = null;
 
     if (paymentMethod === "IBAN_RON") {
@@ -354,8 +374,8 @@ router.post("/confirm/:orderId", authMiddleware, async (req, res) => {
     if (order.paymentStatus !== "paid") {
       order.paymentStatus = "paid";
       order.status = "paid";
-      order.provider = provider;
-      order.providerRef = providerRef;
+      order.provider = provider || "NETOPIA";
+      order.providerRef = providerRef || order.providerRef || "";
       await order.save();
     }
 
@@ -385,6 +405,66 @@ router.post("/confirm/:orderId", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("❌ payments/confirm error:", err);
     return res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
+/* ======================================================
+   MANUAL CONFIRM PAYMENT + GENERATE INVOICE
+====================================================== */
+router.post("/manual-confirm/:orderId", authMiddleware, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    if (
+      String(order.userId) !== String(req.user.id) &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Not allowed." });
+    }
+
+    order.paymentStatus = "paid";
+    order.status = "paid";
+    order.provider = "NETOPIA";
+
+    await order.save();
+
+    if (!order.oblioInvoice?.issued) {
+      try {
+        await issueOblioInvoiceForOrder(order);
+      } catch (invoiceError) {
+        order.oblioInvoice = {
+          ...(order.oblioInvoice || {}),
+          issued: false,
+          error: invoiceError.message,
+        };
+        await order.save();
+
+        return res.status(500).json({
+          success: false,
+          message: "Order marked as paid, but Oblio invoice failed.",
+          error: invoiceError.message,
+          order,
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: "Order manually confirmed and invoice generated.",
+      order,
+    });
+  } catch (err) {
+    console.error("❌ payments/manual-confirm error:", err);
+    return res.status(500).json({
+      success: false,
       message: err.message,
     });
   }
