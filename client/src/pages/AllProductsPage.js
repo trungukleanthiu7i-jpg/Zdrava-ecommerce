@@ -47,7 +47,6 @@ function Barcode({ value }) {
    CATEGORIES (LEFT SIDEBAR)
 ================================ */
 const CATEGORIES = [
-  // ===== SUPERMARKET =====
   {
     key: "legume-conservate",
     label: "Legume conservate",
@@ -88,8 +87,6 @@ const CATEGORIES = [
     label: "Plăcintă",
     icon: <FaPizzaSlice />,
   },
-
-  // ===== HORECA =====
   {
     key: "legume-conservate-horeca",
     label: "Legume conservate HORECA",
@@ -113,27 +110,22 @@ const CATEGORIES = [
 function AllProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addedItems, setAddedItems] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const location = useLocation();
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  // ✅ Read category from URL query first
+  const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const productsPerPage = 12;
+
+  // ✅ Read category from URL query
   const queryCategory = new URLSearchParams(location.search).get("category");
   const validCategory =
     CATEGORIES.find((c) => c.key === queryCategory)?.key || CATEGORIES[0].key;
 
-  // ✅ default category can come from URL
   const [activeCategory, setActiveCategory] = useState(validCategory);
-
-  // pagination for the FILTERED list
-  const [currentPage, setCurrentPage] = useState(1);
-  const [addedItems, setAddedItems] = useState([]);
-
-  const productsPerPage = 12;
-
-  // ✅ Use deployed backend on Render, localhost in development
-  const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   /* ================================
      SYNC CATEGORY WITH URL
@@ -147,49 +139,46 @@ function AllProductsPage() {
   }, [queryCategory]);
 
   /* ================================
-     FETCH PRODUCTS
+     FETCH PRODUCTS BY CATEGORY
   ================================ */
   useEffect(() => {
     const fetchProducts = async () => {
+      setLoading(true);
+
       try {
-        const res = await axios.get(`${API}/api/products`);
-        setProducts(res.data || []);
+        const res = await axios.get(
+          `${API}/api/products?category=${encodeURIComponent(activeCategory)}`
+        );
+        setProducts(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Fetch products error:", err);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [API]);
+  }, [API, activeCategory]);
 
   /* ================================
-     FILTER BY CATEGORY
+     RESET PAGE WHEN CATEGORY CHANGES
   ================================ */
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const cat = (p.category || "").toLowerCase().trim();
-      return cat === activeCategory.toLowerCase().trim();
-    });
-  }, [products, activeCategory]);
-
-  // Reset page when category changes
   useEffect(() => {
     setCurrentPage(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeCategory]);
 
   /* ================================
-     PAGINATION (FILTERED)
+     PAGINATION
   ================================ */
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage) || 1;
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct
-  );
+  const totalPages = Math.ceil(products.length / productsPerPage) || 1;
+
+  const currentProducts = useMemo(() => {
+    const indexOfLastProduct = currentPage * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    return products.slice(indexOfFirstProduct, indexOfLastProduct);
+  }, [products, currentPage]);
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -221,8 +210,7 @@ function AllProductsPage() {
   };
 
   /* ================================
-     IMAGE URL (PRODUCTION SAFE)
-     Backend returns image like "/images/produse/filename.jpg"
+     IMAGE URL
   ================================ */
   const getImageUrl = (imagePath) => {
     if (!imagePath) return `${process.env.PUBLIC_URL}/images/no-image.png`;
@@ -262,9 +250,7 @@ function AllProductsPage() {
           <div className="all-products-header">
             <h1>{activeLabel}</h1>
             {!loading && (
-              <div className="all-products-count">
-                {filteredProducts.length} produse
-              </div>
+              <div className="all-products-count">{products.length} produse</div>
             )}
           </div>
 
@@ -272,7 +258,7 @@ function AllProductsPage() {
             <p>Loading products...</p>
           ) : (
             <>
-              {filteredProducts.length === 0 ? (
+              {products.length === 0 ? (
                 <div className="no-products-message">
                   <p>Nu există produse în această categorie momentan.</p>
                 </div>
@@ -289,24 +275,20 @@ function AllProductsPage() {
                         }`}
                         onClick={() => navigate(`/product/${product._id}`)}
                       >
-                        {/* IMAGE */}
                         <img
                           src={getImageUrl(product.image)}
                           alt={product.name}
+                          loading="lazy"
                         />
 
-                        {/* NAME */}
                         <h3>{product.name}</h3>
 
-                        {/* PRICE (EUR) */}
                         <p className="price">
                           €{Number(product.price || 0).toFixed(2)}
                         </p>
 
-                        {/* BARCODE */}
                         {product.barcode && <Barcode value={product.barcode} />}
 
-                        {/* STOCK STATUS */}
                         <div
                           className={`stock-status ${
                             isOutOfStock ? "out" : "in"
@@ -315,7 +297,6 @@ function AllProductsPage() {
                           {isOutOfStock ? "Out of stock" : "In stock"}
                         </div>
 
-                        {/* ADD TO CART */}
                         <button
                           className={`add-to-cart-btn ${
                             addedItems.includes(product._id) ? "added" : ""
@@ -335,8 +316,7 @@ function AllProductsPage() {
                 </div>
               )}
 
-              {/* PAGINATION */}
-              {filteredProducts.length > productsPerPage && (
+              {products.length > productsPerPage && (
                 <div className="pagination">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}

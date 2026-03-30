@@ -24,14 +24,29 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 /* ======================================================
-   ✅ GET all products
+   ✅ GET products
+   - all products
+   - or filtered by category with ?category=
 ====================================================== */
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find().lean();
+    const { category } = req.query;
+
+    const query = {};
+
+    if (category && String(category).trim()) {
+      query.category = {
+        $regex: new RegExp(`^${String(category).trim()}$`, "i"),
+      };
+    }
+
+    const products = await Product.find(query)
+      .sort({ createdAt: -1, _id: -1 })
+      .lean();
+
     res.json(products);
   } catch (err) {
-    console.error("GET ALL PRODUCTS ERROR:", err);
+    console.error("GET PRODUCTS ERROR:", err);
     res.status(500).json({ message: "Error fetching products" });
   }
 });
@@ -75,11 +90,9 @@ router.get("/category/:category", async (req, res) => {
 
 /* ======================================================
    ✅ POST add product (IMAGE OPTIONAL + OPTIONAL FIELDS)
-   ✅ Keeps your current image path format to avoid breaking anything
 ====================================================== */
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    // 🔎 DEBUG: see what backend receives
     console.log("📦 REQ.BODY:", req.body);
     console.log("🖼️ REQ.FILE:", req.file ? req.file.filename : "no file");
 
@@ -89,13 +102,9 @@ router.post("/", upload.single("image"), async (req, res) => {
       price,
       stock,
       category,
-
-      // optional existing
       unitsPerBox = "",
       boxPerPalet = "",
       barcode = "",
-
-      // ✅ NEW optional fields (tabs)
       ingredientsText = "",
       allergens = "",
       nutritionPer100g,
@@ -103,7 +112,6 @@ router.post("/", upload.single("image"), async (req, res) => {
       netWeight = "",
     } = req.body;
 
-    // ✅ Only these are required (unchanged)
     const missing = [];
     if (!name || !String(name).trim()) missing.push("name");
     if (price === undefined || price === null || String(price).trim() === "")
@@ -122,10 +130,8 @@ router.post("/", upload.single("image"), async (req, res) => {
       return res.status(400).json({ message: "Price must be a number" });
     }
 
-    // ✅ KEEP YOUR CURRENT IMAGE FORMAT (to avoid breaking anything)
     const image = req.file ? `/images/produse/${req.file.filename}` : "";
 
-    // ✅ Parse allergens: allow "milk, soy" OR ["milk","soy"]
     let allergensArray = [];
     if (Array.isArray(allergens)) {
       allergensArray = allergens.map((a) => String(a).trim()).filter(Boolean);
@@ -136,22 +142,18 @@ router.post("/", upload.single("image"), async (req, res) => {
         .filter(Boolean);
     }
 
-    // ✅ Parse nutritionPer100g:
-    // - may arrive as object OR JSON string OR empty
     let nutritionObj;
     if (nutritionPer100g && typeof nutritionPer100g === "string") {
       try {
         const parsed = JSON.parse(nutritionPer100g);
         if (parsed && typeof parsed === "object") nutritionObj = parsed;
       } catch (e) {
-        // ignore invalid JSON so product can still be added
         console.warn("⚠ nutritionPer100g not valid JSON, ignoring.");
       }
     } else if (nutritionPer100g && typeof nutritionPer100g === "object") {
       nutritionObj = nutritionPer100g;
     }
 
-    // ✅ Clean nutrition object: remove empty values, convert numeric strings
     if (nutritionObj) {
       for (const key of Object.keys(nutritionObj)) {
         const v = nutritionObj[key];
@@ -181,14 +183,10 @@ router.post("/", upload.single("image"), async (req, res) => {
       price: numericPrice,
       stock,
       category,
-
-      // keep as strings
       unitsPerBox: unitsPerBox ? String(unitsPerBox) : "",
       boxPerPalet: boxPerPalet ? String(boxPerPalet) : "",
       barcode: barcode ? String(barcode) : "",
       image,
-
-      // ✅ NEW optional fields
       ingredientsText: ingredientsText ? String(ingredientsText) : "",
       allergens: allergensArray,
       ...(nutritionObj ? { nutritionPer100g: nutritionObj } : {}),
@@ -201,7 +199,6 @@ router.post("/", upload.single("image"), async (req, res) => {
   } catch (err) {
     console.error("ADD PRODUCT ERROR:", err);
 
-    // ✅ if mongoose validation fails, show the real reason
     if (err?.name === "ValidationError") {
       return res.status(400).json({ message: err.message });
     }
