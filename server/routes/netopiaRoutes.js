@@ -127,8 +127,11 @@ async function issueOblioInvoiceForOrder(order) {
   const client = getClientDataFromOrder(order);
   const products = await buildOblioProductsFromOrder(order);
 
-  console.log("🧾 OBLIO INVOICE CLIENT:", client);
-  console.log("🧾 OBLIO INVOICE PRODUCTS:", JSON.stringify(products, null, 2));
+  console.error("🧾 OBLIO INVOICE CLIENT:", client);
+  console.error(
+    "🧾 OBLIO INVOICE PRODUCTS:",
+    JSON.stringify(products, null, 2)
+  );
 
   const payload = {
     client,
@@ -143,11 +146,11 @@ async function issueOblioInvoiceForOrder(order) {
     orderNumber: order.orderNumber,
   };
 
-  console.log("🧾 OBLIO INVOICE PAYLOAD:", JSON.stringify(payload, null, 2));
+  console.error("🧾 OBLIO INVOICE PAYLOAD:", JSON.stringify(payload, null, 2));
 
   const invoiceData = await createOblioInvoice(payload);
 
-  console.log("🧾 OBLIO INVOICE RESPONSE:", invoiceData);
+  console.error("🧾 OBLIO INVOICE RESPONSE:", invoiceData);
 
   order.oblioInvoice = {
     issued: true,
@@ -233,13 +236,13 @@ router.post(
   express.urlencoded({ extended: true }),
   async (req, res) => {
     try {
-      console.log("🔥 NETOPIA CONFIRM HIT");
-      console.log("📥 NETOPIA RAW BODY:", req.body);
+      console.error("🔥 NETOPIA CONFIRM HIT");
+      console.error("📥 NETOPIA RAW BODY:", req.body);
 
       const { env_key, data, iv, cipher } = req.body;
 
       if (!env_key || !data) {
-        console.log("❌ NETOPIA CONFIRM MISSING env_key OR data");
+        console.error("❌ NETOPIA CONFIRM MISSING env_key OR data");
 
         const ack = buildNetopiaAckXml({
           errorType: "temporary",
@@ -258,13 +261,13 @@ router.post(
         cipher: cipher || "aes-256-cbc",
       });
 
-      console.log("📩 NETOPIA DECRYPTED XML:", decryptedXml);
+      console.error("📩 NETOPIA DECRYPTED XML:", decryptedXml);
 
       const ipn = parseNetopiaIpnXml(decryptedXml);
-      console.log("📦 NETOPIA PARSED IPN:", ipn);
+      console.error("📦 NETOPIA PARSED IPN:", ipn);
 
       if (!ipn.orderId) {
-        console.log("❌ NETOPIA IPN MISSING ORDER ID");
+        console.error("❌ NETOPIA IPN MISSING ORDER ID");
 
         const ack = buildNetopiaAckXml({
           errorType: "temporary",
@@ -279,7 +282,7 @@ router.post(
       const order = await Order.findById(ipn.orderId);
 
       if (!order) {
-        console.log("❌ NETOPIA ORDER NOT FOUND:", ipn.orderId);
+        console.error("❌ NETOPIA ORDER NOT FOUND:", ipn.orderId);
 
         const ack = buildNetopiaAckXml({
           errorType: "temporary",
@@ -291,7 +294,7 @@ router.post(
         return res.status(200).send(ack);
       }
 
-      console.log("🧾 ORDER FOUND:", {
+      console.error("🧾 ORDER FOUND:", {
         id: String(order._id),
         orderNumber: order.orderNumber,
         status: order.status,
@@ -299,7 +302,7 @@ router.post(
       });
 
       const successful = isNetopiaPaymentSuccessful(ipn);
-      console.log("✅ NETOPIA PAYMENT SUCCESS:", successful);
+      console.error("✅ NETOPIA PAYMENT SUCCESS:", successful);
 
       if (successful) {
         if (order.paymentStatus !== "paid") {
@@ -312,7 +315,7 @@ router.post(
 
         await order.save();
 
-        console.log("✅ ORDER MARKED AS PAID:", {
+        console.error("✅ ORDER MARKED AS PAID:", {
           id: String(order._id),
           status: order.status,
           paymentStatus: order.paymentStatus,
@@ -321,15 +324,15 @@ router.post(
 
         if (!order.oblioInvoice?.issued) {
           try {
-            console.log("🧾 TRYING OBLIO INVOICE FOR ORDER:", order._id);
-            console.log(
+            console.error("🧾 TRYING OBLIO INVOICE FOR ORDER:", order._id);
+            console.error(
               "🧾 ORDER ITEMS:",
               JSON.stringify(order.items, null, 2)
             );
 
             await issueOblioInvoiceForOrder(order);
 
-            console.log("✅ OBLIO INVOICE CREATED SUCCESSFULLY");
+            console.error("✅ OBLIO INVOICE CREATED SUCCESSFULLY");
           } catch (invoiceError) {
             console.error("❌ Oblio invoice creation failed:", invoiceError);
             console.error(
@@ -347,7 +350,7 @@ router.post(
           }
         }
       } else {
-        console.log(
+        console.error(
           "⚠️ NETOPIA PAYMENT NOT SUCCESSFUL. ACTION:",
           String(ipn.action || "").toLowerCase()
         );
@@ -363,7 +366,7 @@ router.post(
           order.providerRef = ipn.purchaseId || ipn.crc || "";
           await order.save();
 
-          console.log("⚠️ ORDER MARKED AS FAILED/CANCELLED");
+          console.error("⚠️ ORDER MARKED AS FAILED/CANCELLED");
         }
       }
 
