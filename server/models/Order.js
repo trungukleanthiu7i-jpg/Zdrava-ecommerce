@@ -5,14 +5,14 @@ import mongoose from "mongoose";
 ============================ */
 const orderItemSchema = new mongoose.Schema(
   {
-    // 🔗 Link to Product (CRITICAL for barcodes, stock, etc.)
+    // 🔗 Link to Product
     productId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
       required: true,
     },
 
-    // 🧾 Snapshot fields (never change after order)
+    // 🧾 Snapshot fields
     name: {
       type: String,
       required: true,
@@ -31,6 +31,19 @@ const orderItemSchema = new mongoose.Schema(
     unitsPerBox: {
       type: Number,
       default: 1,
+      min: 1,
+    },
+
+    boxPerPalet: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    pieces: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
 
     boxes: {
@@ -103,36 +116,24 @@ const oblioInvoiceSchema = new mongoose.Schema(
 ============================ */
 const orderSchema = new mongoose.Schema(
   {
-    /* ------------------------
-       Order number
-    ------------------------ */
     orderNumber: {
       type: String,
       unique: true,
       required: true,
     },
 
-    /* ------------------------
-       User reference
-    ------------------------ */
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    /* ------------------------
-       Customer type
-    ------------------------ */
     customerType: {
       type: String,
       enum: ["individual", "company"],
       required: true,
     },
 
-    /* ------------------------
-       Customer snapshot
-    ------------------------ */
     customer: {
       fullName: {
         type: String,
@@ -150,9 +151,6 @@ const orderSchema = new mongoose.Schema(
       },
     },
 
-    /* ------------------------
-       Company details (B2B)
-    ------------------------ */
     company: {
       companyName: {
         type: String,
@@ -168,9 +166,6 @@ const orderSchema = new mongoose.Schema(
       },
     },
 
-    /* ------------------------
-       Shipping address
-    ------------------------ */
     shippingAddress: {
       country: {
         type: String,
@@ -190,18 +185,12 @@ const orderSchema = new mongoose.Schema(
       },
     },
 
-    /* ------------------------
-       Order items
-    ------------------------ */
     items: {
       type: [orderItemSchema],
       required: true,
       validate: [(v) => v.length > 0, "Order must have at least one item"],
     },
 
-    /* ------------------------
-       Pricing
-    ------------------------ */
     currency: {
       type: String,
       enum: ["RON", "EUR"],
@@ -223,9 +212,6 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
-    /* ------------------------
-       Payment
-    ------------------------ */
     paymentMethod: {
       type: String,
       enum: ["NETOPIA", "REVOLUT", "PAYPAL", "IBAN_RON", "IBAN_EUR", "WU"],
@@ -251,9 +237,6 @@ const orderSchema = new mongoose.Schema(
       default: "unpaid",
     },
 
-    /* ------------------------
-       Payment provider data
-    ------------------------ */
     provider: {
       type: String,
       default: "",
@@ -264,17 +247,11 @@ const orderSchema = new mongoose.Schema(
       default: "",
     },
 
-    /* ------------------------
-       Oblio invoice
-    ------------------------ */
     oblioInvoice: {
       type: oblioInvoiceSchema,
       default: () => ({}),
     },
 
-    /* ------------------------
-       Optional notes
-    ------------------------ */
     notes: {
       type: String,
       default: "",

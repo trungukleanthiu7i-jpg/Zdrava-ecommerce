@@ -56,13 +56,13 @@ async function buildOblioProductsFromOrder(order) {
     const productName = item.name;
 
     const productSearch = await searchOblioProducts(productName);
-    const foundProducts = Array.isArray(productSearch?.data)
+    const foundProducts = Array.isArray(productSearch)
+      ? productSearch
+      : Array.isArray(productSearch?.data)
       ? productSearch.data
-      : Array.isArray(productSearch?.data?.data)
-        ? productSearch.data.data
-        : Array.isArray(productSearch?.data?.records)
-          ? productSearch.data.records
-          : [];
+      : Array.isArray(productSearch?.records)
+      ? productSearch.records
+      : [];
 
     const exactProduct = foundProducts.find((p) => p.name === productName);
 
@@ -72,10 +72,10 @@ async function buildOblioProductsFromOrder(order) {
 
     const stockEntry = Array.isArray(exactProduct.stock)
       ? exactProduct.stock.find(
-        (s) =>
-          s.workStation === OBLIO_WORKSTATION &&
-          s.management === OBLIO_MANAGEMENT
-      )
+          (s) =>
+            s.workStation === OBLIO_WORKSTATION &&
+            s.management === OBLIO_MANAGEMENT
+        )
       : null;
 
     if (!stockEntry) {
@@ -127,6 +127,9 @@ async function issueOblioInvoiceForOrder(order) {
   const client = getClientDataFromOrder(order);
   const products = await buildOblioProductsFromOrder(order);
 
+  console.log("🧾 OBLIO INVOICE CLIENT:", client);
+  console.log("🧾 OBLIO INVOICE PRODUCTS:", JSON.stringify(products, null, 2));
+
   const payload = {
     client,
     workStation: OBLIO_WORKSTATION,
@@ -140,17 +143,20 @@ async function issueOblioInvoiceForOrder(order) {
     orderNumber: order.orderNumber,
   };
 
-  const result = await createOblioInvoice(payload);
-  const invoiceData = result?.data || {};
+  console.log("🧾 OBLIO INVOICE PAYLOAD:", JSON.stringify(payload, null, 2));
+
+  const invoiceData = await createOblioInvoice(payload);
+
+  console.log("🧾 OBLIO INVOICE RESPONSE:", invoiceData);
 
   order.oblioInvoice = {
     issued: true,
-    invoiceId: invoiceData.id ? String(invoiceData.id) : "",
-    seriesName: invoiceData.seriesName || "",
-    number: invoiceData.number || "",
-    link: invoiceData.link || "",
-    einvoice: invoiceData.einvoice || "",
-    total: Number(invoiceData.total || 0),
+    invoiceId: invoiceData?.id ? String(invoiceData.id) : "",
+    seriesName: invoiceData?.seriesName || "",
+    number: invoiceData?.number || "",
+    link: invoiceData?.link || "",
+    einvoice: invoiceData?.einvoice || "",
+    total: Number(invoiceData?.total || 0),
     issuedAt: new Date(),
     error: "",
   };
@@ -186,7 +192,7 @@ router.post("/start/:orderId", authMiddleware, async (req, res) => {
       });
     }
 
-    const details = `Order ${order.orderNumber}`;
+    const details = `Order ${order.orderNumber || order._id}`;
 
     const payload = createNetopiaPaymentPayload({
       orderId: String(order._id),
@@ -227,9 +233,14 @@ router.post(
   express.urlencoded({ extended: true }),
   async (req, res) => {
     try {
+      console.log("🔥 NETOPIA CONFIRM HIT");
+      console.log("📥 NETOPIA RAW BODY:", req.body);
+
       const { env_key, data, iv, cipher } = req.body;
 
       if (!env_key || !data) {
+        console.log("❌ NETOPIA CONFIRM MISSING env_key OR data");
+
         const ack = buildNetopiaAckXml({
           errorType: "temporary",
           errorCode: "100",
@@ -247,9 +258,14 @@ router.post(
         cipher: cipher || "aes-256-cbc",
       });
 
+      console.log("📩 NETOPIA DECRYPTED XML:", decryptedXml);
+
       const ipn = parseNetopiaIpnXml(decryptedXml);
+      console.log("📦 NETOPIA PARSED IPN:", ipn);
 
       if (!ipn.orderId) {
+        console.log("❌ NETOPIA IPN MISSING ORDER ID");
+
         const ack = buildNetopiaAckXml({
           errorType: "temporary",
           errorCode: "101",
@@ -263,6 +279,8 @@ router.post(
       const order = await Order.findById(ipn.orderId);
 
       if (!order) {
+        console.log("❌ NETOPIA ORDER NOT FOUND:", ipn.orderId);
+
         const ack = buildNetopiaAckXml({
           errorType: "temporary",
           errorCode: "102",
@@ -273,7 +291,15 @@ router.post(
         return res.status(200).send(ack);
       }
 
+      console.log("🧾 ORDER FOUND:", {
+        id: String(order._id),
+        orderNumber: order.orderNumber,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+      });
+
       const successful = isNetopiaPaymentSuccessful(ipn);
+      console.log("✅ NETOPIA PAYMENT SUCCESS:", successful);
 
       if (successful) {
         if (order.paymentStatus !== "paid") {
@@ -286,11 +312,30 @@ router.post(
 
         await order.save();
 
+        console.log("✅ ORDER MARKED AS PAID:", {
+          id: String(order._id),
+          status: order.status,
+          paymentStatus: order.paymentStatus,
+          providerRef: order.providerRef,
+        });
+
         if (!order.oblioInvoice?.issued) {
           try {
+            console.log("🧾 TRYING OBLIO INVOICE FOR ORDER:", order._id);
+            console.log(
+              "🧾 ORDER ITEMS:",
+              JSON.stringify(order.items, null, 2)
+            );
+
             await issueOblioInvoiceForOrder(order);
+
+            console.log("✅ OBLIO INVOICE CREATED SUCCESSFULLY");
           } catch (invoiceError) {
             console.error("❌ Oblio invoice creation failed:", invoiceError);
+            console.error(
+              "❌ Oblio invoice error message:",
+              invoiceError.message
+            );
 
             order.oblioInvoice = {
               ...(order.oblioInvoice || {}),
@@ -302,6 +347,11 @@ router.post(
           }
         }
       } else {
+        console.log(
+          "⚠️ NETOPIA PAYMENT NOT SUCCESSFUL. ACTION:",
+          String(ipn.action || "").toLowerCase()
+        );
+
         if (
           ["canceled", "cancelled", "credit"].includes(
             String(ipn.action || "").toLowerCase()
@@ -312,6 +362,8 @@ router.post(
           order.provider = "NETOPIA";
           order.providerRef = ipn.purchaseId || ipn.crc || "";
           await order.save();
+
+          console.log("⚠️ ORDER MARKED AS FAILED/CANCELLED");
         }
       }
 
