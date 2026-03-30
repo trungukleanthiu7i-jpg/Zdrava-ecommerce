@@ -105,6 +105,16 @@ const CATEGORIES = [
 ];
 
 /* ================================
+   HELPERS
+================================ */
+function isZdravaProduct(product) {
+  const brand = String(product?.brand || "").toLowerCase().trim();
+  const name = String(product?.name || "").toLowerCase().trim();
+
+  return brand.includes("zdrava") || name.includes("zdrava");
+}
+
+/* ================================
    MAIN PAGE
 ================================ */
 function AllProductsPage() {
@@ -149,7 +159,23 @@ function AllProductsPage() {
         const res = await axios.get(
           `${API}/api/products?category=${encodeURIComponent(activeCategory)}`
         );
-        setProducts(Array.isArray(res.data) ? res.data : []);
+
+        const incomingProducts = Array.isArray(res.data) ? res.data : [];
+
+        const sortedProducts =
+          activeCategory === "dulciuri-si-snacks-uri"
+            ? [...incomingProducts].sort((a, b) => {
+                const aIsZdrava = isZdravaProduct(a);
+                const bIsZdrava = isZdravaProduct(b);
+
+                if (aIsZdrava && !bIsZdrava) return -1;
+                if (!aIsZdrava && bIsZdrava) return 1;
+
+                return String(a.name || "").localeCompare(String(b.name || ""));
+              })
+            : incomingProducts;
+
+        setProducts(sortedProducts);
       } catch (err) {
         console.error("Fetch products error:", err);
         setProducts([]);
