@@ -6,34 +6,40 @@
   align-items: center;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
   font-family: "Poppins", sans-serif;
+  position: relative;
+  z-index: 100;
 
   &__top {
     width: 100%;
     max-width: 1300px;
-    padding: 8px 20px;
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-  }
-
-  &__logo {
-    width: 100px;
-    height: auto;
-    transform: scale(2.8);
-    transform-origin: left center;
+    gap: 18px;
   }
 
   &__left {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 0;
+  }
+
+  &__logo {
+    width: 100px;
+    height: auto;
+    transform: scale(2.4);
+    transform-origin: left center;
+    display: block;
   }
 
   &__search {
     display: flex;
-    width: 45%;
-    min-width: 300px;
+    align-items: center;
+    flex: 1;
+    max-width: 520px;
+    min-width: 280px;
     background: white;
     border-radius: 30px;
     overflow: hidden;
@@ -46,6 +52,7 @@
       font-size: 15px;
       outline: none;
       color: #333;
+      min-width: 0;
 
       &::placeholder {
         color: #aaa;
@@ -61,6 +68,7 @@
       align-items: center;
       justify-content: center;
       transition: background 0.3s;
+      height: 42px;
 
       svg {
         color: white;
@@ -81,6 +89,7 @@
     display: flex;
     align-items: center;
     gap: 15px;
+    flex-shrink: 0;
   }
 
   &__cart {
@@ -124,7 +133,7 @@
     border: 1px solid white;
     color: white;
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 6px 10px;
     font-size: 14px;
     cursor: pointer;
     transition: 0.2s;
@@ -138,6 +147,16 @@
     }
   }
 
+  &__menu-toggle {
+    display: none;
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 6px;
+  }
+
   &__nav {
     width: 100%;
     background-color: #2b8242;
@@ -145,12 +164,13 @@
     justify-content: center;
     align-items: center;
     gap: 30px;
-    padding: 10px 0;
+    padding: 10px 20px;
     flex-wrap: wrap;
     position: relative;
 
     a,
-    button {
+    button,
+    span {
       color: white;
       background: none;
       border: none;
@@ -162,10 +182,11 @@
       align-items: center;
       gap: 6px;
       transition: color 0.3s ease;
+    }
 
-      &:hover {
-        color: #c9f7d7;
-      }
+    a:hover,
+    button:hover {
+      color: #c9f7d7;
     }
 
     .categories-dropdown {
@@ -182,7 +203,7 @@
         background: white;
         color: #333;
         position: absolute;
-        top: 100%;
+        top: calc(100% + 10px);
         left: 0;
         width: 520px;
         padding: 20px;
@@ -256,11 +277,20 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
   color: white;
   font-weight: 600;
-  cursor: pointer;
-  padding: 2px 0;
+
+  .header__account-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: 2px 0;
+  }
 
   .username {
     color: #fff;
@@ -279,17 +309,14 @@
     transition: transform 0.2s ease;
   }
 
-  &:hover .chevron {
+  &:hover .chevron,
+  &.is-open .chevron {
     transform: translateY(1px);
   }
 
   .auth-link {
     color: #fff;
     font-weight: 600;
-
-    &:hover {
-      color: #c9f7d7;
-    }
   }
 
   .account-dropdown {
@@ -400,5 +427,277 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .header {
+    &__top {
+      gap: 14px;
+    }
+
+    &__logo {
+      transform: scale(2);
+    }
+
+    &__search {
+      max-width: 420px;
+      min-width: 220px;
+    }
+
+    &__nav {
+      gap: 20px;
+      padding: 10px 16px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    align-items: stretch;
+
+    &__top {
+      max-width: 100%;
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      grid-template-areas:
+        "logo cart lang menu"
+        "search search search search";
+      align-items: center;
+      gap: 12px;
+    }
+
+    &__left {
+      grid-area: logo;
+      min-width: 0;
+    }
+
+    &__logo {
+      width: 88px;
+      transform: none;
+      max-width: 100%;
+    }
+
+    &__search {
+      grid-area: search;
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      order: 2;
+
+      input {
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+
+      &-btn {
+        height: 40px;
+        padding: 0 14px;
+      }
+    }
+
+    &__right {
+      display: contents;
+    }
+
+    &__cart {
+      grid-area: cart;
+      justify-self: end;
+
+      .cart-icon {
+        font-size: 1.35rem;
+      }
+    }
+
+    &__lang {
+      grid-area: lang;
+      justify-self: end;
+      min-width: 84px;
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+
+    &__menu-toggle {
+      grid-area: menu;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      justify-self: end;
+    }
+
+    &__nav {
+      display: none;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+      padding: 0;
+      background-color: #2b8242;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+      &.header__nav--open {
+        display: flex;
+      }
+
+      > a,
+      > span,
+      > .categories-dropdown,
+      > .header__account {
+        width: 100%;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      > a,
+      > span {
+        padding: 14px 16px;
+        justify-content: flex-start;
+      }
+
+      .categories-dropdown {
+        button {
+          width: 100%;
+          justify-content: flex-start;
+          padding: 14px 16px;
+        }
+
+        .dropdown-mega-menu {
+          position: static;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+          padding: 16px;
+          margin: 0;
+          border-radius: 0;
+          box-shadow: none;
+          animation: none;
+
+          .dropdown-column {
+            min-width: 0;
+
+            h4 {
+              font-size: 15px;
+              margin-bottom: 10px;
+            }
+
+            a {
+              padding: 8px 0;
+              font-size: 14px;
+
+              &:hover {
+                transform: none;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .header__account {
+    width: 100%;
+    display: block;
+
+    .header__account-trigger {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 14px 16px;
+    }
+
+    .account-dropdown {
+      position: static;
+      width: 100%;
+      min-width: 0;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      animation: none;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .dropdown-item {
+      color: white;
+      padding: 12px 20px;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+      }
+
+      &.logout {
+        color: #ffd1d1;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: #ffd1d1;
+        }
+      }
+    }
+
+    .dropdown-divider {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .auth-link {
+      color: white;
+    }
+
+    .username {
+      color: white;
+      flex-wrap: wrap;
+    }
+
+    &::after {
+      display: none;
+    }
+  }
+
+  .admin-badge {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    &__top {
+      padding: 10px 10px;
+      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) auto auto auto;
+    }
+
+    &__logo {
+      width: 76px;
+    }
+
+    &__lang {
+      min-width: 74px;
+      font-size: 12px;
+      padding: 5px 6px;
+    }
+
+    &__search {
+      input {
+        font-size: 13px;
+      }
+    }
+
+    &__nav {
+      > a,
+      > span {
+        font-size: 15px;
+      }
+    }
+  }
+
+  .header__account {
+    .header__account-trigger {
+      font-size: 15px;
+    }
+
+    .username {
+      font-size: 15px;
+      max-width: 100%;
+    }
   }
 }
