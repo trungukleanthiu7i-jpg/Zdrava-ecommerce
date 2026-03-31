@@ -381,7 +381,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 12px 14px 10px;
+    padding: 10px 14px 8px;
   }
 
   &__logo-wrap {
@@ -389,10 +389,11 @@
     align-items: center;
     text-decoration: none;
     min-width: 0;
+    flex: 1;
   }
 
   &__logo {
-    width: 150px;
+    width: 140px;
     max-width: 100%;
     display: block;
   }
@@ -400,13 +401,13 @@
   &__actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-shrink: 0;
   }
 
   &__cart {
     .cart-icon {
-      font-size: 1.5rem;
+      font-size: 1.45rem;
     }
 
     .cart-count {
@@ -417,13 +418,14 @@
 
   &__lang {
     background: transparent;
-    border: 1px solid white;
+    border: 1px solid rgba(255, 255, 255, 0.8);
     color: white;
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 13px;
+    border-radius: 10px;
+    padding: 7px 9px;
+    font-size: 12px;
     height: 40px;
     cursor: pointer;
+    min-width: 88px;
 
     option {
       color: black;
@@ -431,8 +433,8 @@
   }
 
   &__menu-btn {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border: 1px solid rgba(255, 255, 255, 0.45);
     background: rgba(255, 255, 255, 0.08);
     color: white;
@@ -440,8 +442,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     cursor: pointer;
+    flex-shrink: 0;
   }
 
   &__search {
@@ -460,6 +463,7 @@
       padding: 12px 14px;
       font-size: 14px;
       color: #333;
+      min-width: 0;
 
       &::placeholder {
         color: #aaa;
@@ -492,10 +496,10 @@
   &__menu-item {
     width: 100%;
     border: none;
-    background: rgba(43, 130, 66, 0.95);
+    background: rgba(43, 130, 66, 0.96);
     color: white;
     border-radius: 14px;
-    padding: 14px 16px;
+    padding: 13px 15px;
     margin-bottom: 10px;
     display: flex;
     align-items: center;
@@ -519,9 +523,9 @@
   &__categories,
   &__account-links {
     display: none;
-    background: rgba(43, 130, 66, 0.7);
+    background: rgba(43, 130, 66, 0.75);
     border-radius: 14px;
-    padding: 10px;
+    padding: 8px;
     margin: -2px 0 10px;
 
     &.is-open {
@@ -532,7 +536,7 @@
     button {
       width: 100%;
       display: block;
-      padding: 11px 12px;
+      padding: 10px 12px;
       color: white;
       text-decoration: none;
       background: none;
@@ -551,17 +555,17 @@
   &__quicklinks {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 10px;
   }
 
   &__pill {
     text-decoration: none;
     color: white;
-    background: #2b8242;
+    background: #2f8a46;
     border-radius: 999px;
-    padding: 10px 14px;
-    font-size: 14px;
+    padding: 9px 13px;
+    font-size: 13px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
@@ -570,11 +574,21 @@
 }
 
 @keyframes cartPulse {
-  0% { transform: scale(1); }
-  25% { transform: scale(1.3); }
-  50% { transform: scale(1.15); }
-  75% { transform: scale(1.25); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.3);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  75% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes fadeIn {
@@ -623,29 +637,29 @@
 @media (max-width: 480px) {
   .header-mobile {
     &__top {
-      padding: 10px 12px 10px;
+      padding: 10px 12px 8px;
       gap: 8px;
     }
 
     &__logo {
-      width: 135px;
+      width: 125px;
     }
 
     &__actions {
-      gap: 8px;
+      gap: 7px;
     }
 
     &__lang {
-      min-width: 84px;
+      min-width: 82px;
       font-size: 12px;
-      padding: 7px 8px;
+      padding: 6px 7px;
       height: 38px;
     }
 
     &__menu-btn {
       width: 38px;
       height: 38px;
-      font-size: 1.05rem;
+      font-size: 1rem;
     }
 
     &__search {
@@ -668,12 +682,21 @@
 
     &__menu-item {
       font-size: 14px;
-      padding: 13px 14px;
+      padding: 12px 14px;
     }
 
     &__pill {
       font-size: 13px;
-      padding: 9px 12px;
+      padding: 8px 12px;
+    }
+
+    &__categories,
+    &__account-links {
+      a,
+      button {
+        font-size: 13px;
+        padding: 9px 11px;
+      }
     }
   }
 }
