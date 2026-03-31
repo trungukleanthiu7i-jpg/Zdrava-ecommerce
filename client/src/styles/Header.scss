@@ -24,6 +24,7 @@
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+    min-width: 0;
   }
 
   &__logo {
@@ -67,8 +68,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.3s;
+      transition: background 0.3s ease;
       height: 42px;
+      min-width: 52px;
+      flex-shrink: 0;
 
       svg {
         color: white;
@@ -137,6 +140,7 @@
     font-size: 14px;
     cursor: pointer;
     transition: 0.2s;
+    height: 42px;
 
     &:hover {
       background: rgba(255, 255, 255, 0.2);
@@ -155,6 +159,7 @@
     font-size: 1.4rem;
     cursor: pointer;
     padding: 6px;
+    line-height: 1;
   }
 
   &__nav {
@@ -458,9 +463,9 @@
 
     &__top {
       max-width: 100%;
-      padding: 12px 14px;
+      padding: 12px 14px 14px;
       display: grid;
-      grid-template-columns: 1fr auto auto auto;
+      grid-template-columns: minmax(110px, 1fr) auto auto auto;
       grid-template-areas:
         "logo cart lang menu"
         "search search search search";
@@ -471,12 +476,15 @@
     &__left {
       grid-area: logo;
       min-width: 0;
+      display: flex;
+      align-items: center;
     }
 
     &__logo {
-      width: 88px;
-      transform: none;
+      width: 120px;
       max-width: 100%;
+      transform: none;
+      display: block;
     }
 
     &__search {
@@ -484,16 +492,17 @@
       width: 100%;
       max-width: none;
       min-width: 0;
-      order: 2;
 
       input {
-        padding: 10px 12px;
-        font-size: 14px;
+        padding: 12px 14px;
+        font-size: 15px;
       }
 
       &-btn {
-        height: 40px;
+        height: 46px;
+        min-width: 52px;
         padding: 0 14px;
+        flex-shrink: 0;
       }
     }
 
@@ -504,18 +513,25 @@
     &__cart {
       grid-area: cart;
       justify-self: end;
+      margin-right: 2px;
 
       .cart-icon {
-        font-size: 1.35rem;
+        font-size: 1.55rem;
+      }
+
+      .cart-count {
+        top: -8px;
+        right: -8px;
       }
     }
 
     &__lang {
       grid-area: lang;
       justify-self: end;
-      min-width: 84px;
-      padding: 6px 8px;
-      font-size: 13px;
+      min-width: 96px;
+      padding: 7px 10px;
+      font-size: 14px;
+      height: 42px;
     }
 
     &__menu-toggle {
@@ -524,6 +540,9 @@
       align-items: center;
       justify-content: center;
       justify-self: end;
+      font-size: 1.7rem;
+      padding: 4px;
+      margin-right: 2px;
     }
 
     &__nav {
@@ -661,24 +680,42 @@
 @media (max-width: 480px) {
   .header {
     &__top {
-      padding: 10px 10px;
+      padding: 12px 12px 14px;
       gap: 10px;
-      grid-template-columns: minmax(0, 1fr) auto auto auto;
+      grid-template-columns: minmax(95px, 1fr) auto auto auto;
     }
 
     &__logo {
-      width: 76px;
+      width: 105px;
+    }
+
+    &__cart {
+      .cart-icon {
+        font-size: 1.45rem;
+      }
     }
 
     &__lang {
-      min-width: 74px;
-      font-size: 12px;
-      padding: 5px 6px;
+      min-width: 88px;
+      font-size: 13px;
+      padding: 6px 8px;
+      height: 40px;
+    }
+
+    &__menu-toggle {
+      font-size: 1.55rem;
+      margin-right: 0;
     }
 
     &__search {
       input {
-        font-size: 13px;
+        font-size: 14px;
+        padding: 11px 12px;
+      }
+
+      &-btn {
+        height: 44px;
+        min-width: 48px;
       }
     }
 
