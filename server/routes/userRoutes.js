@@ -1,8 +1,11 @@
 import express from "express";
 import User from "../models/User.js";
+import PendingUser from "../models/PendingUser.js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import authMiddleware from "../middleware/authMiddleware.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 const router = express.Router();
 
@@ -59,7 +62,7 @@ router.put("/me", authMiddleware, async (req, res) => {
       }
 
       updates.email = normalizedEmail;
-      updates.username = normalizedEmail; // keep username = email
+      updates.username = normalizedEmail;
     }
 
     if (phone !== undefined) updates.phone = phone;
@@ -83,17 +86,20 @@ router.put("/me", authMiddleware, async (req, res) => {
         updates["company.vatNumber"] = company.vatNumber;
 
       if (company.email !== undefined) {
-        const normalizedCompanyEmail = String(company.email).trim().toLowerCase();
+        const normalizedCompanyEmail = String(company.email)
+          .trim()
+          .toLowerCase();
 
         if (normalizedCompanyEmail && !isValidEmail(normalizedCompanyEmail)) {
-          return res.status(400).json({ message: "Invalid company email format." });
+          return res
+            .status(400)
+            .json({ message: "Invalid company email format." });
         }
 
         updates["company.email"] = normalizedCompanyEmail;
       }
 
-      if (company.phone !== undefined)
-        updates["company.phone"] = company.phone;
+      if (company.phone !== undefined) updates["company.phone"] = company.phone;
 
       if (company.invoiceAddress) {
         if (company.invoiceAddress.country !== undefined)
@@ -158,6 +164,10 @@ router.put("/me/password", authMiddleware, async (req, res) => {
 
     const user = await User.findById(req.user._id).select("+password");
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
     const isMatch = await user.matchPassword(oldPassword);
     if (!isMatch) {
       return res.status(400).json({ message: "Old password is incorrect." });
@@ -174,7 +184,7 @@ router.put("/me/password", authMiddleware, async (req, res) => {
 });
 
 /* =============================
-   ✅ REGISTER (CLIENT ONLY)
+   ✅ REGISTER (PENDING + EMAIL VERIFICATION)
 ============================= */
 router.post("/register", async (req, res) => {
   try {
@@ -187,42 +197,66 @@ router.post("/register", async (req, res) => {
     const normalizedEmail = String(username).trim().toLowerCase();
 
     if (!isValidEmail(normalizedEmail)) {
-      return res.status(400).json({ message: "Please enter a valid email address." });
+      return res
+        .status(400)
+        .json({ message: "Please enter a valid email address." });
     }
 
     if (!isStrongPassword(password)) {
       return res.status(400).json({ message: passwordRuleMessage });
     }
 
-    const exists = await User.findOne({
+    const existingUser = await User.findOne({
       $or: [{ username: normalizedEmail }, { email: normalizedEmail }],
     });
 
-    if (exists) {
-      return res.status(400).json({ message: "An account with this email already exists." });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: "An account with this email already exists." });
     }
 
-    const user = await User.create({
-      username: normalizedEmail,
+    await PendingUser.deleteMany({ email: normalizedEmail });
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
+
+    await PendingUser.create({
       email: normalizedEmail,
+      username: normalizedEmail,
       password,
-      role: "client",
-      provider: "local",
+      verificationToken,
+      verificationTokenExpires,
     });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const verifyUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+
+    await sendEmail({
+      to: normalizedEmail,
+      subject: "Verify your email address",
+      text: `Please verify your email by opening this link: ${verifyUrl}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>Verify your email</h2>
+          <p>Thank you for creating an account.</p>
+          <p>Please click the button below to verify your email address:</p>
+          <p>
+            <a
+              href="${verifyUrl}"
+              style="display:inline-block;padding:12px 20px;background:#111;color:#fff;text-decoration:none;border-radius:8px;"
+            >
+              Verify Email
+            </a>
+          </p>
+          <p>This link expires in 1 hour.</p>
+        </div>
+      `,
     });
 
-    res.status(201).json({
-      token,
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        accountType: user.accountType,
-      },
+    return res.status(200).json({
+      message:
+        "Verification email sent. Please check your inbox before logging in.",
     });
   } catch (err) {
     console.error("❌ Register error:", err);
@@ -240,7 +274,9 @@ router.post("/login", async (req, res) => {
     const normalizedEmail = String(username || "").trim().toLowerCase();
 
     if (!normalizedEmail || !password) {
-      return res.status(400).json({ message: "Email and password are required." });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required." });
     }
 
     const user = await User.findOne({
