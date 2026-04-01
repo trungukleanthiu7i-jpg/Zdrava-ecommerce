@@ -16,6 +16,10 @@ function isStrongPassword(password = "") {
   return minLength && hasUppercase && hasNumber;
 }
 
+function isValidEmail(email = "") {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 const passwordRuleMessage =
   "Password must contain at least 6 characters, one uppercase letter and one number.";
 
@@ -47,7 +51,17 @@ router.put("/me", authMiddleware, async (req, res) => {
 
     const updates = {};
 
-    if (email !== undefined) updates.email = email;
+    if (email !== undefined) {
+      const normalizedEmail = String(email).trim().toLowerCase();
+
+      if (normalizedEmail && !isValidEmail(normalizedEmail)) {
+        return res.status(400).json({ message: "Invalid email format." });
+      }
+
+      updates.email = normalizedEmail;
+      updates.username = normalizedEmail; // keep username = email
+    }
+
     if (phone !== undefined) updates.phone = phone;
     if (accountType !== undefined) updates.accountType = accountType;
 
@@ -67,8 +81,17 @@ router.put("/me", authMiddleware, async (req, res) => {
         updates["company.companyName"] = company.companyName;
       if (company.vatNumber !== undefined)
         updates["company.vatNumber"] = company.vatNumber;
-      if (company.email !== undefined)
-        updates["company.email"] = company.email;
+
+      if (company.email !== undefined) {
+        const normalizedCompanyEmail = String(company.email).trim().toLowerCase();
+
+        if (normalizedCompanyEmail && !isValidEmail(normalizedCompanyEmail)) {
+          return res.status(400).json({ message: "Invalid company email format." });
+        }
+
+        updates["company.email"] = normalizedCompanyEmail;
+      }
+
       if (company.phone !== undefined)
         updates["company.phone"] = company.phone;
 
@@ -90,6 +113,17 @@ router.put("/me", authMiddleware, async (req, res) => {
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ message: "No valid fields to update." });
+    }
+
+    if (updates.email) {
+      const existingUser = await User.findOne({
+        _id: { $ne: req.user._id },
+        $or: [{ email: updates.email }, { username: updates.username }],
+      });
+
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use." });
+      }
     }
 
     const user = await User.findByIdAndUpdate(
@@ -150,19 +184,30 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "All fields required." });
     }
 
+    const normalizedEmail = String(username).trim().toLowerCase();
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ message: "Please enter a valid email address." });
+    }
+
     if (!isStrongPassword(password)) {
       return res.status(400).json({ message: passwordRuleMessage });
     }
 
-    const exists = await User.findOne({ username });
+    const exists = await User.findOne({
+      $or: [{ username: normalizedEmail }, { email: normalizedEmail }],
+    });
+
     if (exists) {
-      return res.status(400).json({ message: "Username already exists." });
+      return res.status(400).json({ message: "An account with this email already exists." });
     }
 
     const user = await User.create({
-      username,
+      username: normalizedEmail,
+      email: normalizedEmail,
       password,
       role: "client",
+      provider: "local",
     });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -174,6 +219,7 @@ router.post("/register", async (req, res) => {
       user: {
         _id: user._id,
         username: user.username,
+        email: user.email,
         role: user.role,
         accountType: user.accountType,
       },
@@ -191,7 +237,16 @@ router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const user = await User.findOne({ username }).select("+password");
+    const normalizedEmail = String(username || "").trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
+    }
+
+    const user = await User.findOne({
+      $or: [{ username: normalizedEmail }, { email: normalizedEmail }],
+    }).select("+password");
+
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials." });
     }
@@ -210,6 +265,7 @@ router.post("/login", async (req, res) => {
       user: {
         _id: user._id,
         username: user.username,
+        email: user.email,
         role: user.role,
         accountType: user.accountType,
       },
