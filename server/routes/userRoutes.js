@@ -184,7 +184,8 @@ router.put("/me/password", authMiddleware, async (req, res) => {
 });
 
 /* =============================
-   ✅ REGISTER (PENDING + EMAIL VERIFICATION)
+   ✅ REGISTER
+   TEMPORARY DIRECT ACCOUNT CREATION
 ============================= */
 router.post("/register", async (req, res) => {
   try {
@@ -216,57 +217,56 @@ router.post("/register", async (req, res) => {
         .json({ message: "An account with this email already exists." });
     }
 
-    await PendingUser.deleteMany({ email: normalizedEmail });
-
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
-
-    await PendingUser.create({
+    const existingPendingUser = await PendingUser.findOne({
       email: normalizedEmail,
-      username: normalizedEmail,
-      password,
-      verificationToken,
-      verificationTokenExpires,
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const verifyUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+    if (existingPendingUser) {
+      await PendingUser.deleteMany({ email: normalizedEmail });
+    }
+
+    const user = await User.create({
+      username: normalizedEmail,
+      email: normalizedEmail,
+      password,
+    });
 
     try {
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
       await sendEmail({
         to: normalizedEmail,
-        subject: "Verify your email address",
-        text: `Please verify your email by opening this link: ${verifyUrl}`,
+        subject: "Welcome to Albania Product",
+        text: `Your account was created successfully. You can now log in at ${frontendUrl}/auth`,
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2>Verify your email</h2>
-            <p>Thank you for creating an account.</p>
-            <p>Please click the button below to verify your email address:</p>
+            <h2>Welcome to Albania Product</h2>
+            <p>Your account was created successfully.</p>
+            <p>You can now log in using your email and password.</p>
             <p>
               <a
-                href="${verifyUrl}"
+                href="${frontendUrl}/auth"
                 style="display:inline-block;padding:12px 20px;background:#111;color:#fff;text-decoration:none;border-radius:8px;"
               >
-                Verify Email
+                Log In
               </a>
             </p>
-            <p>This link expires in 1 hour.</p>
           </div>
         `,
       });
     } catch (mailError) {
-      console.error("❌ Verification email failed:", mailError);
-
-      return res.status(500).json({
-        message:
-          "Account registration started, but verification email could not be sent. Please check email configuration.",
-        error: mailError.message,
-      });
+      console.error("⚠️ Welcome email failed, but account was created:", mailError.message);
     }
 
-    return res.status(200).json({
-      message:
-        "Verification email sent. Please check your inbox before logging in.",
+    return res.status(201).json({
+      message: "Account created successfully. You can now log in.",
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        accountType: user.accountType,
+      },
     });
   } catch (err) {
     console.error("❌ Register error:", err);
