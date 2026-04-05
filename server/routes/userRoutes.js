@@ -232,27 +232,37 @@ router.post("/register", async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const verifyUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
 
-    await sendEmail({
-      to: normalizedEmail,
-      subject: "Verify your email address",
-      text: `Please verify your email by opening this link: ${verifyUrl}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <h2>Verify your email</h2>
-          <p>Thank you for creating an account.</p>
-          <p>Please click the button below to verify your email address:</p>
-          <p>
-            <a
-              href="${verifyUrl}"
-              style="display:inline-block;padding:12px 20px;background:#111;color:#fff;text-decoration:none;border-radius:8px;"
-            >
-              Verify Email
-            </a>
-          </p>
-          <p>This link expires in 1 hour.</p>
-        </div>
-      `,
-    });
+    try {
+      await sendEmail({
+        to: normalizedEmail,
+        subject: "Verify your email address",
+        text: `Please verify your email by opening this link: ${verifyUrl}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2>Verify your email</h2>
+            <p>Thank you for creating an account.</p>
+            <p>Please click the button below to verify your email address:</p>
+            <p>
+              <a
+                href="${verifyUrl}"
+                style="display:inline-block;padding:12px 20px;background:#111;color:#fff;text-decoration:none;border-radius:8px;"
+              >
+                Verify Email
+              </a>
+            </p>
+            <p>This link expires in 1 hour.</p>
+          </div>
+        `,
+      });
+    } catch (mailError) {
+      console.error("❌ Verification email failed:", mailError);
+
+      return res.status(500).json({
+        message:
+          "Account registration started, but verification email could not be sent. Please check email configuration.",
+        error: mailError.message,
+      });
+    }
 
     return res.status(200).json({
       message:
@@ -260,7 +270,7 @@ router.post("/register", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Register error:", err);
-    res.status(500).json({ message: "Registration failed." });
+    res.status(500).json({ message: err.message || "Registration failed." });
   }
 });
 
