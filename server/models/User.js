@@ -3,9 +3,6 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    /* =========================
-       AUTH
-    ========================= */
     username: {
       type: String,
       required: true,
@@ -15,8 +12,8 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      select: false, // 🔐 never return password by default
-      default: null, // ✅ allow OAuth users without password
+      select: false,
+      default: null,
     },
 
     provider: {
@@ -41,18 +38,12 @@ const userSchema = new mongoose.Schema(
       default: "client",
     },
 
-    /* =========================
-       ACCOUNT TYPE (B2C / B2B)
-    ========================= */
     accountType: {
       type: String,
       enum: ["individual", "company"],
       default: "individual",
     },
 
-    /* =========================
-       CONTACT INFORMATION
-    ========================= */
     email: {
       type: String,
       trim: true,
@@ -66,9 +57,6 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    /* =========================
-       SHIPPING ADDRESS
-    ========================= */
     shippingAddress: {
       country: { type: String, default: "" },
       city: { type: String, default: "" },
@@ -76,9 +64,6 @@ const userSchema = new mongoose.Schema(
       postalCode: { type: String, default: "" },
     },
 
-    /* =========================
-       COMPANY / B2B PROFILE
-    ========================= */
     company: {
       companyName: { type: String, default: "" },
       vatNumber: { type: String, default: "" },
@@ -107,23 +92,22 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-/* =========================
-   🔐 HASH PASSWORD (LOCAL ONLY)
-========================= */
 userSchema.pre("save", async function (next) {
-  // ✅ Skip hashing if password is missing (OAuth users)
   if (!this.password) return next();
-
   if (!this.isModified("password")) return next();
+
+  // already hashed bcrypt password from PendingUser
+  if (String(this.password).startsWith("$2a$") ||
+      String(this.password).startsWith("$2b$") ||
+      String(this.password).startsWith("$2y$")) {
+    return next();
+  }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-/* =========================
-   🔑 PASSWORD COMPARE
-========================= */
 userSchema.methods.matchPassword = async function (enteredPassword) {
   if (!this.password) return false;
   return bcrypt.compare(enteredPassword, this.password);

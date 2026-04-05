@@ -4,7 +4,6 @@ import PendingUser from "../models/PendingUser.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import authMiddleware from "../middleware/authMiddleware.js";
-import adminMiddleware from "../middleware/adminMiddleware.js";
 import { sendEmail } from "../utils/sendEmail.js";
 
 const router = express.Router();
@@ -184,8 +183,7 @@ router.put("/me/password", authMiddleware, async (req, res) => {
 });
 
 /* =============================
-   ✅ REGISTER
-   TEMPORARY DIRECT ACCOUNT CREATION
+   ✅ REGISTER → CREATE PENDING USER
 ============================= */
 router.post("/register", async (req, res) => {
   try {
@@ -217,56 +215,57 @@ router.post("/register", async (req, res) => {
         .json({ message: "An account with this email already exists." });
     }
 
-    const existingPendingUser = await PendingUser.findOne({
+    await PendingUser.deleteMany({ email: normalizedEmail });
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
+
+    await PendingUser.create({
       email: normalizedEmail,
-    });
-
-    if (existingPendingUser) {
-      await PendingUser.deleteMany({ email: normalizedEmail });
-    }
-
-    const user = await User.create({
       username: normalizedEmail,
-      email: normalizedEmail,
       password,
+      verificationToken,
+      verificationTokenExpires,
     });
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const verifyUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
 
     try {
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-
       await sendEmail({
         to: normalizedEmail,
-        subject: "Welcome to Albania Product",
-        text: `Your account was created successfully. You can now log in at ${frontendUrl}/auth`,
+        subject: "Verify your email address",
+        text: `Please verify your email by opening this link: ${verifyUrl}`,
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2>Welcome to Albania Product</h2>
-            <p>Your account was created successfully.</p>
-            <p>You can now log in using your email and password.</p>
+            <h2>Verify your email</h2>
+            <p>Thank you for creating an account.</p>
+            <p>Please click the button below to verify your email address:</p>
             <p>
               <a
-                href="${frontendUrl}/auth"
+                href="${verifyUrl}"
                 style="display:inline-block;padding:12px 20px;background:#111;color:#fff;text-decoration:none;border-radius:8px;"
               >
-                Log In
+                Verify Email
               </a>
             </p>
+            <p>This link expires in 1 hour.</p>
           </div>
         `,
       });
     } catch (mailError) {
-      console.error("⚠️ Welcome email failed, but account was created:", mailError.message);
+      console.error("❌ Verification email failed:", mailError);
+
+      return res.status(500).json({
+        message:
+          "Verification email could not be sent. Please check email configuration.",
+        error: mailError.message,
+      });
     }
 
-    return res.status(201).json({
-      message: "Account created successfully. You can now log in.",
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        accountType: user.accountType,
-      },
+    return res.status(200).json({
+      message:
+        "Verification email sent. Please check your inbox and verify your account before logging in.",
     });
   } catch (err) {
     console.error("❌ Register error:", err);
@@ -275,7 +274,67 @@ router.post("/register", async (req, res) => {
 });
 
 /* =============================
-   ✅ LOGIN (CLIENT + ADMIN)
+   ✅ VERIFY EMAIL
+============================= */
+router.get("/verify-email", async (req, res) => {
+  try {
+    const token = String(req.query.token || "").trim();
+
+    if (!token) {
+      return res.status(400).json({ message: "Missing verification token." });
+    }
+
+    const pendingUser = await PendingUser.findOne({
+      verificationToken: token,
+    }).select("+password");
+
+    if (!pendingUser) {
+      return res.status(400).json({ message: "Invalid verification token." });
+    }
+
+    if (
+      !pendingUser.verificationTokenExpires ||
+      pendingUser.verificationTokenExpires < new Date()
+    ) {
+      await PendingUser.deleteOne({ _id: pendingUser._id });
+      return res.status(400).json({ message: "Verification token expired." });
+    }
+
+    const existingUser = await User.findOne({
+      $or: [{ username: pendingUser.username }, { email: pendingUser.email }],
+    });
+
+    if (existingUser) {
+      await PendingUser.deleteOne({ _id: pendingUser._id });
+      return res.status(400).json({
+        message: "This email is already verified. Please log in.",
+      });
+    }
+
+    const user = await User.create({
+      username: pendingUser.username,
+      email: pendingUser.email,
+      password: pendingUser.password,
+    });
+
+    await PendingUser.deleteOne({ _id: pendingUser._id });
+
+    return res.status(200).json({
+      message: "Email verified successfully. You can now log in.",
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Verify email error:", err);
+    res.status(500).json({ message: "Email verification failed." });
+  }
+});
+
+/* =============================
+   ✅ LOGIN (ONLY REAL USERS)
 ============================= */
 router.post("/login", async (req, res) => {
   try {
@@ -294,7 +353,10 @@ router.post("/login", async (req, res) => {
     }).select("+password");
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials." });
+      return res.status(400).json({
+        message:
+          "Invalid credentials or account not verified yet. Please verify your email first.",
+      });
     }
 
     const isMatch = await user.matchPassword(password);

@@ -36,6 +36,7 @@ import RecipeDetailsPage from "./pages/RecipeDetailsPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
 import ReturnPolicy from "./pages/ReturnPolicy";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 // 🔍 Other
 import SearchResults from "./components/SearchResults";
@@ -204,6 +205,14 @@ function AnimatedRoutes() {
           element={
             <AnimatedPage>
               <AuthPage />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/verify-email"
+          element={
+            <AnimatedPage>
+              <VerifyEmailPage />
             </AnimatedPage>
           }
         />
