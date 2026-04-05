@@ -166,8 +166,28 @@ async function issueOblioInvoiceForOrder(order) {
   return order.oblioInvoice;
 }
 
-function parseNetopiaFormBody(rawBody = "") {
-  const params = new URLSearchParams(String(rawBody || ""));
+function parseNetopiaFormBody(body) {
+  if (!body) {
+    return {
+      env_key: "",
+      data: "",
+      iv: "",
+      cipher: "aes-256-cbc",
+    };
+  }
+
+  // ✅ already parsed by express.urlencoded()
+  if (typeof body === "object" && !Buffer.isBuffer(body)) {
+    return {
+      env_key: body.env_key || "",
+      data: body.data || "",
+      iv: body.iv || "",
+      cipher: body.cipher || "aes-256-cbc",
+    };
+  }
+
+  // ✅ raw text body
+  const params = new URLSearchParams(String(body || ""));
 
   return {
     env_key: params.get("env_key") || "",
@@ -175,6 +195,10 @@ function parseNetopiaFormBody(rawBody = "") {
     iv: params.get("iv") || "",
     cipher: params.get("cipher") || "aes-256-cbc",
   };
+}
+
+function normalizeAction(action = "") {
+  return String(action).trim().toLowerCase();
 }
 
 /* ======================================================
@@ -240,169 +264,173 @@ router.post("/start/:orderId", authMiddleware, async (req, res) => {
 /* ======================================================
    NETOPIA CONFIRM / IPN
 ====================================================== */
-router.post("/confirm", express.text({ type: "*/*" }), async (req, res) => {
-  try {
-    console.error("🔥 NETOPIA CONFIRM HIT");
-    console.error("📥 NETOPIA HEADERS:", req.headers);
-    console.error("📥 NETOPIA RAW TEXT BODY:", req.body);
+router.post(
+  "/confirm",
+  express.text({ type: "*/*" }),
+  async (req, res) => {
+    try {
+      console.error("🔥 NETOPIA CONFIRM HIT");
+      console.error("📥 NETOPIA HEADERS:", req.headers);
+      console.error("📥 NETOPIA BODY TYPE:", typeof req.body);
+      console.error("📥 NETOPIA RAW BODY:", req.body);
 
-    const { env_key, data, iv, cipher } = parseNetopiaFormBody(req.body);
+      const { env_key, data, iv, cipher } = parseNetopiaFormBody(req.body);
 
-    console.error("📥 NETOPIA PARSED FORM:", {
-      hasEnvKey: Boolean(env_key),
-      hasData: Boolean(data),
-      hasIv: Boolean(iv),
-      cipher,
-    });
-
-    if (!env_key || !data) {
-      console.error("❌ NETOPIA CONFIRM MISSING env_key OR data");
-
-      const ack = buildNetopiaAckXml({
-        errorType: "temporary",
-        errorCode: "100",
-        message: "Missing env_key or data",
+      console.error("📥 NETOPIA PARSED FORM:", {
+        hasEnvKey: Boolean(env_key),
+        hasData: Boolean(data),
+        hasIv: Boolean(iv),
+        cipher,
       });
 
-      res.set("Content-Type", "application/xml");
-      return res.status(200).send(ack);
-    }
+      if (!env_key || !data) {
+        console.error("❌ NETOPIA CONFIRM MISSING env_key OR data");
 
-    const decryptedXml = decryptNetopiaResponse({
-      env_key,
-      data,
-      iv,
-      cipher: cipher || "aes-256-cbc",
-    });
+        const ack = buildNetopiaAckXml({
+          errorType: "temporary",
+          errorCode: "100",
+          message: "Missing env_key or data",
+        });
 
-    console.error("📩 NETOPIA DECRYPTED XML:", decryptedXml);
-
-    const ipn = parseNetopiaIpnXml(decryptedXml);
-    console.error("📦 NETOPIA PARSED IPN:", ipn);
-
-    if (!ipn.orderId) {
-      console.error("❌ NETOPIA IPN MISSING ORDER ID");
-
-      const ack = buildNetopiaAckXml({
-        errorType: "temporary",
-        errorCode: "101",
-        message: "Missing order id in NETOPIA response",
-      });
-
-      res.set("Content-Type", "application/xml");
-      return res.status(200).send(ack);
-    }
-
-    const order = await Order.findById(ipn.orderId);
-
-    if (!order) {
-      console.error("❌ NETOPIA ORDER NOT FOUND:", ipn.orderId);
-
-      const ack = buildNetopiaAckXml({
-        errorType: "temporary",
-        errorCode: "102",
-        message: "Order not found",
-      });
-
-      res.set("Content-Type", "application/xml");
-      return res.status(200).send(ack);
-    }
-
-    console.error("🧾 ORDER FOUND:", {
-      id: String(order._id),
-      orderNumber: order.orderNumber,
-      status: order.status,
-      paymentStatus: order.paymentStatus,
-    });
-
-    const successful = isNetopiaPaymentSuccessful(ipn);
-    console.error("✅ NETOPIA PAYMENT SUCCESS:", successful);
-
-    if (successful) {
-      if (order.paymentStatus !== "paid") {
-        order.paymentStatus = "paid";
-        order.status = "paid";
+        res.set("Content-Type", "application/xml");
+        return res.status(200).send(ack);
       }
 
-      order.provider = "NETOPIA";
-      order.providerRef = ipn.purchaseId || ipn.crc || "";
+      const decryptedXml = decryptNetopiaResponse({
+        env_key,
+        data,
+        iv,
+        cipher: cipher || "aes-256-cbc",
+      });
 
-      await order.save();
+      console.error("📩 NETOPIA DECRYPTED XML:", decryptedXml);
 
-      console.error("✅ ORDER MARKED AS PAID:", {
+      const ipn = parseNetopiaIpnXml(decryptedXml);
+      console.error("📦 NETOPIA PARSED IPN:", ipn);
+
+      if (!ipn.orderId) {
+        console.error("❌ NETOPIA IPN MISSING ORDER ID");
+
+        const ack = buildNetopiaAckXml({
+          errorType: "temporary",
+          errorCode: "101",
+          message: "Missing order id in NETOPIA response",
+        });
+
+        res.set("Content-Type", "application/xml");
+        return res.status(200).send(ack);
+      }
+
+      const order = await Order.findById(ipn.orderId);
+
+      if (!order) {
+        console.error("❌ NETOPIA ORDER NOT FOUND:", ipn.orderId);
+
+        const ack = buildNetopiaAckXml({
+          errorType: "temporary",
+          errorCode: "102",
+          message: "Order not found",
+        });
+
+        res.set("Content-Type", "application/xml");
+        return res.status(200).send(ack);
+      }
+
+      console.error("🧾 ORDER FOUND:", {
         id: String(order._id),
+        orderNumber: order.orderNumber,
         status: order.status,
         paymentStatus: order.paymentStatus,
+        provider: order.provider,
         providerRef: order.providerRef,
+        oblioIssued: order.oblioInvoice?.issued,
       });
 
-      if (!order.oblioInvoice?.issued) {
-        try {
-          console.error("🧾 TRYING OBLIO INVOICE FOR ORDER:", order._id);
-          console.error(
-            "🧾 ORDER ITEMS:",
-            JSON.stringify(order.items, null, 2)
-          );
+      const successful = isNetopiaPaymentSuccessful(ipn);
+      const action = normalizeAction(ipn.action);
 
-          await issueOblioInvoiceForOrder(order);
+      console.error("✅ NETOPIA PAYMENT SUCCESS:", successful);
+      console.error("🔎 NETOPIA ACTION:", action);
 
-          console.error("✅ OBLIO INVOICE CREATED SUCCESSFULLY");
-        } catch (invoiceError) {
-          console.error("❌ Oblio invoice creation failed:", invoiceError);
-          console.error(
-            "❌ Oblio invoice error message:",
-            invoiceError.message
-          );
+      if (successful) {
+        const wasAlreadyPaid = order.paymentStatus === "paid";
 
-          order.oblioInvoice = {
-            ...(order.oblioInvoice || {}),
-            issued: false,
-            error: invoiceError.message,
-          };
-
-          await order.save();
-        }
-      }
-    } else {
-      console.error(
-        "⚠️ NETOPIA PAYMENT NOT SUCCESSFUL. ACTION:",
-        String(ipn.action || "").toLowerCase()
-      );
-
-      if (
-        ["canceled", "cancelled", "credit"].includes(
-          String(ipn.action || "").toLowerCase()
-        )
-      ) {
-        order.paymentStatus = "failed";
-        order.status = "cancelled";
+        order.paymentStatus = "paid";
+        order.status = "paid";
         order.provider = "NETOPIA";
-        order.providerRef = ipn.purchaseId || ipn.crc || "";
+        order.providerRef = ipn.purchaseId || ipn.crc || order.providerRef || "";
+
         await order.save();
 
-        console.error("⚠️ ORDER MARKED AS FAILED/CANCELLED");
+        console.error("💾 ORDER SAVED AFTER PAYMENT:", {
+          id: String(order._id),
+          paymentStatus: order.paymentStatus,
+          status: order.status,
+          provider: order.provider,
+          providerRef: order.providerRef,
+          wasAlreadyPaid,
+        });
+
+        if (!order.oblioInvoice?.issued) {
+          try {
+            console.error("🧾 TRYING OBLIO INVOICE FOR ORDER:", order._id);
+            console.error("🧾 ORDER ITEMS:", JSON.stringify(order.items, null, 2));
+
+            await issueOblioInvoiceForOrder(order);
+
+            console.error("✅ OBLIO INVOICE CREATED SUCCESSFULLY");
+            console.error("🧾 ORDER OBLIO STATE AFTER SAVE:", order.oblioInvoice);
+          } catch (invoiceError) {
+            console.error("❌ Oblio invoice creation failed:", invoiceError);
+            console.error("❌ Oblio invoice error message:", invoiceError.message);
+
+            order.oblioInvoice = {
+              ...(order.oblioInvoice || {}),
+              issued: false,
+              error: invoiceError.message,
+            };
+
+            await order.save();
+
+            console.error("❌ ORDER OBLIO STATE AFTER FAILED SAVE:", order.oblioInvoice);
+          }
+        } else {
+          console.error("ℹ️ OBLIO INVOICE ALREADY EXISTS, SKIPPING NEW ONE");
+        }
+      } else {
+        console.error("⚠️ NETOPIA PAYMENT NOT SUCCESSFUL. ACTION:", action);
+
+        if (["canceled", "cancelled", "credit"].includes(action)) {
+          order.paymentStatus = "failed";
+          order.status = "cancelled";
+          order.provider = "NETOPIA";
+          order.providerRef = ipn.purchaseId || ipn.crc || order.providerRef || "";
+          await order.save();
+
+          console.error("⚠️ ORDER MARKED AS FAILED/CANCELLED");
+        }
       }
+
+      const ack = buildNetopiaAckXml({
+        message: "OK",
+      });
+
+      res.set("Content-Type", "application/xml");
+      return res.status(200).send(ack);
+    } catch (err) {
+      console.error("❌ netopia/confirm error:", err);
+
+      const ack = buildNetopiaAckXml({
+        errorType: "temporary",
+        errorCode: "500",
+        message: err.message || "Internal error",
+      });
+
+      res.set("Content-Type", "application/xml");
+      return res.status(200).send(ack);
     }
-
-    const ack = buildNetopiaAckXml({
-      message: "OK",
-    });
-
-    res.set("Content-Type", "application/xml");
-    return res.status(200).send(ack);
-  } catch (err) {
-    console.error("❌ netopia/confirm error:", err);
-
-    const ack = buildNetopiaAckXml({
-      errorType: "temporary",
-      errorCode: "500",
-      message: err.message || "Internal error",
-    });
-
-    res.set("Content-Type", "application/xml");
-    return res.status(200).send(ack);
   }
-});
+);
 
 /* ======================================================
    SIMPLE RETURN PAGE HELPER

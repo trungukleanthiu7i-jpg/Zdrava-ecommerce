@@ -91,9 +91,7 @@ async function buildOblioProductsFromOrder(order) {
         Number(item.boxPerPalet || 0) *
         Number(item.unitsPerBox || 1);
 
-    if (quantity <= 0) {
-      continue;
-    }
+    if (quantity <= 0) continue;
 
     oblioProducts.push({
       name: exactProduct.name,
@@ -351,71 +349,14 @@ router.post("/initiate", authMiddleware, async (req, res) => {
 });
 
 /* ======================================================
-   CONFIRM PAYMENT + ISSUE OBLIO INVOICE
-====================================================== */
-router.post("/confirm/:orderId", authMiddleware, async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { provider = "", providerRef = "" } = req.body;
-
-    const order = await Order.findById(orderId);
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found." });
-    }
-
-    if (
-      String(order.userId) !== String(req.user.id) &&
-      req.user.role !== "admin"
-    ) {
-      return res.status(403).json({ message: "Not allowed." });
-    }
-
-    if (order.paymentStatus !== "paid") {
-      order.paymentStatus = "paid";
-      order.status = "paid";
-      order.provider = provider || "NETOPIA";
-      order.providerRef = providerRef || order.providerRef || "";
-      await order.save();
-    }
-
-    if (!order.oblioInvoice?.issued) {
-      try {
-        await issueOblioInvoiceForOrder(order);
-      } catch (invoiceError) {
-        order.oblioInvoice = {
-          ...(order.oblioInvoice || {}),
-          issued: false,
-          error: invoiceError.message,
-        };
-        await order.save();
-
-        return res.status(500).json({
-          message: "Payment confirmed but Oblio invoice failed.",
-          error: invoiceError.message,
-          order,
-        });
-      }
-    }
-
-    return res.json({
-      message: "Payment confirmed and invoice processed successfully.",
-      order,
-    });
-  } catch (err) {
-    console.error("❌ payments/confirm error:", err);
-    return res.status(500).json({
-      message: err.message,
-    });
-  }
-});
-
-/* ======================================================
    MANUAL CONFIRM PAYMENT + GENERATE INVOICE
+   ✅ Internal/admin/manual route only
+   ❌ NOT used by NETOPIA callback
 ====================================================== */
 router.post("/manual-confirm/:orderId", authMiddleware, async (req, res) => {
   try {
     const { orderId } = req.params;
+    const { provider = "NETOPIA", providerRef = "" } = req.body;
 
     const order = await Order.findById(orderId);
 
@@ -432,7 +373,8 @@ router.post("/manual-confirm/:orderId", authMiddleware, async (req, res) => {
 
     order.paymentStatus = "paid";
     order.status = "paid";
-    order.provider = "NETOPIA";
+    order.provider = provider || "NETOPIA";
+    order.providerRef = providerRef || order.providerRef || "";
 
     await order.save();
 
@@ -501,12 +443,14 @@ router.post("/retry-oblio/:orderId", authMiddleware, async (req, res) => {
     await issueOblioInvoiceForOrder(order);
 
     return res.json({
+      success: true,
       message: "Oblio invoice issued successfully.",
       order,
     });
   } catch (err) {
     console.error("❌ payments/retry-oblio error:", err);
     return res.status(500).json({
+      success: false,
       message: err.message,
     });
   }

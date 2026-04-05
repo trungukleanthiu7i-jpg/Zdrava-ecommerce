@@ -57,6 +57,11 @@ app.use(
   })
 );
 
+/* =========================
+   📦 BODY PARSERS
+========================= */
+// ✅ Important for payment providers that may send form-encoded data
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // 🔐 Initialize Passport (OAuth)
