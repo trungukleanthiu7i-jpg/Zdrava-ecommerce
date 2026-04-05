@@ -4,8 +4,8 @@ import dns from "dns";
 dns.setDefaultResultOrder("ipv4first");
 
 function createTransporter() {
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
+  const emailUser = String(process.env.EMAIL_USER || "").trim();
+  const emailPass = String(process.env.EMAIL_PASS || "").trim();
 
   if (!emailUser || !emailPass) {
     throw new Error(
@@ -24,6 +24,8 @@ function createTransporter() {
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 10000,
+    logger: true,
+    debug: true,
   });
 }
 
@@ -35,9 +37,12 @@ export async function sendEmail({ to, subject, html, text }) {
 
     const transporter = createTransporter();
 
+    const verifyResult = await transporter.verify();
+    console.log("✅ SMTP verify result:", verifyResult);
+
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-      to,
+      from: String(process.env.EMAIL_FROM || process.env.EMAIL_USER || "").trim(),
+      to: String(to).trim(),
       subject,
       text,
       html,
@@ -46,11 +51,15 @@ export async function sendEmail({ to, subject, html, text }) {
     console.log("✅ Email sent:", info.messageId);
     return info;
   } catch (err) {
-    console.error("❌ sendEmail error:", err);
+    console.error("❌ sendEmail error message:", err.message);
+    console.error("❌ sendEmail error code:", err.code);
+    console.error("❌ sendEmail full error:", err);
     console.error("❌ EMAIL CONFIG:", {
       hasEmailUser: Boolean(process.env.EMAIL_USER),
       hasEmailPass: Boolean(process.env.EMAIL_PASS),
       hasEmailFrom: Boolean(process.env.EMAIL_FROM),
+      emailUser: String(process.env.EMAIL_USER || "").trim(),
+      emailFrom: String(process.env.EMAIL_FROM || "").trim(),
     });
 
     throw err;
