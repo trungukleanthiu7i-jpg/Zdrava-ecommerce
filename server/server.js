@@ -1,7 +1,7 @@
+import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import dotenv from "dotenv";
 import path from "path";
 import passport from "passport";
 
@@ -19,13 +19,6 @@ import netopiaRoutes from "./routes/netopiaRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import authOAuthRoutes from "./routes/authOAuthRoutes.js";
 import oblioRoutes from "./routes/oblioRoutes.js";
-
-/**
- * ENV loading
- * - Render uses dashboard env vars
- * - Local uses .env
- */
-dotenv.config();
 
 const app = express();
 
@@ -60,7 +53,7 @@ app.use(
 /* =========================
    📦 BODY PARSERS
 ========================= */
-// ✅ Important for payment providers that may send form-encoded data
+// ✅ Important for payment providers and form posts
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -87,6 +80,12 @@ mongoose
     console.log("✅ MongoDB connected successfully");
     console.log("✅ Connected DB:", mongoose.connection.name);
     console.log("✅ Allowed CORS origins:", allowedOrigins);
+    console.log("✅ EMAIL ENV CHECK:", {
+      hasEmailUser: Boolean(process.env.EMAIL_USER),
+      hasEmailPass: Boolean(process.env.EMAIL_PASS),
+      hasEmailFrom: Boolean(process.env.EMAIL_FROM),
+      frontendUrl: process.env.FRONTEND_URL || "",
+    });
   })
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err);
