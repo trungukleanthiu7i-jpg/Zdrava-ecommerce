@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import axiosClient from "../api/axiosClient";
 import "../styles/CheckoutPage.scss";
-import { FaUniversity, FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 export default function CheckoutPage() {
@@ -35,12 +35,11 @@ export default function CheckoutPage() {
     postalCode: "",
   });
 
-  const [paymentMethod, setPaymentMethod] = useState("NETOPIA");
+  const [paymentMethod] = useState("NETOPIA");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptCookies, setAcceptCookies] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [instructions, setInstructions] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const total = useMemo(() => Number(getTotalPrice() || 0), [getTotalPrice]);
@@ -111,7 +110,6 @@ export default function CheckoutPage() {
     if (loading) return;
 
     setError("");
-    setInstructions(null);
 
     if (
       !shippingAddress.country ||
@@ -171,14 +169,13 @@ export default function CheckoutPage() {
           pallets: Number(i.pallets || 0),
           pieces: Number(i.pieces || 0),
         })),
-        paymentMethod,
+        paymentMethod: "NETOPIA",
         currency: "EUR",
       };
 
       const res = await axiosClient.post("/payments/initiate", payload);
 
       if (
-        paymentMethod === "NETOPIA" &&
         res.data.paymentUrl &&
         res.data.formData?.env_key &&
         res.data.formData?.data
@@ -188,10 +185,6 @@ export default function CheckoutPage() {
           formData: res.data.formData,
         });
         return;
-      }
-
-      if (res.data.instructions) {
-        setInstructions(res.data.instructions);
       }
 
       clearCart();
@@ -336,10 +329,8 @@ export default function CheckoutPage() {
             <div className="payment-methods-icons">
               <button
                 type="button"
-                className={`payment-card ${
-                  paymentMethod === "NETOPIA" ? "active" : ""
-                }`}
-                onClick={() => setPaymentMethod("NETOPIA")}
+                className="payment-card active"
+                disabled
               >
                 <img
                   src="/images/netopia-logo.webp"
@@ -347,26 +338,6 @@ export default function CheckoutPage() {
                   className="payment-icon payment-icon-image"
                 />
                 Netopia
-              </button>
-
-              <button
-                type="button"
-                className={`payment-card ${
-                  paymentMethod === "IBAN_RON" ? "active" : ""
-                }`}
-                onClick={() => setPaymentMethod("IBAN_RON")}
-              >
-                <FaUniversity className="payment-icon" /> IBAN RON
-              </button>
-
-              <button
-                type="button"
-                className={`payment-card ${
-                  paymentMethod === "IBAN_EUR" ? "active" : ""
-                }`}
-                onClick={() => setPaymentMethod("IBAN_EUR")}
-              >
-                <FaUniversity className="payment-icon" /> IBAN EUR
               </button>
             </div>
 
@@ -460,25 +431,10 @@ export default function CheckoutPage() {
               onClick={placeOrder}
               disabled={loading || !acceptTerms || !acceptCookies}
             >
-              {loading
-                ? t("Processing...")
-                : paymentMethod === "NETOPIA"
-                ? t("Pay with card")
-                : t("Pay now")}
+              {loading ? t("Processing...") : t("Pay with card")}
             </button>
 
             {error && <p className="checkout-message error">{error}</p>}
-
-            {instructions && (
-              <div className="payment-instructions">
-                <h3>{instructions.title}</h3>
-                <ul>
-                  {instructions.details.map((d, i) => (
-                    <li key={i}>{d}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
 
             <div className="checkout-total">
               <strong>
