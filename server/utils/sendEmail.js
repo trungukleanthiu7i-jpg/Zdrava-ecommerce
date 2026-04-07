@@ -1,33 +1,6 @@
-import nodemailer from "nodemailer";
-import dns from "dns";
+import { Resend } from "resend";
 
-dns.setDefaultResultOrder("ipv4first");
-
-function createTransporter() {
-  const emailUser = String(process.env.EMAIL_USER || "").trim();
-  const emailPass = String(process.env.EMAIL_PASS || "").trim();
-
-  if (!emailUser || !emailPass) {
-    throw new Error(
-      "EMAIL_USER or EMAIL_PASS is missing in environment variables."
-    );
-  }
-
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: emailUser,
-      pass: emailPass,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-    logger: true,
-    debug: true,
-  });
-}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendEmail({ to, subject, html, text }) {
   try {
@@ -35,33 +8,26 @@ export async function sendEmail({ to, subject, html, text }) {
       throw new Error("Missing recipient email.");
     }
 
-    const transporter = createTransporter();
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error("Missing RESEND_API_KEY in environment variables.");
+    }
 
-    const verifyResult = await transporter.verify();
-    console.log("✅ SMTP verify result:", verifyResult);
+    const from = String(
+      process.env.EMAIL_FROM || "onboarding@resend.dev"
+    ).trim();
 
-    const info = await transporter.sendMail({
-      from: String(process.env.EMAIL_FROM || process.env.EMAIL_USER || "").trim(),
-      to: String(to).trim(),
-      subject,
-      text,
+    const response = await resend.emails.send({
+      from,
+      to: [String(to).trim()],
+      subject: String(subject || "").trim(),
       html,
+      text,
     });
 
-    console.log("✅ Email sent:", info.messageId);
-    return info;
+    console.log("✅ Email sent (Resend):", response);
+    return response;
   } catch (err) {
-    console.error("❌ sendEmail error message:", err.message);
-    console.error("❌ sendEmail error code:", err.code);
-    console.error("❌ sendEmail full error:", err);
-    console.error("❌ EMAIL CONFIG:", {
-      hasEmailUser: Boolean(process.env.EMAIL_USER),
-      hasEmailPass: Boolean(process.env.EMAIL_PASS),
-      hasEmailFrom: Boolean(process.env.EMAIL_FROM),
-      emailUser: String(process.env.EMAIL_USER || "").trim(),
-      emailFrom: String(process.env.EMAIL_FROM || "").trim(),
-    });
-
+    console.error("❌ Resend email error:", err);
     throw err;
   }
 }
