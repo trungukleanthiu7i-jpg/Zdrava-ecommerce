@@ -102,7 +102,7 @@ const Footer = () => {
             <div className="footerPro__contactItem">
               <FaBuilding className="footerPro__contactIcon" />
               <span className="footerPro__contactText">
-                <strong>MERITA LOGISTIC S.R.L.</strong>
+                <strong>MERITA LOGISTICS S.R.L.</strong>
               </span>
             </div>
 
