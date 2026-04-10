@@ -17,20 +17,28 @@ const generateToken = (user) =>
 /* =========================
    🚀 GOOGLE LOGIN START
 ========================= */
-router.get(
-  "/google",
+router.get("/google", (req, res, next) => {
+  console.log("🚀 /api/auth/google hit");
+
   passport.authenticate("google", {
     scope: ["profile", "email"],
     session: false,
-  })
-);
+  })(req, res, next);
+});
 
 /* =========================
    🔄 GOOGLE CALLBACK
 ========================= */
 router.get(
   "/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: `${process.env.FRONTEND_URL}/auth` }),
+  (req, res, next) => {
+    console.log("🔄 /api/auth/google/callback hit");
+    next();
+  },
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: `${process.env.FRONTEND_URL}/auth`,
+  }),
   async (req, res) => {
     try {
       if (!req.user) {
@@ -39,13 +47,59 @@ router.get(
       }
 
       const token = generateToken(req.user);
-      console.log("✅ Google OAuth successful, token generated:", token);
+      console.log("✅ Google OAuth successful for user:", req.user._id);
 
-      // Redirect to frontend with token
-      res.redirect(`${process.env.FRONTEND_URL}/oauth-success?token=${token}`);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/oauth-success?token=${token}`
+      );
     } catch (err) {
-      console.error("🔥 OAuth callback error:", err);
-      res.status(500).send(`Internal Server Error: ${err.message}`);
+      console.error("🔥 Google OAuth callback error:", err);
+      return res.status(500).send(`Internal Server Error: ${err.message}`);
+    }
+  }
+);
+
+/* =========================
+   📘 FACEBOOK LOGIN START
+========================= */
+router.get("/facebook", (req, res, next) => {
+  console.log("📘 /api/auth/facebook hit");
+
+  passport.authenticate("facebook", {
+    scope: ["email"],
+    session: false,
+  })(req, res, next);
+});
+
+/* =========================
+   🔄 FACEBOOK CALLBACK
+========================= */
+router.get(
+  "/facebook/callback",
+  (req, res, next) => {
+    console.log("🔄 /api/auth/facebook/callback hit");
+    next();
+  },
+  passport.authenticate("facebook", {
+    session: false,
+    failureRedirect: `${process.env.FRONTEND_URL}/auth`,
+  }),
+  async (req, res) => {
+    try {
+      if (!req.user) {
+        console.error("⚠️ Facebook OAuth: req.user is null");
+        return res.status(400).send("User not found after Facebook login");
+      }
+
+      const token = generateToken(req.user);
+      console.log("✅ Facebook OAuth successful for user:", req.user._id);
+
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/oauth-success?token=${token}`
+      );
+    } catch (err) {
+      console.error("🔥 Facebook OAuth callback error:", err);
+      return res.status(500).send(`Internal Server Error: ${err.message}`);
     }
   }
 );
