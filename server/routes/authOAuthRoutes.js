@@ -65,9 +65,8 @@ router.get(
 router.get("/facebook", (req, res, next) => {
   console.log("📘 /api/auth/facebook hit");
 
-  passport.authenticate("facebook", {
-    scope: ["email"],
-    session: false,
+passport.authenticate("facebook", {
+  session: false,
   })(req, res, next);
 });
 
