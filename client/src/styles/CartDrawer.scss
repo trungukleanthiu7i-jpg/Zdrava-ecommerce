@@ -246,3 +246,30 @@
     justify-content: center;
   }
 }
+.cart-drawer__info p {
+  margin: 4px 0;
+  line-height: 1.5;
+  font-size: 0.92rem;
+  color: #444;
+}
+
+.cart-drawer__info strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.cart-drawer__info small {
+  display: block;
+  margin-top: 4px;
+  color: #777;
+  font-size: 0.8rem;
+}
+
+.cart-drawer__footer h3 {
+  line-height: 1.6;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
