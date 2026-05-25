@@ -309,9 +309,12 @@ function AllProductsPage() {
 
                         <h3>{product.name}</h3>
 
-                        <p className="price">
-                          €{Number(product.price || 0).toFixed(2)}
-                        </p>
+<p className="price">
+  €{Number(product.price || 0).toFixed(2)}
+  <span className="price-lei">
+    {" "} / {(Number(product.price || 0) * 5.25).toFixed(2)} lei
+  </span>
+</p>
 
                         {product.barcode && <Barcode value={product.barcode} />}
 
