@@ -11,6 +11,36 @@ const MINIMUM_ORDER_RON = 350;
 const EXTRA_SHIPPING_RON = 150;
 const OUTSIDE_ROMANIA_SHIPPING_EUR = 15;
 
+const EU_COUNTRIES = [
+  "Austria",
+  "Belgium",
+  "Bulgaria",
+  "Croatia",
+  "Cyprus",
+  "Czechia",
+  "Denmark",
+  "Estonia",
+  "Finland",
+  "France",
+  "Germany",
+  "Greece",
+  "Hungary",
+  "Ireland",
+  "Italy",
+  "Latvia",
+  "Lithuania",
+  "Luxembourg",
+  "Malta",
+  "Netherlands",
+  "Poland",
+  "Portugal",
+  "Romania",
+  "Slovakia",
+  "Slovenia",
+  "Spain",
+  "Sweden",
+];
+
 export default function CheckoutPage() {
   const { t } = useTranslation();
   const { cartItems, getTotalPrice, clearCart } = useCart();
@@ -47,14 +77,7 @@ export default function CheckoutPage() {
   const total = useMemo(() => Number(getTotalPrice() || 0), [getTotalPrice]);
   const totalRon = total * EUR_TO_RON;
 
-  const normalizedCountry = shippingAddress.country.toLowerCase().trim();
-
-  const isRomania =
-    normalizedCountry === "romania" ||
-    normalizedCountry === "românia" ||
-    normalizedCountry === "ro" ||
-    normalizedCountry.includes("romania") ||
-    normalizedCountry.includes("românia");
+  const isRomania = shippingAddress.country === "Romania";
 
   const shippingCostEur = useMemo(() => {
     if (!shippingAddress.country) return 0;
@@ -76,7 +99,7 @@ export default function CheckoutPage() {
 
   const shippingMessage = useMemo(() => {
     if (!shippingAddress.country) {
-      return t("Enter your country to calculate shipping.");
+      return t("Select your country to calculate shipping.");
     }
 
     if (!isRomania) {
@@ -123,13 +146,8 @@ export default function CheckoutPage() {
       data: formData.data,
     };
 
-    if (formData.cipher) {
-      fields.cipher = formData.cipher;
-    }
-
-    if (formData.iv) {
-      fields.iv = formData.iv;
-    }
+    if (formData.cipher) fields.cipher = formData.cipher;
+    if (formData.iv) fields.iv = formData.iv;
 
     Object.entries(fields).forEach(([name, value]) => {
       const input = document.createElement("input");
@@ -206,7 +224,7 @@ export default function CheckoutPage() {
           pallets: Number(i.pallets || 0),
           pieces: Number(i.pieces || 0),
         })),
-        paymentMethod: "NETOPIA",
+        paymentMethod,
         currency: "EUR",
 
         shipping: {
@@ -343,44 +361,19 @@ export default function CheckoutPage() {
                 onChange={handleCustomerChange}
               />
 
-<select
-  name="country"
-  value={shippingAddress.country}
-  onChange={handleAddressChange}
-  className="country-select"
->
-  <option value="">{t("Select country")}</option>
-
-  <option value="Romania">Romania</option>
-  <option value="Germany">Germany</option>
-  <option value="Italy">Italy</option>
-  <option value="France">France</option>
-  <option value="Spain">Spain</option>
-  <option value="Greece">Greece</option>
-  <option value="Belgium">Belgium</option>
-  <option value="Netherlands">Netherlands</option>
-  <option value="Austria">Austria</option>
-  <option value="Sweden">Sweden</option>
-  <option value="Norway">Norway</option>
-  <option value="Denmark">Denmark</option>
-  <option value="Poland">Poland</option>
-  <option value="Bulgaria">Bulgaria</option>
-  <option value="Hungary">Hungary</option>
-  <option value="Cyprus">Serbia</option>
-  <option value="Croatia">Croatia</option>
-  <option value="Czechia">Turkey</option>
-  <option value="Estonia">Turkey</option>
-  <option value="Finland">Turkey</option>
-  <option value="Irland">Turkey</option>
-  <option value="Letonia">Turkey</option>
-  <option value="Lithuania">Turkey</option>
-  <option value="Luxembourg">Turkey</option>
-  <option value="Malta">Turkey</option>
-  <option value="Portugal">Turkey</option>
-  <option value="Slovakia">Turkey</option>
-  <option value="Slovenia">Turkey</option>
-  <option value="Sweden">Turkey</option>
-</select>
+              <select
+                name="country"
+                value={shippingAddress.country}
+                onChange={handleAddressChange}
+                className="country-select"
+              >
+                <option value="">{t("Select country")}</option>
+                {EU_COUNTRIES.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
 
               <input
                 name="city"
