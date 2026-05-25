@@ -7,6 +7,9 @@ import { FaCheckCircle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 const EUR_TO_RON = 5.25;
+const MINIMUM_ORDER_RON = 350;
+const EXTRA_SHIPPING_RON = 150;
+const OUTSIDE_ROMANIA_SHIPPING_EUR = 15;
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
@@ -43,6 +46,49 @@ export default function CheckoutPage() {
 
   const total = useMemo(() => Number(getTotalPrice() || 0), [getTotalPrice]);
   const totalRon = total * EUR_TO_RON;
+
+  const normalizedCountry = shippingAddress.country.toLowerCase().trim();
+
+  const isRomania =
+    normalizedCountry === "romania" ||
+    normalizedCountry === "românia" ||
+    normalizedCountry === "ro" ||
+    normalizedCountry.includes("romania") ||
+    normalizedCountry.includes("românia");
+
+  const shippingCostEur = useMemo(() => {
+    if (!shippingAddress.country) return 0;
+
+    if (!isRomania) {
+      return OUTSIDE_ROMANIA_SHIPPING_EUR;
+    }
+
+    if (totalRon < MINIMUM_ORDER_RON) {
+      return EXTRA_SHIPPING_RON / EUR_TO_RON;
+    }
+
+    return 0;
+  }, [shippingAddress.country, isRomania, totalRon]);
+
+  const shippingCostRon = shippingCostEur * EUR_TO_RON;
+  const finalTotalEur = total + shippingCostEur;
+  const finalTotalRon = totalRon + shippingCostRon;
+
+  const shippingMessage = useMemo(() => {
+    if (!shippingAddress.country) {
+      return t("Enter your country to calculate shipping.");
+    }
+
+    if (!isRomania) {
+      return t("Shipping outside Romania.");
+    }
+
+    if (totalRon < MINIMUM_ORDER_RON) {
+      return t("Extra shipping cost because order is under 350 lei.");
+    }
+
+    return t("Free shipping inside Romania.");
+  }, [shippingAddress.country, isRomania, totalRon, t]);
 
   const handleCustomerChange = (e) =>
     setCustomer({ ...customer, [e.target.name]: e.target.value });
@@ -162,6 +208,19 @@ export default function CheckoutPage() {
         })),
         paymentMethod: "NETOPIA",
         currency: "EUR",
+
+        shipping: {
+          costEur: Number(shippingCostEur.toFixed(2)),
+          costRon: Number(shippingCostRon.toFixed(2)),
+          message: shippingMessage,
+        },
+
+        totals: {
+          subtotalEur: Number(total.toFixed(2)),
+          subtotalRon: Number(totalRon.toFixed(2)),
+          finalTotalEur: Number(finalTotalEur.toFixed(2)),
+          finalTotalRon: Number(finalTotalRon.toFixed(2)),
+        },
       };
 
       const res = await axiosClient.post("/payments/initiate", payload);
@@ -425,7 +484,24 @@ export default function CheckoutPage() {
 
             <div className="checkout-total">
               <strong>
-                {t("Total")}: €{total.toFixed(2)} / {totalRon.toFixed(2)} lei
+                {t("Subtotal")}: €{total.toFixed(2)} / {totalRon.toFixed(2)} lei
+              </strong>
+
+              <p className="checkout-shipping">
+                {t("Shipping")}:{" "}
+                {shippingCostEur === 0
+                  ? t("Free")
+                  : `€${shippingCostEur.toFixed(2)} / ${shippingCostRon.toFixed(
+                      2
+                    )} lei`}
+                <span className="checkout-shipping-note">
+                  {shippingMessage}
+                </span>
+              </p>
+
+              <strong className="checkout-final-total">
+                {t("Total")}: €{finalTotalEur.toFixed(2)} /{" "}
+                {finalTotalRon.toFixed(2)} lei
               </strong>
             </div>
           </div>
