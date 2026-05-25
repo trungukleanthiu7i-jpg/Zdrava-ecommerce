@@ -6,14 +6,13 @@ import "../styles/CheckoutPage.scss";
 import { FaCheckCircle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
+const EUR_TO_RON = 5.25;
+
 export default function CheckoutPage() {
   const { t } = useTranslation();
   const { cartItems, getTotalPrice, clearCart } = useCart();
   const navigate = useNavigate();
 
-  /* ===============================
-     State
-  =============================== */
   const [customerType, setCustomerType] = useState("individual");
 
   const [customer, setCustomer] = useState({
@@ -43,10 +42,8 @@ export default function CheckoutPage() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const total = useMemo(() => Number(getTotalPrice() || 0), [getTotalPrice]);
+  const totalRon = total * EUR_TO_RON;
 
-  /* ===============================
-     Handlers
-  =============================== */
   const handleCustomerChange = (e) =>
     setCustomer({ ...customer, [e.target.name]: e.target.value });
 
@@ -56,9 +53,6 @@ export default function CheckoutPage() {
   const handleAddressChange = (e) =>
     setShippingAddress({ ...shippingAddress, [e.target.name]: e.target.value });
 
-  /* ===============================
-     Helpers
-  =============================== */
   const resetCheckoutForm = () => {
     setCustomer({ fullName: "", email: "", phone: "" });
     setCompany({ companyName: "", vatNumber: "", contactPerson: "" });
@@ -103,9 +97,6 @@ export default function CheckoutPage() {
     form.submit();
   };
 
-  /* ===============================
-     Place Order
-  =============================== */
   const placeOrder = async () => {
     if (loading) return;
 
@@ -327,11 +318,7 @@ export default function CheckoutPage() {
             <h2>{t("Checkout")}</h2>
 
             <div className="payment-methods-icons">
-              <button
-                type="button"
-                className="payment-card active"
-                disabled
-              >
+              <button type="button" className="payment-card active" disabled>
                 <img
                   src="/images/netopia-logo.webp"
                   alt="Netopia"
@@ -438,7 +425,7 @@ export default function CheckoutPage() {
 
             <div className="checkout-total">
               <strong>
-                {t("Total")}: €{total.toFixed(2)}
+                {t("Total")}: €{total.toFixed(2)} / {totalRon.toFixed(2)} lei
               </strong>
             </div>
           </div>
