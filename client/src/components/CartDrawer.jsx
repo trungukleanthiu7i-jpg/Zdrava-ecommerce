@@ -6,6 +6,8 @@ import { FaShoppingCart, FaPlus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
+const EUR_TO_RON = 5.25;
+
 const CartDrawer = () => {
   const { t } = useTranslation();
 
@@ -26,7 +28,6 @@ const CartDrawer = () => {
   const [cartAnimation, setCartAnimation] = useState(false);
   const navigate = useNavigate();
 
-  /* ✅ total visible units for one item */
   const getItemUnits = (item) => {
     const pieces = Number(item.pieces || 0);
     const boxes = Number(item.quantity || 0);
@@ -37,7 +38,6 @@ const CartDrawer = () => {
     return pieces + boxes * unitsPerBox + pallets * boxPerPalet * unitsPerBox;
   };
 
-  /* ✅ label for quantity details */
   const getItemBreakdown = (item) => {
     const pieces = Number(item.pieces || 0);
     const boxes = Number(item.quantity || 0);
@@ -139,6 +139,8 @@ const CartDrawer = () => {
                 {cartItems.map((item) => {
                   const totalUnits = getItemUnits(item);
                   const breakdown = getItemBreakdown(item);
+                  const price = Number(item.price || 0);
+                  const itemTotal = price * totalUnits;
 
                   return (
                     <li key={item._id} className="cart-drawer__item">
@@ -153,13 +155,18 @@ const CartDrawer = () => {
 
                       <div className="cart-drawer__info">
                         <h4>{item.name}</h4>
+
                         <p>
-                          {item.price} € × {totalUnits}
+                          {price.toFixed(2)} € /{" "}
+                          {(price * EUR_TO_RON).toFixed(2)} lei × {totalUnits}
                         </p>
 
                         {breakdown && <small>{breakdown}</small>}
 
-                        <strong>{(item.price * totalUnits).toFixed(2)} €</strong>
+                        <strong>
+                          {itemTotal.toFixed(2)} € /{" "}
+                          {(itemTotal * EUR_TO_RON).toFixed(2)} lei
+                        </strong>
                       </div>
 
                       <div className="cart-drawer__actions">
@@ -176,7 +183,10 @@ const CartDrawer = () => {
               </ul>
 
               <div className="cart-drawer__footer">
-                <h3>Total: {getTotalPrice().toFixed(2)} €</h3>
+                <h3>
+                  Total: {Number(getTotalPrice()).toFixed(2)} € /{" "}
+                  {(Number(getTotalPrice()) * EUR_TO_RON).toFixed(2)} lei
+                </h3>
 
                 <div className="drawer-buttons">
                   <button className="go-to-cart-btn" onClick={handleGoToCart}>
