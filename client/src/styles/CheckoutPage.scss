@@ -309,3 +309,34 @@
   align-items: center;
   gap: 10px;
 }
+.checkout-shipping {
+  margin: 10px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+
+  line-height: 1.6;
+}
+
+.checkout-shipping-note {
+  display: block;
+  margin-top: 6px;
+
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #777;
+}
+
+.checkout-final-total {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+
+  color: #111;
+  font-size: 1.45rem !important;
+}
