@@ -343,12 +343,44 @@ export default function CheckoutPage() {
                 onChange={handleCustomerChange}
               />
 
-              <input
-                name="country"
-                placeholder={t("Country")}
-                value={shippingAddress.country}
-                onChange={handleAddressChange}
-              />
+<select
+  name="country"
+  value={shippingAddress.country}
+  onChange={handleAddressChange}
+  className="country-select"
+>
+  <option value="">{t("Select country")}</option>
+
+  <option value="Romania">Romania</option>
+  <option value="Germany">Germany</option>
+  <option value="Italy">Italy</option>
+  <option value="France">France</option>
+  <option value="Spain">Spain</option>
+  <option value="Greece">Greece</option>
+  <option value="Belgium">Belgium</option>
+  <option value="Netherlands">Netherlands</option>
+  <option value="Austria">Austria</option>
+  <option value="Sweden">Sweden</option>
+  <option value="Norway">Norway</option>
+  <option value="Denmark">Denmark</option>
+  <option value="Poland">Poland</option>
+  <option value="Bulgaria">Bulgaria</option>
+  <option value="Hungary">Hungary</option>
+  <option value="Cyprus">Serbia</option>
+  <option value="Croatia">Croatia</option>
+  <option value="Czechia">Turkey</option>
+  <option value="Estonia">Turkey</option>
+  <option value="Finland">Turkey</option>
+  <option value="Irland">Turkey</option>
+  <option value="Letonia">Turkey</option>
+  <option value="Lithuania">Turkey</option>
+  <option value="Luxembourg">Turkey</option>
+  <option value="Malta">Turkey</option>
+  <option value="Portugal">Turkey</option>
+  <option value="Slovakia">Turkey</option>
+  <option value="Slovenia">Turkey</option>
+  <option value="Sweden">Turkey</option>
+</select>
 
               <input
                 name="city"
