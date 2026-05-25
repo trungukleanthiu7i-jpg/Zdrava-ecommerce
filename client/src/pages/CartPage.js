@@ -4,6 +4,8 @@ import { useCart } from "../context/CartContext";
 import { useTranslation } from "react-i18next";
 import "../styles/CartPage.scss";
 
+const EUR_TO_RON = 5.25;
+
 function CartPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -18,7 +20,6 @@ function CartPage() {
     getTotalPrice,
   } = useCart();
 
-  // 🔐 Auth check (JWT based)
   const isLoggedIn = Boolean(localStorage.getItem("token"));
 
   const handleCheckout = () => {
@@ -70,10 +71,12 @@ function CartPage() {
 
                     <p>
                       {t("Preț / unitate")}:{" "}
-                      <strong>{price.toFixed(2)} €</strong>
+                      <strong>
+                        {price.toFixed(2)} € /{" "}
+                        {(price * EUR_TO_RON).toFixed(2)} lei
+                      </strong>
                     </p>
 
-                    {/* Pieces */}
                     <div className="cart-field">
                       <label>{t("Bucăți")}: </label>
                       <input
@@ -90,7 +93,6 @@ function CartPage() {
                       />
                     </div>
 
-                    {/* Boxes */}
                     <div className="cart-field">
                       <label>{t("Cantitate (boxes)")}: </label>
                       <input
@@ -107,7 +109,6 @@ function CartPage() {
                       />
                     </div>
 
-                    {/* Pallets */}
                     <div className="cart-field">
                       <label>{t("Paleti")}: </label>
                       <input
@@ -141,7 +142,8 @@ function CartPage() {
                     </p>
 
                     <p className="item-total">
-                      {t("Total produs")}: {itemTotal.toFixed(2)} €
+                      {t("Total produs")}: {itemTotal.toFixed(2)} € /{" "}
+                      {(itemTotal * EUR_TO_RON).toFixed(2)} lei
                     </p>
                   </div>
 
@@ -158,7 +160,8 @@ function CartPage() {
 
           <div className="cart-total">
             <h2>
-              {t("Total comandă")}: {Number(getTotalPrice()).toFixed(2)} €
+              {t("Total comandă")}: {Number(getTotalPrice()).toFixed(2)} € /{" "}
+              {(Number(getTotalPrice()) * EUR_TO_RON).toFixed(2)} lei
             </h2>
           </div>
 
